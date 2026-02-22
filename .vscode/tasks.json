@@ -1,0 +1,29 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Flutter Run Android",
+			"type": "shell",
+			"command": "flutter run -d emulator-5554",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Flutter Run iOS",
+			"type": "shell",
+			"command": "flutter run -d 47DA0070-671F-43A8-806B-E69A5E3051ED",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Flutter Run Physical iPhone",
+			"type": "shell",
+			"command": "flutter run -d 00008150-000E65990A01401C",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

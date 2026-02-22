@@ -1,0 +1,3 @@
+- Verify project structure and README.md exist.
+- Use `google_fonts` package to access fonts; avoid bundling TTF until confirmed.
+- When scaffolding UI, place placeholder assets in `assets/images/` and list them in `pubspec.yaml`.

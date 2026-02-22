@@ -1,0 +1,32 @@
+name: grocery_app_landing
+description: A Flutter app scaffold for the Grocery App landing page (Figma-driven)
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  google_fonts: ^8.0.1
+  flutter_svg: ^2.0.7
+  http: ^1.1.0
+  share_plus: ^8.0.0
+  image_picker: ^1.1.2
+  # Directly added to allow newer transitive versions where safe
+  # characters is pinned by the Flutter SDK; keep it transitive
+  # material_color_utilities is pinned by the Flutter SDK; keep it transitive
+  # path_provider_foundation requires a newer Dart SDK; left as transitive dependency for now
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  # matcher kept at SDK-pinned version via flutter_test
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/

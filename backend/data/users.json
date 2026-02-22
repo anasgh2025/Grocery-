@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1ae3ca54-0f8f-4ab3-80fc-7a35fbfd5cdf",
+    "name": "Test User",
+    "email": "test@example.com",
+    "password": "$2a$10$Whjok7e/n.OqC8jrTeV2KuCMOTPNxJpnfFWV8.2drjh5ZVRm3/CJC"
+  },
+  {
+    "id": "d001abe9-9444-43fb-ab8f-a10585c771f6",
+    "name": "SQLite User",
+    "email": "sqlite@example.com",
+    "password": "$2a$10$haMWEe8feuOi8OTt.pQUgewTMrpYnc3Gnvud7GcWx1qAMiTDguDfK"
+  },
+  {
+    "id": "e7e66af8-aef8-4b69-8ab7-01fe33cbdd3a",
+    "name": "anas",
+    "email": "anas@a.com",
+    "password": "$2a$10$8A1x/qPVcyWa0cxod4fLa.Ot0ZknGbXlnlMuG/8UFxG4lYXPtPx5e"
+  },
+  {
+    "id": "7c0e8e2e-0451-42d8-b8b4-5a577b3e99f7",
+    "name": "Login Test",
+    "email": "logintest@example.com",
+    "password": "$2a$10$PyUYO3BG4biDTE16xvSut.P/4e2GLhrRFqg7Uv5z0dNV7qFpLRiZm"
+  }
+]
