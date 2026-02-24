@@ -91,10 +91,14 @@ app.use('/api/users', usersRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
+  const mongoose = require('mongoose');
+  const dbName = mongoose.connection.db ? mongoose.connection.db.databaseName : 'not connected';
   res.json({
     status: 'OK',
     message: 'Grocery App API is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    database: dbName,
+    uriDb: MONGODB_URI.replace(/\/\/[^@]+@/, '//****@'),
   });
 });
 
