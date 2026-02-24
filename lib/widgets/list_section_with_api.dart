@@ -404,7 +404,8 @@ class _ListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isUrgent = list.progress >= 1.0;
+    final (checked, total) = _itemCounts;
+    final bool allChecked = total > 0 && checked == total;
 
     return GestureDetector(
       onTap: onTap,
@@ -473,8 +474,10 @@ class _ListCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (isUrgent)
-                  const Icon(Icons.priority_high, size: 24, color: Colors.redAccent),
+                if (allChecked)
+                  const Icon(Icons.check_circle, size: 20, color: Colors.green)
+                else if (total > 0 && checked < total)
+                  const Icon(Icons.error_outline, size: 20, color: Colors.redAccent),
               ],
             ),
             const SizedBox(height: 2),

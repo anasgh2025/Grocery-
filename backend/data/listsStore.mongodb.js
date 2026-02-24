@@ -82,7 +82,8 @@ const update = async (id, listData) => {
 
   // Handle listItems
   if (listData.listItems) {
-    existing.listItems = [...listData.listItems];
+    existing.listItems = listData.listItems.map(it => ({ ...it }));
+    existing.markModified('listItems');
   }
 
   // Recompute items/progress from listItems
