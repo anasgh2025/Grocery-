@@ -474,10 +474,10 @@ class _ListCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (list.priority == 1)
-                  const Icon(Icons.priority_high, size: 18, color: Colors.redAccent)
-                else if (allChecked)
+                if (allChecked)
                   const Icon(Icons.check_circle, size: 20, color: Colors.green)
+                else if (list.priority == 1)
+                  const Icon(Icons.priority_high, size: 18, color: Colors.redAccent)
                 else if (total > 0 && checked < total)
                   const Icon(Icons.error_outline, size: 20, color: Colors.redAccent),
               ],
