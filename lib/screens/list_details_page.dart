@@ -23,11 +23,16 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
   final ApiService _api = ApiService();
   final int _selectedPriority = 0; // 0 = Normal, 1 = Urgent
 
+  /// Categories loaded from the backend API
+  List<Map<String, dynamic>> _categories = [];
+  bool _categoriesLoaded = false;
+
   @override
   void initState() {
     super.initState();
     // Load items from backend for this list
     _loadItems();
+    _loadCategories();
   }
 
   Widget _buildPriorityIcon(int priority) {
@@ -61,6 +66,56 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       setState(() {
         _items = List.generate(8, (i) => { 'id': 'p$i', 'name': 'Item ${i + 1}', 'qty': 1, 'checked': false });
       });
+    }
+  }
+
+  /// Load categories from backend API
+  Future<void> _loadCategories() async {
+    try {
+      final cats = await _api.fetchCategories();
+      setState(() {
+        _categories = cats.map((c) => {
+          'label': c['label'] as String,
+          'icon': _iconFromString(c['icon'] as String? ?? 'shopping_bag'),
+        }).toList();
+        _categoriesLoaded = true;
+      });
+    } catch (e) {
+      // ignore: avoid_print
+      print('Error loading categories: $e');
+      // If loading fails, we leave _categories empty – the sheet will show a message
+      setState(() => _categoriesLoaded = true);
+    }
+  }
+
+  /// Map an icon name string (stored in DB) to Flutter IconData
+  static IconData _iconFromString(String name) {
+    switch (name) {
+      case 'apple':              return Icons.apple;
+      case 'eco':                return Icons.eco;
+      case 'set_meal':           return Icons.set_meal;
+      case 'water':              return Icons.water;
+      case 'egg_alt':            return Icons.egg_alt;
+      case 'bakery_dining':      return Icons.bakery_dining;
+      case 'local_drink':        return Icons.local_drink;
+      case 'cookie':             return Icons.cookie;
+      case 'ac_unit':            return Icons.ac_unit;
+      case 'grain':              return Icons.grain;
+      case 'blender':            return Icons.blender;
+      case 'inventory_2':        return Icons.inventory_2;
+      case 'spa':                return Icons.spa;
+      case 'opacity':            return Icons.opacity;
+      case 'cake':               return Icons.cake;
+      case 'child_care':         return Icons.child_care;
+      case 'health_and_safety':  return Icons.health_and_safety;
+      case 'cleaning_services':  return Icons.cleaning_services;
+      case 'face':               return Icons.face;
+      case 'pets':               return Icons.pets;
+      case 'free_breakfast':     return Icons.free_breakfast;
+      case 'rice_bowl':          return Icons.rice_bowl;
+      case 'lunch_dining':       return Icons.lunch_dining;
+      case 'shopping_bag':       return Icons.shopping_bag;
+      default:                   return Icons.shopping_bag;
     }
   }
 
@@ -242,33 +297,6 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
     }
   }
 
-  static const List<Map<String, dynamic>> _categories = [
-    {'label': 'Fruits',       'icon': Icons.apple},
-    {'label': 'Vegetables',   'icon': Icons.eco},
-    {'label': 'Meat',         'icon': Icons.set_meal},
-    {'label': 'Seafood',      'icon': Icons.water},
-    {'label': 'Dairy',        'icon': Icons.egg_alt},
-    {'label': 'Bakery',       'icon': Icons.bakery_dining},
-    {'label': 'Beverages',    'icon': Icons.local_drink},
-    {'label': 'Snacks',       'icon': Icons.cookie},
-    {'label': 'Frozen',       'icon': Icons.ac_unit},
-    {'label': 'Grains',       'icon': Icons.grain},
-    {'label': 'Condiments',   'icon': Icons.blender},
-    {'label': 'Canned Goods', 'icon': Icons.inventory_2},
-    {'label': 'Spices',       'icon': Icons.spa},
-    {'label': 'Oils & Fats',  'icon': Icons.opacity},
-    {'label': 'Sweets',       'icon': Icons.cake},
-    {'label': 'Baby Food',    'icon': Icons.child_care},
-    {'label': 'Health',       'icon': Icons.health_and_safety},
-    {'label': 'Cleaning',     'icon': Icons.cleaning_services},
-    {'label': 'Personal Care','icon': Icons.face},
-    {'label': 'Pet Food',     'icon': Icons.pets},
-    {'label': 'Breakfast',    'icon': Icons.free_breakfast},
-    {'label': 'Pasta & Rice', 'icon': Icons.rice_bowl},
-    {'label': 'Deli',         'icon': Icons.lunch_dining},
-    {'label': 'Other',        'icon': Icons.shopping_bag},
-  ];
-
   Future<void> _showAddDialog() async {
     _addItemController.clear();
 
@@ -384,7 +412,16 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
 
                   // ── Bottom 50%: scrollable category list ─────────
                   Expanded(
-                    child: ListView.separated(
+                    child: !_categoriesLoaded
+                        ? const Center(child: CircularProgressIndicator())
+                        : _categories.isEmpty
+                            ? Center(
+                                child: Text(
+                                  'No categories available',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                                ),
+                              )
+                            : ListView.separated(
                       controller: scrollController,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       itemCount: _categories.length,

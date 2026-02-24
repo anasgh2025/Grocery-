@@ -55,8 +55,12 @@ const startServer = async () => {
     console.log(`🔗 Connected to MongoDB: ${MONGODB_URI}`);
 
     // Seed default marketing cards if collection is empty
-    const { seedDefaults } = require('./data/marketingStore.mongodb');
-    await seedDefaults();
+    const { seedDefaults: seedMarketing } = require('./data/marketingStore.mongodb');
+    await seedMarketing();
+
+    // Seed default categories if collection is empty
+    const { seedDefaults: seedCategories } = require('./data/categoriesStore.mongodb');
+    await seedCategories();
   } catch (err) {
     console.error('Failed to connect to MongoDB:');
     console.error(err && err.message ? err.message : String(err));
@@ -95,9 +99,11 @@ app.use((req, res, next) => {
 const listsRoutes = require('./routes/lists');
 const marketingRoutes = require('./routes/marketing');
 const usersRoutes = require('./routes/users');
+const categoriesRoutes = require('./routes/categories');
 app.use('/api/lists', listsRoutes);
 app.use('/api/marketing', marketingRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/categories', categoriesRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

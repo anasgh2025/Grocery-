@@ -272,4 +272,40 @@ class ApiService {
       throw Exception('Error deleting list: $e');
     }
   }
+
+  // ─── Categories ────────────────────────────────────────────────────────
+
+  /// Fetch all categories (summary: id, label, icon, order, itemCount).
+  /// Pass [full] = true to include the items array for each category.
+  Future<List<Map<String, dynamic>>> fetchCategories({bool full = false}) async {
+    try {
+      final uri = Uri.parse('$baseUrl/categories${full ? '?full=true' : ''}');
+      final response = await http.get(uri).timeout(timeout);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonData = json.decode(response.body);
+        return jsonData.cast<Map<String, dynamic>>();
+      }
+      throw Exception('Failed to load categories: ${response.statusCode}');
+    } catch (e) {
+      throw Exception('Error fetching categories: $e');
+    }
+  }
+
+  /// Fetch a single category by label (includes items).
+  Future<Map<String, dynamic>> fetchCategoryByLabel(String label) async {
+    try {
+      final encoded = Uri.encodeComponent(label);
+      final response = await http
+          .get(Uri.parse('$baseUrl/categories/label/$encoded'))
+          .timeout(timeout);
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body) as Map<String, dynamic>;
+      }
+      throw Exception('Failed to load category: ${response.statusCode}');
+    } catch (e) {
+      throw Exception('Error fetching category "$label": $e');
+    }
+  }
 }
