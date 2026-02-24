@@ -14,6 +14,7 @@ const groceryListSchema = new mongoose.Schema({
   name:      { type: String, required: true },
   items:     { type: String, default: '0/0' },
   progress:  { type: Number, default: 0 },
+  priority:  { type: Number, default: 0 },          // 0 = Normal, 1 = Urgent
   time:      { type: String, default: '' },
   icon:      { type: String, default: 'list' },
   listItems: { type: [listItemSchema], default: [] },
@@ -79,6 +80,7 @@ const update = async (id, listData) => {
   existing.name = listData.name !== undefined ? listData.name : existing.name;
   existing.time = listData.time !== undefined ? listData.time : existing.time;
   existing.icon = listData.icon !== undefined ? listData.icon : existing.icon;
+  if (listData.priority !== undefined) existing.priority = listData.priority;
 
   // Handle listItems
   if (listData.listItems) {

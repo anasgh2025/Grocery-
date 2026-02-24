@@ -39,7 +39,7 @@ const getListById = async (req, res) => {
 // Create new list
 const createList = async (req, res) => {
   try {
-    const { name, items, progress, time, icon } = req.body;
+    const { name, items, progress, time, icon, priority } = req.body;
     
     // Validate required fields
     if (!name || items === undefined || progress === undefined || !time || !icon) {
@@ -64,7 +64,8 @@ const createList = async (req, res) => {
       items,
       progress,
       time,
-      icon
+      icon,
+      priority: priority !== undefined ? priority : 0,
     };
     
     const createdList = await store.create(newList);
@@ -81,7 +82,7 @@ const createList = async (req, res) => {
 const updateList = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, items, progress, time, icon } = req.body;
+    const { name, items, progress, time, icon, priority } = req.body;
     
     // Check if list exists
     const existingList = await store.getById(id);
@@ -106,7 +107,8 @@ const updateList = async (req, res) => {
       items: items !== undefined ? items : existingList.items,
       progress: progress !== undefined ? progress : existingList.progress,
       time: time !== undefined ? time : existingList.time,
-      icon: icon !== undefined ? icon : existingList.icon
+      icon: icon !== undefined ? icon : existingList.icon,
+      priority: priority !== undefined ? priority : existingList.priority,
     };
     
     const updatedList = await store.update(id, updatedData);

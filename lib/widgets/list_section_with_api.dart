@@ -292,7 +292,7 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            'Priority: ${created.progress == 0.0 ? 'Normal' : 'Urgent'}',
+                            'Priority: ${created.priority == 1 ? 'Urgent' : 'Normal'}',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ),
@@ -461,7 +461,7 @@ class _ListCard extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            // ── Item count + urgent icon ─────────────────────────
+            // ── Item count + status/urgent icon ─────────────────
             Row(
               children: [
                 Expanded(
@@ -474,7 +474,9 @@ class _ListCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (allChecked)
+                if (list.priority == 1)
+                  const Icon(Icons.priority_high, size: 18, color: Colors.redAccent)
+                else if (allChecked)
                   const Icon(Icons.check_circle, size: 20, color: Colors.green)
                 else if (total > 0 && checked < total)
                   const Icon(Icons.error_outline, size: 20, color: Colors.redAccent),
