@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../screens/profile_landing_page.dart';
+import '../landing_page.dart';
 
 /// Footer menu (BottomAppBar) separated for clarity
 class FooterMenu extends StatelessWidget {
@@ -20,14 +21,23 @@ class FooterMenu extends StatelessWidget {
           child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.home, color: accent, size: 26),
-              const SizedBox(height: 2),
-              Text('Home', style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.w500)),
-            ],
+          InkWell(
+            onTap: () {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const LandingPage()),
+                (route) => false,
+              );
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.home, color: accent, size: 26),
+                const SizedBox(height: 2),
+                Text('Home', style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.w500)),
+              ],
+            ),
           ),
           const SizedBox(width: 40),
           InkWell(

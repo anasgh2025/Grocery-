@@ -142,15 +142,19 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
 
     // ── Empty state ────────────────────────────────────────────────────────
     if (_lists.isEmpty) {
-      // Show the create-card prominently when there are no lists.
-      return SliverToBoxAdapter(
-        child: SizedBox(
-          height: 220,
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: _buildCreateListCard(),
-            ),
+      // Show the create-card in the top-left (first grid position).
+      return SliverPadding(
+        padding: const EdgeInsets.only(left: 0, top: 0),
+        sliver: SliverGrid(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 5,
+            mainAxisSpacing: 5,
+            childAspectRatio: 1.05,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => _buildCreateListCard(),
+            childCount: 1,
           ),
         ),
       );
@@ -311,8 +315,7 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
                         ),
                         const SizedBox(width: 8),
                         OutlinedButton(
-                          onPressed: _apiService.isLoggedIn
-                              ? () async {
+                          onPressed: () async {
                                   final inviteText = 'Join my grocery list "${created.name}" - open the app to view it.';
                                   try {
                                     // Use the bottom sheet's context (`ctx`) to provide a valid sharePositionOrigin
@@ -324,8 +327,7 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
                                     // Fallback: call share without position if anything goes wrong
                                     await Share.share(inviteText, subject: 'Grocery list invite');
                                   }
-                                }
-                              : null,
+                                },
                           child: const Text('Invite'),
                         ),
                       ],

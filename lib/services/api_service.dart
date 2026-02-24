@@ -1,69 +1,33 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/grocery_list.dart';
 
 /// Service for handling API calls related to grocery lists
 class ApiService {
-  // API host selection strategy
-  // Priority (highest → lowest):
-  // 1. Dart-define override: --dart-define=API_HOST=host:port
-  // 2. Platform-specific defaults:
-  //    - Android emulator: 10.0.2.2:3000
-  //    - iOS: prefer mDNS hostname (e.g. my-mac.local:3000) if available, otherwise localhost:3000
-  //    - Web / fallback: localhost:3000
-  // This avoids hard-coded LAN IPs in source and supports physical devices via mDNS or explicit override.
-  static const String _envHost = String.fromEnvironment('API_HOST', defaultValue: '');
-  static const int _port = 3000;
+  // ── Production backend on DigitalOcean App Platform ──
+  // Override at build-time with: --dart-define=API_BASE_URL=https://your-url.com/api
+  static const String _prodBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://coral-app-qjq4a.ondigitalocean.app/api',
+  );
 
   // Secure storage for auth token
   static const _tokenKey = 'auth_token';
   static final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
-  static String get _hostPort {
-    // Explicit override via --dart-define takes precedence.
-    if (_envHost.isNotEmpty) return _envHost;
-
-    // Web apps run on the browser; backend is expected to be localhost in dev.
-    if (kIsWeb) return 'localhost:$_port';
-
-    try {
-      if (Platform.isAndroid) {
-        // Android emulator maps host localhost to 10.0.2.2
-        return '10.0.2.2:$_port';
-      }
-
-      if (Platform.isIOS || Platform.isMacOS) {
-        // Prefer an mDNS-style hostname (LocalHostName.local) so physical devices
-        // on the same network can resolve the dev machine without editing source.
-        final hostname = Platform.localHostname;
-        if (hostname.isNotEmpty) {
-          final mdns = hostname.endsWith('.local') ? hostname : '$hostname.local';
-          return '$mdns:$_port';
-        }
-        // Fallback to localhost (works for the iOS simulator)
-        return 'localhost:$_port';
-      }
-    } catch (_) {
-      // Platform may be unavailable in some environments; fall back below.
-    }
-
-    // Default fallback
-    return 'localhost:$_port';
-  }
-
-  static String get baseUrl => 'http://$_hostPort/api';
+  static String get baseUrl => _prodBaseUrl;
 
   // Timeout duration for API calls
   static const Duration timeout = Duration(seconds: 30);
 
   /// Whether a user is currently authenticated.
   ///
-  /// This app currently doesn't have an auth flow; return false by default.
-  /// When an authentication system is added, update this implementation.
-  bool get isLoggedIn => false;
+  /// Checks secure storage for a saved JWT token.
+  Future<bool> get isLoggedIn async {
+    final token = await _secureStorage.read(key: _tokenKey);
+    return token != null && token.isNotEmpty;
+  }
 
   /// Save auth token to secure storage
   Future<void> saveToken(String token) async {

@@ -1,10 +1,10 @@
 const { v4: uuidv4 } = require('uuid');
-const store = require('../data/store');
+const store = require('../data/listsStore.mongodb');
 
 // Get all lists
-const getAllLists = (req, res) => {
+const getAllLists = async (req, res) => {
   try {
-    const lists = store.getAll();
+    const lists = await store.getAll();
     res.json(lists);
   } catch (error) {
     res.status(500).json({
@@ -15,10 +15,10 @@ const getAllLists = (req, res) => {
 };
 
 // Get single list by ID
-const getListById = (req, res) => {
+const getListById = async (req, res) => {
   try {
     const { id } = req.params;
-    const list = store.getById(id);
+    const list = await store.getById(id);
     
     if (!list) {
       return res.status(404).json({
@@ -37,7 +37,7 @@ const getListById = (req, res) => {
 };
 
 // Create new list
-const createList = (req, res) => {
+const createList = async (req, res) => {
   try {
     const { name, items, progress, time, icon } = req.body;
     
@@ -67,7 +67,7 @@ const createList = (req, res) => {
       icon
     };
     
-    const createdList = store.create(newList);
+    const createdList = await store.create(newList);
     res.status(201).json(createdList);
   } catch (error) {
     res.status(500).json({
@@ -78,13 +78,13 @@ const createList = (req, res) => {
 };
 
 // Update existing list
-const updateList = (req, res) => {
+const updateList = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, items, progress, time, icon } = req.body;
     
     // Check if list exists
-    const existingList = store.getById(id);
+    const existingList = await store.getById(id);
     if (!existingList) {
       return res.status(404).json({
         error: 'Not Found',
@@ -109,7 +109,7 @@ const updateList = (req, res) => {
       icon: icon !== undefined ? icon : existingList.icon
     };
     
-    const updatedList = store.update(id, updatedData);
+    const updatedList = await store.update(id, updatedData);
     res.json(updatedList);
   } catch (error) {
     res.status(500).json({
@@ -120,12 +120,12 @@ const updateList = (req, res) => {
 };
 
 // Delete list
-const deleteList = (req, res) => {
+const deleteList = async (req, res) => {
   try {
     const { id } = req.params;
     
     // Check if list exists
-    const existingList = store.getById(id);
+    const existingList = await store.getById(id);
     if (!existingList) {
       return res.status(404).json({
         error: 'Not Found',
@@ -133,7 +133,7 @@ const deleteList = (req, res) => {
       });
     }
     
-    store.remove(id);
+    await store.remove(id);
     res.status(204).send();
   } catch (error) {
     res.status(500).json({
@@ -142,12 +142,13 @@ const deleteList = (req, res) => {
     });
   }
 };
+
   // --- Item-level handlers ---
   // Get items for a list
-  const getListItems = (req, res) => {
+  const getListItems = async (req, res) => {
     try {
       const { id } = req.params;
-      const list = store.getById(id);
+      const list = await store.getById(id);
       if (!list) return res.status(404).json({ error: 'Not Found', message: `List ${id} not found` });
       res.json(list.listItems || []);
     } catch (error) {
@@ -156,24 +157,22 @@ const deleteList = (req, res) => {
   };
 
   // Add item to a list (accepts optional 'priority')
-  const addListItem = (req, res) => {
+  const addListItem = async (req, res) => {
     try {
       const { id } = req.params;
       const { name, qty, priority } = req.body;
       if (!name) return res.status(400).json({ error: 'Bad Request', message: 'Missing item name' });
 
-      const list = store.getById(id);
+      const list = await store.getById(id);
       if (!list) return res.status(404).json({ error: 'Not Found', message: `List ${id} not found` });
 
       const newItem = { id: uuidv4(), name, qty: qty || 1, checked: false };
-      // If client sent priority, persist it on the item
       if (priority !== undefined) newItem.priority = priority;
 
       list.listItems = list.listItems || [];
       list.listItems.push(newItem);
 
-      // Optionally update items/progress counts here
-      store.update(id, list);
+      await store.update(id, list);
 
       res.status(201).json(newItem);
     } catch (error) {
@@ -182,11 +181,11 @@ const deleteList = (req, res) => {
   };
 
   // Update an item
-  const updateListItem = (req, res) => {
+  const updateListItem = async (req, res) => {
     try {
       const { id, itemId } = req.params;
       const { name, qty, checked, priority } = req.body;
-      const list = store.getById(id);
+      const list = await store.getById(id);
       if (!list) return res.status(404).json({ error: 'Not Found', message: `List ${id} not found` });
 
       list.listItems = list.listItems || [];
@@ -200,13 +199,12 @@ const deleteList = (req, res) => {
         qty: qty !== undefined ? qty : item.qty,
         checked: checked !== undefined ? checked : item.checked,
       };
-      // preserve or update priority if provided
       if (priority !== undefined) updatedItem.priority = priority;
       else if (item.priority !== undefined) updatedItem.priority = item.priority;
 
       list.listItems[idx] = updatedItem;
 
-      store.update(id, list);
+      await store.update(id, list);
       res.json(list.listItems[idx]);
     } catch (error) {
       res.status(500).json({ error: 'Failed to update item', message: error.message });
@@ -214,10 +212,10 @@ const deleteList = (req, res) => {
   };
 
   // Delete an item
-  const deleteListItem = (req, res) => {
+  const deleteListItem = async (req, res) => {
     try {
       const { id, itemId } = req.params;
-      const list = store.getById(id);
+      const list = await store.getById(id);
       if (!list) return res.status(404).json({ error: 'Not Found', message: `List ${id} not found` });
 
       list.listItems = list.listItems || [];
@@ -225,7 +223,7 @@ const deleteList = (req, res) => {
       if (idx === -1) return res.status(404).json({ error: 'Not Found', message: `Item ${itemId} not found` });
 
       list.listItems.splice(idx, 1);
-      store.update(id, list);
+      await store.update(id, list);
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: 'Failed to delete item', message: error.message });

@@ -66,24 +66,6 @@ class LandingHeader extends StatelessWidget {
                       ),
                     ],
                   ),
-
-                  // Avatar image with white border and shadow (40x40)
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                      boxShadow: const [BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.05), blurRadius: 2, offset: Offset(0, 1))],
-                    ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        'assets/images/avatar.png',
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey.shade100, child: const Icon(Icons.person, color: Colors.black38, size: 26)),
-                      ),
-                    ),
-                  ),
                 ],
               ),
 
