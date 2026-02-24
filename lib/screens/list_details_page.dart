@@ -703,13 +703,15 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                             ),
                           ),
 
-                          // Bottom row: priority icon aligned to bottom-right
+                          // Bottom row: check icon or priority icon aligned to bottom-right
                           Row(
                             children: [
                               const Spacer(),
                               Padding(
                                 padding: const EdgeInsets.only(right: 2.0),
-                                child: _buildPriorityIcon(item['priority'] ?? 0),
+                                child: item['checked'] == true
+                                    ? const Icon(Icons.check_circle, size: 20, color: Colors.green)
+                                    : _buildPriorityIcon(item['priority'] ?? 0),
                               ),
                             ],
                           ),
