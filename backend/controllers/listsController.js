@@ -48,6 +48,16 @@ const createList = async (req, res) => {
         message: 'Missing required fields: name, items, progress, time, icon'
       });
     }
+
+    // Check for duplicate list name (case-insensitive)
+    const allLists = await store.getAll();
+    const duplicate = allLists.find(l => l.name.toLowerCase() === name.trim().toLowerCase());
+    if (duplicate) {
+      return res.status(409).json({
+        error: 'Conflict',
+        message: `A list named "${name.trim()}" already exists`
+      });
+    }
     
     // Validate progress is between 0 and 1
     if (progress < 0 || progress > 1) {

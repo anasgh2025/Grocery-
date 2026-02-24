@@ -137,9 +137,11 @@ class _CreateListDialogState extends State<CreateListDialog> {
         setState(() {
           _isCreating = false;
         });
+        // Strip nested "Exception:" prefixes for a cleaner message
+        final msg = e.toString().replaceAll(RegExp(r'Exception:\s*'), '').trim();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to create list: ${e.toString()}'),
+            content: Text(msg),
             backgroundColor: Colors.red[400],
           ),
         );

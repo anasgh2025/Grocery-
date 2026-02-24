@@ -14,7 +14,7 @@ class ApiService {
 
   // Secure storage for auth token
   static const _tokenKey = 'auth_token';
-  static final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   static String get baseUrl => _prodBaseUrl;
 
@@ -185,6 +185,9 @@ class ApiService {
       if (response.statusCode == 201 || response.statusCode == 200) {
         final Map<String, dynamic> jsonData = json.decode(response.body);
         return GroceryList.fromJson(jsonData);
+      } else if (response.statusCode == 409) {
+        final body = json.decode(response.body);
+        throw Exception(body['message'] ?? 'A list with this name already exists');
       } else {
         throw Exception('Failed to create list: ${response.statusCode}');
       }
