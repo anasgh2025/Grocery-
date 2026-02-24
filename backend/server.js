@@ -11,7 +11,13 @@ const mongoose = require('mongoose');
 const buildMongoUri = () => {
   // Prefer an explicit MONGODB_URI
   if (process.env.MONGODB_URI && process.env.MONGODB_URI.trim() !== '') {
-    return process.env.MONGODB_URI.trim();
+    let uri = process.env.MONGODB_URI.trim();
+
+    // DigitalOcean App Platform injects a URI that defaults to the "admin"
+    // database.  Rewrite it so the app uses "Grocery" instead.
+    uri = uri.replace(/\/admin(\?|$)/, '/Grocery$1');
+
+    return uri;
   }
 
   // Otherwise try to build from components (useful for CI / env injection)
