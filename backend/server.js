@@ -53,6 +53,10 @@ const startServer = async () => {
     // Use modern mongoose connect options
     await mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
     console.log(`🔗 Connected to MongoDB: ${MONGODB_URI}`);
+
+    // Seed default marketing cards if collection is empty
+    const { seedDefaults } = require('./data/marketingStore.mongodb');
+    await seedDefaults();
   } catch (err) {
     console.error('Failed to connect to MongoDB:');
     console.error(err && err.message ? err.message : String(err));

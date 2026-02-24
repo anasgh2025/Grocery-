@@ -1,9 +1,9 @@
-const store = require('../data/marketingStore');
+const store = require('../data/marketingStore.mongodb');
 
 // Get all marketing cards
-const getAllCards = (req, res) => {
+const getAllCards = async (req, res) => {
   try {
-    const cards = store.getAll();
+    const cards = await store.getAll();
     res.json(cards);
   } catch (error) {
     res.status(500).json({
@@ -14,10 +14,10 @@ const getAllCards = (req, res) => {
 };
 
 // Get single marketing card by ID
-const getCardById = (req, res) => {
+const getCardById = async (req, res) => {
   try {
     const { id } = req.params;
-    const card = store.getById(id);
+    const card = await store.getById(id);
     
     if (!card) {
       return res.status(404).json({
@@ -36,7 +36,7 @@ const getCardById = (req, res) => {
 };
 
 // Create new marketing card
-const createCard = (req, res) => {
+const createCard = async (req, res) => {
   try {
     const { id, title, subtitle, imageUrl, order } = req.body;
     
@@ -56,7 +56,7 @@ const createCard = (req, res) => {
       order
     };
     
-    const createdCard = store.create(newCard);
+    const createdCard = await store.create(newCard);
     res.status(201).json(createdCard);
   } catch (error) {
     res.status(500).json({
@@ -67,13 +67,13 @@ const createCard = (req, res) => {
 };
 
 // Update existing marketing card
-const updateCard = (req, res) => {
+const updateCard = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, subtitle, imageUrl, order } = req.body;
     
     // Check if card exists
-    const existingCard = store.getById(id);
+    const existingCard = await store.getById(id);
     if (!existingCard) {
       return res.status(404).json({
         error: 'Not Found',
@@ -89,7 +89,7 @@ const updateCard = (req, res) => {
       order: order !== undefined ? order : existingCard.order
     };
     
-    const updatedCard = store.update(id, updatedData);
+    const updatedCard = await store.update(id, updatedData);
     res.json(updatedCard);
   } catch (error) {
     res.status(500).json({
@@ -100,12 +100,12 @@ const updateCard = (req, res) => {
 };
 
 // Delete marketing card
-const deleteCard = (req, res) => {
+const deleteCard = async (req, res) => {
   try {
     const { id } = req.params;
     
     // Check if card exists
-    const existingCard = store.getById(id);
+    const existingCard = await store.getById(id);
     if (!existingCard) {
       return res.status(404).json({
         error: 'Not Found',
@@ -113,7 +113,7 @@ const deleteCard = (req, res) => {
       });
     }
     
-    store.remove(id);
+    await store.remove(id);
     res.status(204).send();
   } catch (error) {
     res.status(500).json({
