@@ -15,6 +15,7 @@ dependencies:
   http: ^1.1.0
   share_plus: ^8.0.0
   image_picker: ^1.1.2
+  flutter_secure_storage: ^8.0.0
   # Directly added to allow newer transitive versions where safe
   # characters is pinned by the Flutter SDK; keep it transitive
   # material_color_utilities is pinned by the Flutter SDK; keep it transitive

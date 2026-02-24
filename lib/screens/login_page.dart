@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import 'profile_landing_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -67,8 +68,17 @@ class _LoginPageState extends State<LoginPage> {
                           final res = await api.login(email: _emailCtrl.text.trim(), password: _passwordCtrl.text);
                           if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Signed in')));
-                          // Optionally return token/user to caller
-                          Navigator.of(context).pop(res);
+                          // Persist token and navigate to the profile landing page.
+                          final token = res['token'] as String?;
+                          if (token != null) {
+                            await api.saveToken(token);
+                          }
+                          final user = res['user'] as Map<String, dynamic>?;
+                          final displayName = user != null && user['name'] != null && (user['name'] as String).isNotEmpty
+                              ? user['name'] as String
+                              : (user != null ? (user['email'] as String?) ?? 'Profile' : 'Profile');
+                          if (!mounted) return;
+                          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => ProfileLandingPage(name: displayName)));
                         } catch (e) {
                           if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
                         } finally {

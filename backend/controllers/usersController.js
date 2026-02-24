@@ -1,4 +1,7 @@
-const usersStore = require('../data/usersStore');
+// Switch to Mongo-backed store when available. The code imports the mongo-backed
+// implementation `usersStore.mongodb.js` which exposes the same API as the
+// previous sqlite-backed store (getAll, getById, findByEmail, create).
+const usersStore = require('../data/usersStore.mongodb');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -17,8 +20,9 @@ const createUser = async (req, res) => {
       return res.status(400).json({ error: 'Bad Request', message: 'Missing required fields: email, password' });
     }
 
-    // basic email validation
-    const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+    // basic (permissive) email validation - allow common characters like '+' and longer TLDs
+    // This keeps validation simple for development while rejecting obvious invalid values.
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(sEmail)) {
       return res.status(400).json({ error: 'Bad Request', message: 'Invalid email format' });
     }

@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
-import 'create_account_page.dart';
-import 'login_page.dart';
+import '../widgets/footer_menu.dart';
+import '../landing_page.dart';
+import '../services/api_service.dart';
 
+/// A minimal profile landing page. Accepts an optional [name] so callers
+/// (like the login flow) can show the signed-in user's display name.
 class ProfileLandingPage extends StatelessWidget {
-  const ProfileLandingPage({super.key});
+  const ProfileLandingPage({super.key, this.name});
+
+  final String? name;
 
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
     return Scaffold(
       appBar: AppBar(
-        // simple back button to return to previous screen
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: primary),
           onPressed: () => Navigator.of(context).maybePop(),
@@ -20,141 +24,53 @@ class ProfileLandingPage extends StatelessWidget {
       ),
       body: SafeArea(
         child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Logo / title
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // subtle rounded accent behind the text
-                    Positioned(
-                      left: 0,
-                      child: Container(
-                        width: 64,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: primary.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                    Text(
-                      'shopping_basket',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: primary,
-                        fontSize: 34,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 28),
-
-                Text('Join ShopSmart', style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 8),
                 Text(
-                  'The smartest way to manage your\ngroceries.',
-                  textAlign: TextAlign.center,
+                  name != null && name!.isNotEmpty ? name! : 'Profile',
+                  style: TextStyle(color: primary, fontSize: 28, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Welcome to your profile',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+                  textAlign: TextAlign.center,
                 ),
-
-                const SizedBox(height: 28),
-
-                // Google button (outlined)
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                      side: const BorderSide(color: Colors.black12),
-                      foregroundColor: Colors.black87,
-                      backgroundColor: Colors.white,
-                    ),
-                    icon: const Icon(Icons.account_circle, color: Colors.redAccent),
-                    label: const Text('Continue with Google'),
-                    onPressed: () {},
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Apple button (black)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                    ),
-                    icon: const Icon(Icons.apple),
-                    label: const Text('Continue with Apple'),
-                    onPressed: () {},
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // OR divider
-                const Row(
-                  children: [
-                    Expanded(child: Divider()),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text('OR', style: TextStyle(color: Colors.black45)),
-                    ),
-                    Expanded(child: Divider()),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                // Sign up with Email (primary)
+                const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
+                    onPressed: () async {
+                      // Clear persisted auth token and return to landing page.
+                      try {
+                        await ApiService().clearToken();
+                      } catch (_) {
+                        // ignore storage errors and continue navigation
+                      }
+                      // Remove all previous routes and show landing page.
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (ctx) => const LandingPage()),
+                        (route) => false,
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                       backgroundColor: primary,
                       foregroundColor: Colors.white,
-                      elevation: 4,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    onPressed: () {
-                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CreateAccountPage()));
-                    },
-                    child: const Text('Sign up with Email'),
+                    child: const Text('Sign Out'),
                   ),
-                ),
-
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('Already have an account?', style: TextStyle(color: Colors.black54)),
-                    TextButton(onPressed: () { Navigator.of(context).push(MaterialPageRoute(builder: (context) => const LoginPage())); }, child: Text('Log In', style: TextStyle(color: primary))),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-                Text(
-                  'By signing up, you agree to our TERMS OF SERVICE and PRIVACY POLICY',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.black38),
                 ),
               ],
             ),
           ),
         ),
       ),
+      bottomNavigationBar: FooterMenu(accent: primary),
     );
   }
 }

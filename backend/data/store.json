@@ -1,95 +1,22 @@
 [
   {
-    "id": "902e76a2-47d3-4fb9-8310-004751a4bbaf",
-    "name": "Home 2",
-    "items": "0/4",
-    "progress": 0,
-    "time": "Due in 4 days",
-    "icon": "list",
-    "listItems": [
-      {
-        "id": "c80e795a-3cb5-4ee1-8f8f-a49046e6240e",
-        "name": "Banana",
-        "qty": 2,
-        "checked": false,
-        "priority": 0
-      },
-      {
-        "id": "fbbcda43-9d04-41fa-a896-543592843a39",
-        "name": "Cat Food (Dry)",
-        "qty": 1,
-        "checked": false,
-        "priority": 0
-      },
-      {
-        "id": "86337a0c-c6c5-4fc5-8132-e7855312fec1",
-        "name": "Chicken Thighs",
-        "qty": 1,
-        "checked": false,
-        "priority": 0
-      }
-    ]
-  },
-  {
-    "id": "5288fd38-b8e9-4042-bcd6-70d5ac4fc7bb",
-    "name": "Home 3",
-    "items": "7/11",
-    "progress": 0.64,
+    "id": "1e679105-8517-456a-87e2-7a5a21b40a76",
+    "name": "Home 1",
+    "items": "3/3",
+    "progress": 1,
     "time": "Due Today",
     "icon": "list",
     "listItems": [
       {
-        "id": "837b121d-7fc8-4a7d-98c3-4d8d91576489",
+        "id": "d4379492-4e4c-4690-93f7-dba1486d747c",
         "name": "Apple",
-        "qty": 4,
+        "qty": 2,
         "checked": true,
         "priority": 0
       },
       {
-        "id": "67008acb-352c-4470-9e41-3e401b7a69c2",
-        "name": "Carrot",
-        "qty": 1,
-        "checked": false,
-        "priority": 0
-      },
-      {
-        "id": "4023456f-7a0f-4843-b13e-aa6cf9a50a31",
-        "name": "Milk",
-        "qty": 1,
-        "checked": false,
-        "priority": 0
-      },
-      {
-        "id": "c2186c45-4461-45e9-add4-6877ec3b6dce",
-        "name": "Butter",
-        "qty": 1,
-        "checked": false,
-        "priority": 0
-      },
-      {
-        "id": "c7256480-e33c-45b1-8cad-40b258d798ff",
-        "name": "Grapes",
-        "qty": 1,
-        "checked": true,
-        "priority": 0
-      },
-      {
-        "id": "7345be48-9828-41bc-bca0-67fb1530d60c",
-        "name": "Cream Cheese",
-        "qty": 1,
-        "checked": true,
-        "priority": 0
-      },
-      {
-        "id": "1ee34b4d-d446-40d1-b107-77017b166327",
-        "name": "Dish Soap",
-        "qty": 1,
-        "checked": false,
-        "priority": 0
-      },
-      {
-        "id": "ba7bce10-de24-43ae-b93b-0734a3100ea2",
-        "name": "Frozen Peas",
+        "id": "5f2d6868-7621-4a65-86b5-ff42c6bb6aa1",
+        "name": "Broccoli",
         "qty": 1,
         "checked": true,
         "priority": 0

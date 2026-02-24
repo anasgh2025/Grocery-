@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/grocery_list.dart';
 
 /// Service for handling API calls related to grocery lists
@@ -16,6 +17,10 @@ class ApiService {
   // This avoids hard-coded LAN IPs in source and supports physical devices via mDNS or explicit override.
   static const String _envHost = String.fromEnvironment('API_HOST', defaultValue: '');
   static const int _port = 3000;
+
+  // Secure storage for auth token
+  static const _tokenKey = 'auth_token';
+  static final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   static String get _hostPort {
     // Explicit override via --dart-define takes precedence.
@@ -59,6 +64,21 @@ class ApiService {
   /// This app currently doesn't have an auth flow; return false by default.
   /// When an authentication system is added, update this implementation.
   bool get isLoggedIn => false;
+
+  /// Save auth token to secure storage
+  Future<void> saveToken(String token) async {
+    await _secureStorage.write(key: _tokenKey, value: token);
+  }
+
+  /// Clear auth token from secure storage
+  Future<void> clearToken() async {
+    await _secureStorage.delete(key: _tokenKey);
+  }
+
+  /// Read auth token from secure storage
+  Future<String?> readToken() async {
+    return await _secureStorage.read(key: _tokenKey);
+  }
 
   /// Fetch all grocery lists from the backend
   Future<List<GroceryList>> fetchGroceryLists() async {
