@@ -146,10 +146,12 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
         padding: const EdgeInsets.only(left: 0, top: 0),
         sliver: SliverGrid(
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 5,
-            mainAxisSpacing: 5,
-            childAspectRatio: 1.05,
+            // Show two cards per row on the landing page
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            // Slightly taller cards to suit two-column layout on mobile
+            childAspectRatio: 1.12,
           ),
           delegate: SliverChildBuilderDelegate(
             (context, index) => _buildCreateListCard(),
@@ -164,10 +166,12 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
     // A bare SliverGrid is layout-stable across scroll frames.
     return SliverGrid(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 5,
-        mainAxisSpacing: 5,
-        childAspectRatio: 1.05,
+        // Two columns keeps rows balanced on most phone widths
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        // Card is slightly taller to better fit two-up layout
+        childAspectRatio: 1.12,
       ),
       delegate: SliverChildBuilderDelegate(
         (context, index) {
@@ -356,16 +360,42 @@ class _ListCard extends StatelessWidget {
     final (checked, total) = _itemCounts;
     final bool allChecked = total > 0 && checked == total;
 
+    final isParty = list.name.toLowerCase().contains('party') ||
+        list.icon == Icons.celebration ||
+        list.icon == Icons.celebration_outlined;
+
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(5),
-        decoration: appBoxDecoration(
-          context,
-          color: Colors.white,
-          radius: 12,
-        ),
-        child: Column(
+      child: Stack(
+        children: [
+          // Base card decoration
+          Container(
+            padding: const EdgeInsets.all(5),
+            decoration: appBoxDecoration(
+              context,
+              color: Colors.white,
+              radius: 12,
+            ),
+          ),
+          // Party background image (falls back gracefully if asset missing)
+          if (isParty)
+            Positioned.fill(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  'assets/images/Party.png',
+                  fit: BoxFit.cover,
+                  // If the asset isn't present, don't crash — just ignore the image.
+                  errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                ),
+              ),
+            ),
+          // Card content
+          Container(
+            padding: const EdgeInsets.all(5),
+            // Ensure content sits above the background image
+            decoration: BoxDecoration(color: Colors.transparent),
+            child: Column(
           mainAxisSize: MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -455,6 +485,8 @@ class _ListCard extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ],
+  ),
+); 
   }
 }
