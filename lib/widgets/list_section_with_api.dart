@@ -382,11 +382,26 @@ class _ListCard extends StatelessWidget {
             Positioned.fill(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  'assets/images/Party.png',
-                  fit: BoxFit.cover,
-                  // If the asset isn't present, don't crash — just ignore the image.
-                  errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.asset(
+                      'assets/images/Party.png',
+                      fit: BoxFit.cover,
+                      // If the asset isn't present, don't crash — just ignore the image.
+                      errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                    ),
+                    // Gentle gradient overlay to keep text readable on bright images
+                    Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.center,
+                          colors: [Color(0x88000000), Colors.transparent],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
