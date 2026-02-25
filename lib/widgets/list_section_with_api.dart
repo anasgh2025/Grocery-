@@ -292,26 +292,81 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
           }
         }();
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.grey.shade300, width: 1.6),
+      child: CustomPaint(
+        painter: _DashedRRectPainter(
+          color: Colors.grey.shade300,
+          strokeWidth: 1.6,
+          radius: 10.0,
+          dashWidth: 6.0,
+          dashSpace: 4.0,
         ),
-        child: const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.add_circle_outline, size: 24, color: Colors.grey),
-            SizedBox(height: 6),
-            Text(
-              'Create\nNew List',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.w500),
-            ),
-          ],
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.add_circle_outline, size: 24, color: Colors.grey),
+              SizedBox(height: 6),
+              Text(
+                'Create\nNew List',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+}
+
+// Painter that draws a dashed rounded rectangle border.
+class _DashedRRectPainter extends CustomPainter {
+  const _DashedRRectPainter({
+    required this.color,
+    this.strokeWidth = 1.6,
+    this.radius = 10.0,
+    this.dashWidth = 6.0,
+    this.dashSpace = 4.0,
+  });
+
+  final Color color;
+  final double strokeWidth;
+  final double radius;
+  final double dashWidth;
+  final double dashSpace;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+
+    final rrect = RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(radius));
+    final path = Path()..addRRect(rrect);
+
+    for (final metric in path.computeMetrics()) {
+      double distance = 0.0;
+      while (distance < metric.length) {
+        final double next = (distance + dashWidth).clamp(0.0, metric.length);
+        final extract = metric.extractPath(distance, next);
+        canvas.drawPath(extract, paint);
+        distance += dashWidth + dashSpace;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedRRectPainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.radius != radius ||
+        oldDelegate.dashWidth != dashWidth ||
+        oldDelegate.dashSpace != dashSpace;
   }
 }
 
