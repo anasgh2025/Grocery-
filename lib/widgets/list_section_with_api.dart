@@ -415,9 +415,17 @@ class _ListCard extends StatelessWidget {
     final (checked, total) = _itemCounts;
     final bool allChecked = total > 0 && checked == total;
 
-    final isParty = list.name.toLowerCase().contains('party') ||
-        list.icon == Icons.celebration ||
-        list.icon == Icons.celebration_outlined;
+  final isParty = list.name.toLowerCase().contains('party') ||
+    list.icon == Icons.celebration ||
+    list.icon == Icons.celebration_outlined;
+  final isWork = list.name.toLowerCase().contains('work') ||
+    list.icon == Icons.work ||
+    list.icon == Icons.work_outline;
+  final String? bgAsset = isParty
+    ? 'assets/images/Party.png'
+    : isWork
+      ? 'assets/images/work.png'
+      : null;
 
     return GestureDetector(
       onTap: onTap,
@@ -432,8 +440,8 @@ class _ListCard extends StatelessWidget {
               radius: 12,
             ),
           ),
-          // Party background image (falls back gracefully if asset missing)
-          if (isParty)
+          // Optional background image for special categories (party/work).
+          if (bgAsset != null)
             Positioned.fill(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
@@ -441,7 +449,7 @@ class _ListCard extends StatelessWidget {
                   fit: StackFit.expand,
                   children: [
                     Image.asset(
-                      'assets/images/Party.png',
+                      bgAsset,
                       fit: BoxFit.cover,
                       // If the asset isn't present, don't crash — just ignore the image.
                       errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
