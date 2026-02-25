@@ -24,7 +24,7 @@ class SearchField extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               'Search items or lists...',
-              style: GoogleFonts.inter(
+              style: GoogleFonts.nunito(
                 textStyle: const TextStyle(fontSize: 14, height: 17 / 14, color: Color(0xFF9CA3AF), fontWeight: FontWeight.w400),
               ),
             ),

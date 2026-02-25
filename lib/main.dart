@@ -5,10 +5,10 @@ import 'theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Pre-load Inter so font metrics are stable before the first frame is drawn.
+  // Pre-load Nunito so font metrics are stable before the first frame is drawn.
   // Without this, async font loading mid-render causes layout shifts → card jitter.
   await GoogleFonts.pendingFonts([
-    GoogleFonts.inter(),
+    GoogleFonts.nunito(),
   ]);
   runApp(const MyApp());
 }

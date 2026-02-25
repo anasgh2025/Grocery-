@@ -37,24 +37,24 @@ class AppTheme {
     );
 
   final textTheme = TextTheme(
-      displayLarge: GoogleFonts.inter(fontSize: 56, fontWeight: FontWeight.w700, letterSpacing: -0.5),
-      displayMedium: GoogleFonts.inter(fontSize: 40, fontWeight: FontWeight.w700, letterSpacing: -0.25),
-      displaySmall: GoogleFonts.inter(fontSize: 34, fontWeight: FontWeight.w700),
+      displayLarge: GoogleFonts.nunito(fontSize: 56, fontWeight: FontWeight.w700, letterSpacing: -0.5),
+      displayMedium: GoogleFonts.nunito(fontSize: 40, fontWeight: FontWeight.w700, letterSpacing: -0.25),
+      displaySmall: GoogleFonts.nunito(fontSize: 34, fontWeight: FontWeight.w700),
 
-      headlineLarge: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w700),
-      headlineMedium: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w600),
-      headlineSmall: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w700),
+      headlineLarge: GoogleFonts.nunito(fontSize: 32, fontWeight: FontWeight.w700),
+      headlineMedium: GoogleFonts.nunito(fontSize: 28, fontWeight: FontWeight.w600),
+      headlineSmall: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w700),
 
-      titleLarge: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600),
-      titleMedium: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
-      titleSmall: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+      titleLarge: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w600),
+      titleMedium: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w600),
+      titleSmall: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
 
-      bodyLarge: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w400, height: 1.45),
-      bodyMedium: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400, height: 1.4),
-      bodySmall: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w400, height: 1.3),
+      bodyLarge: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w400, height: 1.45),
+      bodyMedium: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w400, height: 1.4),
+      bodySmall: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w400, height: 1.3),
 
-      labelLarge: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
-      labelSmall: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600),
+      labelLarge: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
+      labelSmall: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w600),
     );
 
     return ThemeData(

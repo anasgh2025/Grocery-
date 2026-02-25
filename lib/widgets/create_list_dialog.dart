@@ -177,7 +177,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
                 children: [
                   Text(
                     'Create List',
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.nunito(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
@@ -196,7 +196,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
               // List Name
               Text(
                 'LIST NAME',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.nunito(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: Colors.black54,
@@ -208,7 +208,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
                 controller: _nameController,
                 decoration: InputDecoration(
                   hintText: 'Enter list name (e.g., Weekly Groceries)',
-                  hintStyle: GoogleFonts.poppins(
+                  hintStyle: GoogleFonts.nunito(
                     fontSize: 14,
                     color: Colors.black26,
                   ),
@@ -223,7 +223,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
                     vertical: 14,
                   ),
                 ),
-                style: GoogleFonts.poppins(fontSize: 14),
+                style: GoogleFonts.nunito(fontSize: 14),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter a list name';
@@ -236,7 +236,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
               // Select Category
               Text(
                 'SELECT CATEGORY',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.nunito(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: Colors.black54,
@@ -275,7 +275,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
                           const SizedBox(width: 6),
                           Text(
                             category,
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.nunito(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                               color: isSelected ? Colors.white : Colors.black87,
@@ -292,7 +292,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
               // Priority
               Text(
                 'PRIORITY',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.nunito(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: Colors.black54,
@@ -320,7 +320,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
                         child: Center(
                           child: Text(
                             'Urgent',
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.nunito(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: _selectedPriority == 'Urgent'
@@ -351,7 +351,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
                         child: Center(
                           child: Text(
                             'Normal',
-                            style: GoogleFonts.poppins(
+                            style: GoogleFonts.nunito(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: _selectedPriority == 'Normal'
@@ -370,7 +370,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
               // Due Date
               Text(
                 'DUE DATE',
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.nunito(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: Colors.black54,
@@ -396,7 +396,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
                         _selectedDate == null
                             ? 'Select due date'
                             : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.nunito(
                           fontSize: 14,
                           color: _selectedDate == null
                               ? Colors.black26
@@ -438,7 +438,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
                       )
                     : Text(
                         'CREATE LIST',
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.nunito(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.5,

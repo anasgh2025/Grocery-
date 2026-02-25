@@ -54,7 +54,7 @@ class LandingHeader extends StatelessWidget {
                       // Heading text
                       Text(
                         'Grocery',
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.nunito(
                           textStyle: const TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 20,
