@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:share_plus/share_plus.dart';
 import '../models/grocery_list.dart';
 import '../services/api_service.dart';
 import 'create_list_dialog.dart';
@@ -242,98 +241,48 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
             },
           );
 
-          // If a list was created, refresh and show it in a pull-up details sheet
+          // If a list was created, refresh and show a simple confirmation dialog
           if (created != null) {
             await _fetchLists();
 
             if (!mounted) return;
 
-            // Show a small bottom sheet with the created list details
-            showModalBottomSheet(
+            showDialog(
               context: context,
-              backgroundColor: Colors.transparent,
-              builder: (ctx) => Container(
-                padding: const EdgeInsets.all(16),
-                decoration: appBoxDecoration(
-                  ctx,
-                  color: Colors.white,
-                  radius: 16,
-                ),
-                child: Column(
+              builder: (ctx) => AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                content: Column(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'List created',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.of(ctx).pop(),
-                        ),
-                      ],
+                    Icon(Icons.check_circle, size: 64, color: widget.accent),
+                    const SizedBox(height: 16),
+                    Text(
+                      'List Created!',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 8),
-                    Text(created.name, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18, fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(created.icon, color: widget.accent, size: 24),
-                        const SizedBox(width: 8),
-                        Text(created.time, style: Theme.of(context).textTheme.bodyMedium),
-                        const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'Priority: ${created.priority == 1 ? 'Urgent' : 'Normal'}',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text('${created.items} items', style: Theme.of(context).textTheme.bodySmall),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () => Navigator.of(ctx).pop(),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: widget.accent,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: const Text('Done'),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        OutlinedButton(
-                          onPressed: () async {
-                                  final inviteText = 'Join my grocery list "${created.name}" - open the app to view it.';
-                                  try {
-                                    // Use the bottom sheet's context (`ctx`) to provide a valid sharePositionOrigin
-                                    final box = ctx.findRenderObject() as RenderBox;
-                                    final offset = box.localToGlobal(Offset.zero);
-                                    final origin = Rect.fromLTWH(offset.dx, offset.dy, box.size.width, box.size.height);
-                                    await Share.share(inviteText, subject: 'Grocery list invite', sharePositionOrigin: origin);
-                                  } catch (e) {
-                                    // Fallback: call share without position if anything goes wrong
-                                    await Share.share(inviteText, subject: 'Grocery list invite');
-                                  }
-                                },
-                          child: const Text('Invite'),
-                        ),
-                      ],
+                    Text(
+                      '"${created.name}" has been created successfully.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
                     ),
                   ],
                 ),
+                actions: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: widget.accent,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Done', style: TextStyle(fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ],
               ),
             );
           }

@@ -91,7 +91,7 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
           style: TextStyle(color: primary, fontSize: 28, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
-        Text(
+        const Text(
           'Welcome to your profile',
           style: TextStyle(color: Colors.black54, fontSize: 14),
         ),
