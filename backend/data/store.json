@@ -2,10 +2,11 @@
   {
     "id": "1e679105-8517-456a-87e2-7a5a21b40a76",
     "name": "Home 1",
+    "category": "home",
     "items": "3/3",
     "progress": 1,
     "time": "Due Today",
-    "icon": "list",
+    "icon": "home",
     "listItems": [
       {
         "id": "d4379492-4e4c-4690-93f7-dba1486d747c",

@@ -16,6 +16,7 @@ const groceryListSchema = new mongoose.Schema({
   progress:  { type: Number, default: 0 },
   priority:  { type: Number, default: 0 },          // 0 = Normal, 1 = Urgent
   time:      { type: String, default: '' },
+  category:  { type: String, default: null },
   icon:      { type: String, default: 'list' },
   listItems: { type: [listItemSchema], default: [] },
 }, { timestamps: true });
@@ -79,6 +80,7 @@ const update = async (id, listData) => {
   // Merge fields
   existing.name = listData.name !== undefined ? listData.name : existing.name;
   existing.time = listData.time !== undefined ? listData.time : existing.time;
+  existing.category = listData.category !== undefined ? listData.category : existing.category;
   existing.icon = listData.icon !== undefined ? listData.icon : existing.icon;
   if (listData.priority !== undefined) existing.priority = listData.priority;
 

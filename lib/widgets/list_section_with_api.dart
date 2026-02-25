@@ -415,17 +415,16 @@ class _ListCard extends StatelessWidget {
     final (checked, total) = _itemCounts;
     final bool allChecked = total > 0 && checked == total;
 
-  final isParty = list.name.toLowerCase().contains('party') ||
-    list.icon == Icons.celebration ||
-    list.icon == Icons.celebration_outlined;
-  final isWork = list.name.toLowerCase().contains('work') ||
-    list.icon == Icons.work ||
-    list.icon == Icons.work_outline;
-  final String? bgAsset = isParty
-    ? 'assets/images/Party.png'
-    : isWork
-      ? 'assets/images/work.png'
-      : null;
+  // Very simple category mapping: use only the explicit `category` field
+  // (case-insensitive). Do NOT attempt title or icon-based heuristics.
+  final cat = (list.category ?? '').toLowerCase().trim();
+  final bool isWork = cat == 'work';
+  String? bgAsset;
+  if (cat == 'home') bgAsset = 'assets/images/home.png';
+  else if (cat == 'holiday') bgAsset = 'assets/images/holiday.png';
+  else if (cat == 'party') bgAsset = 'assets/images/party.png';
+  else if (cat == 'work') bgAsset = 'assets/images/work.png';
+  else bgAsset = null;
 
     return GestureDetector(
       onTap: onTap,
@@ -454,18 +453,9 @@ class _ListCard extends StatelessWidget {
                       // If the asset isn't present, don't crash — just ignore the image.
                       errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                     ),
-                    // Gentle gradient overlay to keep text readable on bright images
-                    // Apply overlay only for Party images; do not overlay Work images
-                    if (isParty)
-                      Container(
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.center,
-                            colors: [Color(0x88000000), Colors.transparent],
-                          ),
-                        ),
-                      ),
+                    // No gradient overlay for any special-category images.
+                    // We intentionally keep these images unshadowed (same
+                    // behavior as the Work card) so they render cleanly.
                   ],
                 ),
               ),
@@ -484,14 +474,19 @@ class _ListCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: accent.withAlpha(20),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Icon(list.icon, color: accent, size: 24),
-                ),
+                // Hide the logo for Work cards to reduce visual noise; keep a
+                // fixed spacer so the time chip stays aligned.
+                if (!isWork)
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: accent.withAlpha(20),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Icon(list.icon, color: accent, size: 24),
+                  )
+                else
+                  const SizedBox(width: 32, height: 32),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   decoration: BoxDecoration(
@@ -501,7 +496,7 @@ class _ListCard extends StatelessWidget {
                   child: Text(
                     list.time,
                     style: const TextStyle(
-                      fontSize: 8,
+                      fontSize: 12,
                       color: Colors.black54,
                       fontWeight: FontWeight.w500,
                     ),
@@ -515,7 +510,7 @@ class _ListCard extends StatelessWidget {
               list.name,
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
-                fontSize: 12,
+                fontSize: 24,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -523,13 +518,34 @@ class _ListCard extends StatelessWidget {
             // ── Item count + status/urgent icon ─────────────────
             Row(
               children: [
+                // Display the item-count inside a red rounded chip with a
+                // subtle shadow. Use Align inside Expanded so the chip sizes to
+                // its content but remains left-aligned and the row layout is
+                // preserved.
                 Expanded(
-                  child: Text(
-                    _itemLabel,
-                    style: const TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black54,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        _itemLabel,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
                 ),

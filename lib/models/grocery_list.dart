@@ -8,6 +8,7 @@ class GroceryList {
   final double progress;
   final int priority;       // 0 = Normal, 1 = Urgent
   final String time;
+  final String? category;
   final IconData icon;
   final List<dynamic>? listItems;
 
@@ -18,6 +19,7 @@ class GroceryList {
     required this.progress,
     this.priority = 0,
     required this.time,
+    this.category,
     required this.icon,
     this.listItems,
   });
@@ -31,6 +33,7 @@ class GroceryList {
       progress: (json['progress'] as num).toDouble(),
       priority: (json['priority'] as num?)?.toInt() ?? 0,
       time: json['time'] as String,
+      category: (json['category'] as String?) ?? (json['type'] as String?),
       icon: _getIconFromString(json['icon'] as String?),
       listItems: json['listItems'] != null ? List<dynamic>.from(json['listItems'] as List) : null,
     );
@@ -45,6 +48,7 @@ class GroceryList {
       'progress': progress,
       'priority': priority,
       'time': time,
+      if (category != null) 'category': category,
       'icon': _getIconString(icon),
       if (listItems != null) 'listItems': listItems,
     };
