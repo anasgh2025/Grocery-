@@ -455,15 +455,17 @@ class _ListCard extends StatelessWidget {
                       errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                     ),
                     // Gentle gradient overlay to keep text readable on bright images
-                    Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.center,
-                          colors: [Color(0x88000000), Colors.transparent],
+                    // Apply overlay only for Party images; do not overlay Work images
+                    if (isParty)
+                      Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.center,
+                            colors: [Color(0x88000000), Colors.transparent],
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
