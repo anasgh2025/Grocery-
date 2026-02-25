@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/grocery_list.dart';
 import '../services/api_service.dart';
 import '../widgets/box_styles.dart';
@@ -250,6 +251,24 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete item: $e')));
       }
+    }
+  }
+
+  Future<void> _shareList() async {
+    final buffer = StringBuffer('Here is the list of items for ${widget.list.name}:\n');
+    for (var i = 0; i < _items.length; i++) {
+      final name = _items[i]['name'] ?? 'Item ${i + 1}';
+      buffer.write('${i + 1}. $name\n');
+    }
+    if (_items.isEmpty) {
+      buffer.write('(No items yet)\n');
+    }
+    try {
+      final box = context.findRenderObject() as RenderBox;
+      final origin = box.localToGlobal(Offset.zero) & box.size;
+      await Share.share(buffer.toString(), subject: widget.list.name, sharePositionOrigin: origin);
+    } catch (_) {
+      await Share.share(buffer.toString(), subject: widget.list.name);
     }
   }
 
@@ -552,8 +571,19 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             onSelected: (value) {
               if (value == 'delete') _confirmDeleteList();
+              if (value == 'share') _shareList();
             },
             itemBuilder: (_) => [
+              const PopupMenuItem(
+                value: 'share',
+                child: Row(
+                  children: [
+                    Icon(Icons.share_outlined, color: Colors.black87, size: 20),
+                    SizedBox(width: 10),
+                    Text('Share list'),
+                  ],
+                ),
+              ),
               const PopupMenuItem(
                 value: 'delete',
                 child: Row(
