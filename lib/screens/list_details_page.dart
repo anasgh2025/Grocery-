@@ -468,7 +468,8 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.grey.shade100),
                               boxShadow: [
-                                BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 6, offset: const Offset(0, 1)),
+                                // Avoid deprecated withOpacity; use withAlpha for low-opacity shadow
+                                BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 6, offset: const Offset(0, 1)),
                               ],
                             ),
                             child: Row(

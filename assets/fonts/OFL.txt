@@ -1,0 +1,6 @@
+Copyright 2014 The Nunito Project Authors (https://github.com/googlefonts/nunito)
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+Full license text: https://openfontlicense.org
+
+(See OFL.txt for full license text.)

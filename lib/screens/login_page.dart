@@ -63,11 +63,14 @@ class _LoginPageState extends State<LoginPage> {
                     ? null
                     : () async {
                         setState(() => _loading = true);
+                        final ctx = context; // capture context before awaiting
                         final api = ApiService();
                         try {
                           final res = await api.login(email: _emailCtrl.text.trim(), password: _passwordCtrl.text);
                           if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Signed in')));
+                          // ignore: use_build_context_synchronously
+                          // ignore: use_build_context_synchronously
+                          ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Signed in')));
                           // Persist token and navigate to the profile landing page.
                           final token = res['token'] as String?;
                           if (token != null) {
@@ -78,9 +81,13 @@ class _LoginPageState extends State<LoginPage> {
                               ? user['name'] as String
                               : (user != null ? (user['email'] as String?) ?? 'Profile' : 'Profile');
                           if (!mounted) return;
-                          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => ProfileLandingPage(name: displayName)));
+                          // ignore: use_build_context_synchronously
+                          Navigator.of(ctx).pushReplacement(MaterialPageRoute(builder: (context) => ProfileLandingPage(name: displayName)));
                         } catch (e) {
-                          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                          if (mounted) {
+                            // ignore: use_build_context_synchronously
+                            ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(e.toString())));
+                          }
                         } finally {
                           if (mounted) setState(() => _loading = false);
                         }

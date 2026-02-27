@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 
 class AppTheme {
   // Brand palette (provided):
@@ -36,25 +36,25 @@ class AppTheme {
       brightness: Brightness.light,
     );
 
-  final textTheme = TextTheme(
-      displayLarge: GoogleFonts.nunito(fontSize: 56, fontWeight: FontWeight.w700, letterSpacing: -0.5),
-      displayMedium: GoogleFonts.nunito(fontSize: 40, fontWeight: FontWeight.w700, letterSpacing: -0.25),
-      displaySmall: GoogleFonts.nunito(fontSize: 34, fontWeight: FontWeight.w700),
+  final textTheme = const TextTheme(
+      displayLarge: TextStyle(fontFamily: 'Nunito', fontSize: 56, fontWeight: FontWeight.w700, letterSpacing: -0.5),
+      displayMedium: TextStyle(fontFamily: 'Nunito', fontSize: 40, fontWeight: FontWeight.w700, letterSpacing: -0.25),
+      displaySmall: TextStyle(fontFamily: 'Nunito', fontSize: 34, fontWeight: FontWeight.w700),
 
-      headlineLarge: GoogleFonts.nunito(fontSize: 32, fontWeight: FontWeight.w700),
-      headlineMedium: GoogleFonts.nunito(fontSize: 28, fontWeight: FontWeight.w600),
-      headlineSmall: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w700),
+      headlineLarge: TextStyle(fontFamily: 'Nunito', fontSize: 32, fontWeight: FontWeight.w700),
+      headlineMedium: TextStyle(fontFamily: 'Nunito', fontSize: 28, fontWeight: FontWeight.w600),
+      headlineSmall: TextStyle(fontFamily: 'Nunito', fontSize: 22, fontWeight: FontWeight.w700),
 
-      titleLarge: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w600),
-      titleMedium: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w600),
-      titleSmall: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
+      titleLarge: TextStyle(fontFamily: 'Nunito', fontSize: 20, fontWeight: FontWeight.w600),
+      titleMedium: TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w600),
+      titleSmall: TextStyle(fontFamily: 'Nunito', fontSize: 14, fontWeight: FontWeight.w600),
 
-      bodyLarge: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w400, height: 1.45),
-      bodyMedium: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w400, height: 1.4),
-      bodySmall: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w400, height: 1.3),
+      bodyLarge: TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w400, height: 1.45),
+      bodyMedium: TextStyle(fontFamily: 'Nunito', fontSize: 14, fontWeight: FontWeight.w400, height: 1.4),
+      bodySmall: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w400, height: 1.3),
 
-      labelLarge: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w600),
-      labelSmall: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w600),
+      labelLarge: TextStyle(fontFamily: 'Nunito', fontSize: 14, fontWeight: FontWeight.w600),
+      labelSmall: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w600),
     );
 
     return ThemeData(

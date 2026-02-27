@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'landing_page.dart';
 import 'theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Pre-load Nunito so font metrics are stable before the first frame is drawn.
-  // Without this, async font loading mid-render causes layout shifts → card jitter.
-  await GoogleFonts.pendingFonts([
-    GoogleFonts.nunito(),
-  ]);
+  // Nunito font is now loaded locally via assets/fonts and registered in pubspec.yaml.
   runApp(const MyApp());
 }
 

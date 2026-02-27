@@ -302,12 +302,16 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            // Make the create-card transparent so underlying page/bg shows
+            // through while keeping the dashed rounded border from the
+            // surrounding CustomPaint. This preserves tappability and
+            // visual separation via the painted border.
+            color: Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Column(
+          child: const Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               Icon(Icons.add_circle_outline, size: 24, color: Colors.grey),
               SizedBox(height: 6),
               Text(
@@ -415,16 +419,41 @@ class _ListCard extends StatelessWidget {
     final (checked, total) = _itemCounts;
     final bool allChecked = total > 0 && checked == total;
 
-  // Very simple category mapping: use only the explicit `category` field
-  // (case-insensitive). Do NOT attempt title or icon-based heuristics.
-  final cat = (list.category ?? '').toLowerCase().trim();
+  // Category mapping: prefer explicit `category` (case-insensitive).
+  // If missing, fall back to a small set of icon-based heuristics so
+  // existing lists without a `category` still get a sensible background.
+  String cat = (list.category ?? '').toLowerCase().trim();
+    if (cat.isEmpty) {
+      // Map a few common icon types back to categories as a fallback.
+      final icon = list.icon;
+      if (icon == Icons.celebration_outlined) {
+        cat = 'party';
+      } else if (icon == Icons.shopping_cart_outlined ||
+          icon == Icons.breakfast_dining_outlined ||
+          icon == Icons.cleaning_services_outlined ||
+          icon == Icons.apple_outlined ||
+          icon == Icons.inventory_2_outlined ||
+          icon == Icons.child_care_outlined ||
+          icon == Icons.pets_outlined) {
+        cat = 'home';
+      }
+      // Note: we intentionally do NOT guess 'holiday' or 'work' from icons
+      // because those are more ambiguous; prefer explicit `category` there.
+    }
+
   final bool isWork = cat == 'work';
   String? bgAsset;
-  if (cat == 'home') bgAsset = 'assets/images/home.png';
-  else if (cat == 'holiday') bgAsset = 'assets/images/holiday.png';
-  else if (cat == 'party') bgAsset = 'assets/images/party.png';
-  else if (cat == 'work') bgAsset = 'assets/images/work.png';
-  else bgAsset = null;
+  if (cat == 'home') {
+    bgAsset = 'assets/images/home.png';
+  } else if (cat == 'holiday') {
+    bgAsset = 'assets/images/holiday.png';
+  } else if (cat == 'party') {
+    bgAsset = 'assets/images/party.png';
+  } else if (cat == 'work') {
+    bgAsset = 'assets/images/work.png';
+  } else {
+    bgAsset = null;
+  }
 
     return GestureDetector(
       onTap: onTap,
@@ -464,7 +493,7 @@ class _ListCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(5),
             // Ensure content sits above the background image
-            decoration: BoxDecoration(color: Colors.transparent),
+            decoration: const BoxDecoration(color: Colors.transparent),
             child: Column(
           mainAxisSize: MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -496,7 +525,7 @@ class _ListCard extends StatelessWidget {
                   child: Text(
                     list.time,
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 10,
                       color: Colors.black54,
                       fontWeight: FontWeight.w500,
                     ),
@@ -510,7 +539,7 @@ class _ListCard extends StatelessWidget {
               list.name,
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
-                fontSize: 24,
+                fontSize: 16,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -541,7 +570,7 @@ class _ListCard extends StatelessWidget {
                       child: Text(
                         _itemLabel,
                         style: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 10,
                           fontWeight: FontWeight.w500,
                           color: Colors.white,
                         ),

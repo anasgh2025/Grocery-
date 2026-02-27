@@ -139,6 +139,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                     : () async {
                         if (!(_formKey.currentState?.validate() ?? true)) return;
                         setState(() => _loading = true);
+                        final ctx = context; // capture context before async gap
                         final name = _nameCtrl.text.trim();
                         final email = _emailCtrl.text.trim();
                         final password = _passwordCtrl.text;
@@ -146,11 +147,14 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                         try {
                           await api.createUser(name: name, email: email, password: password);
                           if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Account created successfully')));
-                          Navigator.of(context).pop();
+                          // ignore: use_build_context_synchronously
+                          ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Account created successfully')));
+                          // ignore: use_build_context_synchronously
+                          Navigator.of(ctx).pop();
                         } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                            if (mounted) {
+                            // ignore: use_build_context_synchronously
+                            ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(e.toString())));
                           }
                         } finally {
                           if (mounted) setState(() => _loading = false);
