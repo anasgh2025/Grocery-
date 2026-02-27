@@ -3,10 +3,20 @@ const cors = require('cors');
 require('dotenv').config();
 // Build: 2026-02-25
 const app = express();
+
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, "0.0.0.0", () => {
+const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(`Port ${PORT} is already in use`);
+    process.exit(1);
+  } else {
+    console.error(err);
+  }
 });
 // Connect to MongoDB (accept full MONGODB_URI or build it from parts)
 const mongoose = require('mongoose');
