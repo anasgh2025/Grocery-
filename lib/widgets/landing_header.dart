@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
+// Using bundled Nunito font from assets (configured in pubspec.yaml)
 
 /// Header: logo, avatar and search field
 class LandingHeader extends StatelessWidget {
@@ -52,16 +52,15 @@ class LandingHeader extends StatelessWidget {
                       const SizedBox(width: 8),
 
                       // Heading text
-                      Text(
+                      const Text(
                         'Grocery',
-                        style: GoogleFonts.nunito(
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 20,
-                            height: 28 / 20,
-                            letterSpacing: -0.5,
-                            color: Color(0xFF1A1C1E),
-                          ),
+                        style: TextStyle(
+                          fontFamily: 'Nunito',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 20,
+                          height: 28 / 20,
+                          letterSpacing: -0.5,
+                          color: Color(0xFF1A1C1E),
                         ),
                       ),
                     ],

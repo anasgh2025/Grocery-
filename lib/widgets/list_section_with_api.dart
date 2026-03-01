@@ -28,6 +28,13 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
   /// Called externally via GlobalKey to force a refresh.
   void refresh() => _fetchLists();
 
+  // Helper to check if all items in a list are checked
+  bool _allItemsChecked(GroceryList list) {
+    final items = list.listItems;
+    if (items == null || items.isEmpty) return false;
+    return items.every((item) => item['checked'] == true);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -56,11 +63,19 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
         }
 
         final lists = await _apiService.fetchGroceryLists();
+        // Sort: lists with unchecked items first, lists with all items checked last
+        lists.sort((a, b) {
+          final aAllChecked = _allItemsChecked(a);
+          final bAllChecked = _allItemsChecked(b);
+          if (aAllChecked == bAllChecked) return 0;
+          return aAllChecked ? 1 : -1;
+        });
         setState(() {
           _lists = lists;
           _isLoading = false;
           _isRetrying = false;
         });
+  // Helper to check if all items in a list are checked
         return;
       } catch (e) {
         // If not last attempt, wait with exponential backoff
@@ -96,44 +111,23 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
         child: SizedBox(
           height: 180,
           child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(color: widget.accent),
-                if (_isRetrying) ...[
-                  const SizedBox(height: 12),
-                  Text('Retrying... attempt $_attempt'),
-                ],
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    // ── Error state ────────────────────────────────────────────────────────
-    if (_errorMessage != null) {
-      return SliverToBoxAdapter(
-        child: SizedBox(
-          height: 220,
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.error_outline, size: 48, color: Colors.grey.shade400),
-                const SizedBox(height: 8),
-                const Text('Failed to load lists'),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _fetchLists,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: widget.accent,
-                    foregroundColor: Colors.white,
+            child: _errorMessage == null
+                ? const CircularProgressIndicator()
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Failed to load lists'),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _fetchLists,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: widget.accent,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Retry'),
+                      ),
+                    ],
                   ),
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
           ),
         ),
       );
@@ -176,22 +170,78 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
       delegate: SliverChildBuilderDelegate(
         (context, index) {
           if (index == 0) return _buildCreateListCard();
+          final list = _lists[index - 1];
+          final allChecked = _allItemsChecked(list);
+          final total = list.listItems?.length ?? 0;
+          final checked = list.listItems?.where((item) => item['checked'] == true).length ?? 0;
+          final itemLabel = total > 0 ? '$checked/$total' : 'No items';
+          String? bgAsset;
+          if (list.category?.toLowerCase() == 'party') {
+            bgAsset = 'assets/images/party.png';
+          } else if (list.category?.toLowerCase() == 'work') {
+            bgAsset = 'assets/images/work.png';
+          }
           return RepaintBoundary(
             child: _ListCard(
-              key: ValueKey(_lists[index - 1].id),
-              list: _lists[index - 1],
-              accent: widget.accent,
+              key: ValueKey(list.id),
+              list: list,
               onTap: () async {
                 await Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => ListDetailsPage(
-                      list: _lists[index - 1],
+                      list: list,
                       accent: widget.accent,
                       onItemsChanged: _fetchLists,
-                      onListDeleted: _fetchLists,
                     ),
                   ),
                 );
+              },
+              allChecked: allChecked,
+              total: total,
+              checked: checked,
+              itemLabel: itemLabel,
+              bgAsset: bgAsset,
+              onDelete: (ctx) {
+                showDialog(
+                  context: ctx,
+                  builder: (dialogCtx) => AlertDialog(
+                    title: const Text('Delete List'),
+                    content: const Text('Are you sure you want to delete this list? This action cannot be undone.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(dialogCtx).pop(),
+                        child: const Text('Cancel'),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        onPressed: () async {
+                          Navigator.of(dialogCtx).pop();
+                          try {
+                            await _apiService.deleteGroceryList(list.id);
+                            await _fetchLists();
+                            if (ctx.mounted) {
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                const SnackBar(content: Text('List deleted successfully.')),
+                              );
+                            }
+                          } catch (e) {
+                            if (ctx.mounted) {
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                SnackBar(content: Text('Failed to delete list: $e')),
+                              );
+                            }
+                          }
+                        },
+                        child: const Text('Delete'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              onShare: (ctx) {
+                // TODO: Implement share logic
               },
             ),
           );
@@ -383,78 +433,28 @@ class _ListCard extends StatelessWidget {
   const _ListCard({
     super.key,
     required this.list,
-    required this.accent,
     required this.onTap,
+    required this.allChecked,
+    required this.total,
+    required this.checked,
+    required this.itemLabel,
+    required this.bgAsset,
+    required this.onDelete,
+    required this.onShare,
   });
 
   final GroceryList list;
-  final Color accent;
   final VoidCallback onTap;
-
-  // Compute item counts once at build time — no Builder/try-catch per frame.
-  (int checked, int total) get _itemCounts {
-    final items = list.listItems ?? [];
-    if (items.isEmpty) {
-      // list.items is a display string like "5 items" — extract the number
-      final n = int.tryParse(list.items.split(' ').first) ?? 0;
-      return (0, n);
-    }
-    int total = items.length;
-    int checked = 0;
-    for (final it in items) {
-      if (it['checked'] == true || it['done'] == true) checked++;
-    }
-    return (checked, total);
-  }
-
-  String get _itemLabel {
-    final items = list.listItems ?? [];
-    if (items.isEmpty) return list.items; // use the raw display string
-    final (checked, total) = _itemCounts;
-    return '$checked/$total items';
-  }
+  final bool allChecked;
+  final int total;
+  final int checked;
+  final String itemLabel;
+  final String? bgAsset;
+  final void Function(BuildContext) onDelete;
+  final void Function(BuildContext) onShare;
 
   @override
   Widget build(BuildContext context) {
-    final (checked, total) = _itemCounts;
-    final bool allChecked = total > 0 && checked == total;
-
-  // Category mapping: prefer explicit `category` (case-insensitive).
-  // If missing, fall back to a small set of icon-based heuristics so
-  // existing lists without a `category` still get a sensible background.
-  String cat = (list.category ?? '').toLowerCase().trim();
-    if (cat.isEmpty) {
-      // Map a few common icon types back to categories as a fallback.
-      final icon = list.icon;
-      if (icon == Icons.celebration_outlined) {
-        cat = 'party';
-      } else if (icon == Icons.shopping_cart_outlined ||
-          icon == Icons.breakfast_dining_outlined ||
-          icon == Icons.cleaning_services_outlined ||
-          icon == Icons.apple_outlined ||
-          icon == Icons.inventory_2_outlined ||
-          icon == Icons.child_care_outlined ||
-          icon == Icons.pets_outlined) {
-        cat = 'home';
-      }
-      // Note: we intentionally do NOT guess 'holiday' or 'work' from icons
-      // because those are more ambiguous; prefer explicit `category` there.
-    }
-
-  final bool isWork = cat == 'work';
-  String? bgAsset;
-  if (cat == 'home') {
-    bgAsset = 'assets/images/home.png';
-  } else if (cat == 'holiday') {
-    bgAsset = 'assets/images/holiday.png';
-  } else if (cat == 'party') {
-    bgAsset = 'assets/images/party.png';
-  } else if (cat == 'work') {
-    bgAsset = 'assets/images/work.png';
-  } else {
-    bgAsset = null;
-  }
-
     return GestureDetector(
       onTap: onTap,
       child: Stack(
@@ -477,14 +477,10 @@ class _ListCard extends StatelessWidget {
                   fit: StackFit.expand,
                   children: [
                     Image.asset(
-                      bgAsset,
+                      bgAsset!,
                       fit: BoxFit.cover,
-                      // If the asset isn't present, don't crash — just ignore the image.
                       errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                     ),
-                    // No gradient overlay for any special-category images.
-                    // We intentionally keep these images unshadowed (same
-                    // behavior as the Work card) so they render cleanly.
                   ],
                 ),
               ),
@@ -492,126 +488,124 @@ class _ListCard extends StatelessWidget {
           // Card content
           Container(
             padding: const EdgeInsets.all(5),
-            // Ensure content sits above the background image
             decoration: const BoxDecoration(color: Colors.transparent),
-            child: Column(
-          mainAxisSize: MainAxisSize.max,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // ── Icon + due-date row ─────────────────────────────
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Stack(
               children: [
-                // Hide the logo for Work cards to reduce visual noise; keep a
-                // fixed spacer so the time chip stays aligned.
-                if (!isWork)
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: accent.withAlpha(20),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Icon(list.icon, color: accent, size: 24),
-                  )
-                else
-                  const SizedBox(width: 32, height: 32),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3F4F6),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    list.time,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: Colors.black54,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            // ── Title ───────────────────────────────────────────
-            Text(
-              list.name,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            // ── Item count + status/urgent icon ─────────────────
-            Row(
-              children: [
-                // Display the item-count inside a red rounded chip with a
-                // subtle shadow. Use Align inside Expanded so the chip sizes to
-                // its content but remains left-aligned and the row layout is
-                // preserved.
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 6,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        _itemLabel,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                if (allChecked)
-                  const Icon(Icons.check_circle, size: 20, color: Colors.green)
-                else if (list.priority == 1)
-                  const Icon(Icons.priority_high, size: 18, color: Colors.redAccent)
-                else if (total > 0 && checked < total)
-                  const Icon(Icons.error_outline, size: 20, color: Colors.redAccent),
-              ],
-            ),
-            const SizedBox(height: 2),
-            // ── Static progress bar (no animation = no repaint) ──
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: SizedBox(
-                height: 3.5,
-                child: Row(
+                Column(
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(
-                      flex: (list.progress.clamp(0.0, 1.0) * 1000).round(),
-                      child: Container(color: accent),
+                    // ── Icon + due-date row ─────────────────────────────
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF3F4F6),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                list.time,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.black54,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            if (allChecked)
+                              const Icon(Icons.check_circle, size: 20, color: Colors.green),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          list.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                      ],
                     ),
-                    Flexible(
-                      flex: ((1.0 - list.progress.clamp(0.0, 1.0)) * 1000).round(),
-                      child: const ColoredBox(color: Color(0xFFE5E7EB)),
+                    // ── Item count + status/urgent icon ─────────────────
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.redAccent,
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black26,
+                                    blurRadius: 6,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                itemLabel,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (total > 0 && checked < total)
+                          const Icon(Icons.error_outline, size: 20, color: Colors.redAccent),
+                      ],
                     ),
                   ],
                 ),
-              ),
+                // ── Popup menu for actions ─────────────────────
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'delete') {
+                        onDelete(context);
+                      } else if (value == 'share') {
+                        onShare(context);
+                      }
+                    },
+                    itemBuilder: (ctx) => [
+                      const PopupMenuItem(
+                        value: 'share',
+                        child: ListTile(
+                          leading: Icon(Icons.share),
+                          title: Text('Share'),
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: ListTile(
+                          leading: Icon(Icons.delete, color: Colors.red),
+                          title: Text('Delete', style: TextStyle(color: Colors.red)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 3),
-          ],
-        ),
+          ),
+        ],
       ),
-    ],
-  ),
-); 
+    );
   }
 }

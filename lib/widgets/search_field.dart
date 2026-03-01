@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// Using bundled Nunito font from assets (configured in pubspec.yaml)
 
 /// Search field widget extracted from header
 class SearchField extends StatelessWidget {
@@ -22,10 +22,14 @@ class SearchField extends StatelessWidget {
             ),
             padding: const EdgeInsets.fromLTRB(48, 15, 16, 16),
             alignment: Alignment.centerLeft,
-            child: Text(
+            child: const Text(
               'Search items or lists...',
-              style: GoogleFonts.nunito(
-                textStyle: const TextStyle(fontSize: 14, height: 17 / 14, color: Color(0xFF9CA3AF), fontWeight: FontWeight.w400),
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 14,
+                height: 17 / 14,
+                color: Color(0xFF9CA3AF),
+                fontWeight: FontWeight.w400,
               ),
             ),
           ),

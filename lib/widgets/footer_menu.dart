@@ -39,7 +39,7 @@ class FooterMenu extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 40),
+          // Categories button removed
           InkWell(
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ProfileLandingPage()));

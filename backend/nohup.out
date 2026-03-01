@@ -1,0 +1,6 @@
+Server running on port 3000
+🔗 Connected to MongoDB: mongodb+srv://doadmin:975ki21FgGWH34h6@db-grocery-45446cce.mongo.ondigitalocean.com/Grocery?tls=true&authSource=admin&replicaSet=db-grocery
+📦 Categories collection already has 24 documents – skip seed
+🚀 Server is running on http://localhost:3000
+📝 API Documentation: http://localhost:3000
+❤️  Health Check: http://localhost:3000/api/health

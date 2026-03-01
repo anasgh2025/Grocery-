@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../screens/list_details_page.dart';
 
 /// List section: header + 3x3 grid (first is CTA, rest are existing lists)
 class ListSection extends StatelessWidget {
@@ -86,80 +87,90 @@ class ListSection extends StatelessWidget {
   }
 
   Widget _buildListCard(BuildContext context, Map<String, dynamic> list, ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.all(5),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.06),
-            blurRadius: 6,
-            offset: Offset(0, 2),
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ListDetailsPage(list: list, accent: accent),
           ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon and Due date in same row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: const Color.fromRGBO(255, 107, 95, 0.08),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Icon(list['icon'], color: accent, size: 16),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  list['time'],
-                  style: const TextStyle(fontSize: 8, color: Colors.black54, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          // Title
-          Text(
-            list['name'],
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              fontSize: 11,
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: const [
+            BoxShadow(
+              color: Color.fromRGBO(0, 0, 0, 0.06),
+              blurRadius: 6,
+              offset: Offset(0, 2),
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const Spacer(),
-          // Number of items
-          Text(
-            '${list['items']} items',
-            style: theme.textTheme.bodySmall?.copyWith(fontSize: 9, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 2),
-          // Progress bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: SizedBox(
-              height: 3.5,
-              child: LinearProgressIndicator(
-                value: list['progress'],
-                backgroundColor: Colors.grey.shade200,
-                valueColor: AlwaysStoppedAnimation(accent),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon and Due date in same row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: const Color.fromRGBO(255, 107, 95, 0.08),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(list['icon'], color: accent, size: 16),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    list['time'],
+                    style: const TextStyle(fontSize: 8, color: Colors.black54, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            // Title
+            Text(
+              list['name'],
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const Spacer(),
+            // Number of items
+            Text(
+              '${list['items']} items',
+              style: theme.textTheme.bodySmall?.copyWith(fontSize: 9, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 2),
+            // Progress bar
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: SizedBox(
+                height: 3.5,
+                child: LinearProgressIndicator(
+                  value: list['progress'],
+                  backgroundColor: Colors.grey.shade200,
+                  valueColor: AlwaysStoppedAnimation(accent),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 3),
-        ],
+            const SizedBox(height: 3),
+          ],
+        ),
       ),
     );
   }

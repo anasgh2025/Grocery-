@@ -31,6 +31,34 @@
 			"command": "flutter run -d macos",
 			"isBackground": true,
 			"group": "build"
+		},
+		{
+			"label": "Flutter Run macOS",
+			"type": "shell",
+			"command": "flutter run -d macos",
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "Flutter Run macOS",
+			"type": "shell",
+			"command": "flutter run -d macos",
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "Flutter Run macOS",
+			"type": "shell",
+			"command": "flutter run -d macos",
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "Flutter Run macOS",
+			"type": "shell",
+			"command": "flutter run -d macos",
+			"isBackground": true,
+			"group": "build"
 		}
 	]
 }

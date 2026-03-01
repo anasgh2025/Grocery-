@@ -8,14 +8,14 @@ class CategoryItemsPage extends StatefulWidget {
   final String category;
   final IconData categoryIcon;
   final Color accent;
-  final Future<void> Function(Map<String, dynamic> itemData) onItemAdded;
+  final String listId;
 
   const CategoryItemsPage({
     Key? key,
     required this.category,
     required this.categoryIcon,
     required this.accent,
-    required this.onItemAdded,
+    required this.listId,
   }) : super(key: key);
 
   @override
@@ -24,12 +24,11 @@ class CategoryItemsPage extends StatefulWidget {
 
 class _CategoryItemsPageState extends State<CategoryItemsPage> {
   final ApiService _api = ApiService();
-  String _search = '';
-  final Map<String, int> _selectedPriorities = {};
+  final String _search = '';
+  // Removed unused _selectedPriorities field
 
   List<Map<String, dynamic>> _allItems = [];
-  bool _loading = true;
-  String? _error;
+  // ...existing code...
 
   @override
   void initState() {
@@ -40,15 +39,34 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
   Future<void> _loadItems() async {
     try {
       final cat = await _api.fetchCategoryByLabel(widget.category);
+      debugPrint('[DEBUG] Category fetched: $cat');
       final rawItems = (cat['items'] as List<dynamic>?) ?? [];
+      debugPrint('[DEBUG] Raw items: $rawItems');
+      List<Map<String, dynamic>> parsedItems = [];
+      try {
+        parsedItems = rawItems.map((item) => Map<String, dynamic>.from(item)).toList();
+        debugPrint('[DEBUG] Parsed items: $parsedItems');
+      } catch (parseError) {
+        debugPrint('[DEBUG] Error parsing items: $parseError');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error parsing items: $parseError')),
+          );
+        }
+      }
       setState(() {
-        _allItems = rawItems.cast<Map<String, dynamic>>();
-        _loading = false;
+        _allItems = parsedItems;
       });
+      debugPrint('[DEBUG] _allItems after setState: $_allItems');
     } catch (e) {
+      print('[DEBUG] Error fetching category: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching category: ' + e.toString())),
+        );
+      }
       setState(() {
-        _error = e.toString();
-        _loading = false;
+        // Optionally handle error, e.g., log or show a snackbar
       });
     }
   }
@@ -70,15 +88,66 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
       accent: widget.accent,
     );
     if (result != null && mounted) {
-      await widget.onItemAdded(result);
-      if (mounted) Navigator.of(context).pop();
+      try {
+        final api = ApiService();
+        // Fetch current items in the list
+        final currentItems = await api.fetchListItems(widget.listId);
+        final existing = currentItems.firstWhere(
+          (it) => (it['name'] as String).trim().toLowerCase() == (result['name'] as String).trim().toLowerCase(),
+          orElse: () => null,
+        );
+        if (existing != null) {
+          // Show dialog to ask user if they want to add to quantity
+          final shouldAddQty = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Item already exists'),
+              content: Text('"${result['name']}" is already in your list. Add ${result['qty']} to the existing quantity?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: const Text('Add Quantity'),
+                ),
+              ],
+            ),
+          );
+          if (shouldAddQty == true) {
+            final newQty = (existing['qty'] ?? 1) + (result['qty'] ?? 1);
+            await api.updateListItem(widget.listId, existing['id'], {
+              ...existing,
+              'qty': newQty,
+            });
+            if (mounted) Navigator.of(context).pop(true);
+          }
+          // If cancelled, do nothing
+        } else {
+          await api.addListItem(widget.listId, {
+            'name': result['name'],
+            'qty': result['qty'],
+            'priority': result['priority'] ?? 0,
+            // add other fields if needed
+          });
+          if (mounted) Navigator.of(context).pop(true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to add item: $e')),
+          );
+        }
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final items = _filtered;
+  final theme = Theme.of(context);
+  final items = _filtered;
+  debugPrint('[DEBUG] items in build: $items');
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
@@ -108,156 +177,88 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
           ],
         ),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
-                      const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: Text(
-                          'Failed to load items.\n$_error',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.red.shade400),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '${items.length} item${items.length == 1 ? '' : 's'}',
+                style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade500),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Expanded(
+            child: items.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.search_off_rounded, size: 48, color: Colors.grey.shade300),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No items found',
+                          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade400),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          setState(() { _loading = true; _error = null; });
-                          _loadItems();
-                        },
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                )
-              : Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-                      child: TextField(
-                        onChanged: (v) => setState(() => _search = v),
-                        decoration: InputDecoration(
-                          hintText: 'Search ${widget.category.toLowerCase()}…',
-                          prefixIcon: Icon(Icons.search_rounded, color: Colors.grey.shade500),
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide(color: Colors.grey.shade200),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide(color: Colors.grey.shade200),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide(color: widget.accent, width: 1.5),
-                          ),
-                        ),
-                      ),
+                      ],
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          '${items.length} item${items.length == 1 ? '' : 's'}',
-                          style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade500),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Expanded(
-                      child: items.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.search_off_rounded, size: 48, color: Colors.grey.shade300),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    'No items found',
-                                    style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade400),
-                                  ),
-                                ],
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (_, i) {
+                      final item = items[i];
+                      final name = (item['name'] ?? '') as String;
+                      final emoji = (item['emoji'] ?? '🛒') as String;
+                      final priority = (item['priority'] ?? 0) as int;
+                      return Stack(
+                        children: [
+                          Material(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              leading: SizedBox(
+                                width: 48,
+                                height: 48,
+                                child: Center(child: Text(emoji, style: const TextStyle(fontSize: 24))),
                               ),
-                            )
-                          : ListView.separated(
-                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                              itemCount: items.length,
-                              separatorBuilder: (_, __) => const SizedBox(height: 12),
-                              itemBuilder: (_, i) {
-                                final item = items[i];
-                                final name = item['name'] as String;
-                                final emoji = (item['emoji'] as String?) ?? '🛒';
-                                final priority = _selectedPriorities[name] ?? 0;
-                                return Material(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(14),
-                                  child: ListTile(
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                    leading: Container(
-                                      width: 48,
-                                      height: 48,
-                                      decoration: BoxDecoration(color: widget.accent.withAlpha(26), shape: BoxShape.circle),
-                                      child: Center(child: Text(emoji, style: const TextStyle(fontSize: 24))),
-                                    ),
-                                    title: Text(name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
-                                    subtitle: Text(widget.category, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade500)),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        GestureDetector(
-                                          onTap: () {
-                                            setState(() {
-                                              _selectedPriorities[name] = priority == 0 ? 1 : 0;
-                                            });
-                                          },
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                            decoration: BoxDecoration(
-                                              color: priority == 1 ? Colors.redAccent.withAlpha(26) : widget.accent.withAlpha(18),
-                                              borderRadius: BorderRadius.circular(10),
-                                              border: Border.all(color: priority == 1 ? Colors.redAccent.withAlpha(80) : widget.accent.withAlpha(60)),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                if (priority == 1) const Icon(Icons.priority_high, size: 16, color: Colors.redAccent) else const SizedBox.shrink(),
-                                                const SizedBox(width: 6),
-                                                Text(priority == 1 ? 'Urgent' : 'Normal', style: TextStyle(fontSize: 12, color: priority == 1 ? Colors.redAccent : widget.accent)),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        ElevatedButton(
-                                          onPressed: () => _onItemTap(item),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: widget.accent,
-                                            foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                            minimumSize: const Size(56, 36),
-                                          ),
-                                          child: const Text('Add', style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
+                              title: Text(name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+                              subtitle: Text(widget.category, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade500)),
+                              onTap: () => _onItemTap(item),
                             ),
-                    ),
-                  ],
-                ),
+                          ),
+                          if (priority == 1)
+                            Positioned(
+                              top: 8,
+                              right: 16,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent.withAlpha(26),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.redAccent.withAlpha(80)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    Icon(Icons.priority_high, size: 14, color: Colors.redAccent),
+                                    SizedBox(width: 4),
+                                    Text('Urgent', style: TextStyle(fontSize: 11, color: Colors.redAccent, fontWeight: FontWeight.w600)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }

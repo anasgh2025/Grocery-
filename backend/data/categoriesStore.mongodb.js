@@ -358,7 +358,8 @@ const getById = async (id) => {
 };
 
 const getByLabel = async (label) => {
-  const doc = await Category.findOne({ label });
+  // Case-insensitive label match
+  const doc = await Category.findOne({ label: { $regex: `^${label}$`, $options: 'i' } });
   return doc ? toPlain(doc) : null;
 };
 

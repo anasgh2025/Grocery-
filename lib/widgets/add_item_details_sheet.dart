@@ -44,8 +44,9 @@ class _AddItemDetailsSheet extends StatefulWidget {
 }
 
 class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
+  String _selectedPriority = 'Normal';
   int _qty = 1;
-  final TextEditingController _descController = TextEditingController();
+  // Removed description controller
   XFile? _photo;
   bool _pickingPhoto = false;
 
@@ -106,7 +107,7 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
 
   @override
   void dispose() {
-    _descController.dispose();
+    // No description controller to dispose
     super.dispose();
   }
 
@@ -187,6 +188,94 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
             Divider(height: 1, color: Colors.grey.shade100),
             const SizedBox(height: 20),
 
+            // ── Priority selector ──────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'PRIORITY',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black54,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedPriority = 'Urgent';
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _selectedPriority == 'Urgent'
+                                  ? Colors.red[400]
+                                  : Colors.grey[200],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Urgent',
+                                style: TextStyle(
+                                  fontFamily: 'Nunito',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: _selectedPriority == 'Urgent'
+                                      ? Colors.white
+                                      : Colors.black54,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedPriority = 'Normal';
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _selectedPriority == 'Normal'
+                                  ? Colors.blue[400]
+                                  : Colors.grey[200],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Normal',
+                                style: TextStyle(
+                                  fontFamily: 'Nunito',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: _selectedPriority == 'Normal'
+                                      ? Colors.white
+                                      : Colors.black54,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
             // ── Quantity stepper ────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -219,30 +308,7 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
 
             const SizedBox(height: 20),
 
-            // ── Description ─────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: TextField(
-                controller: _descController,
-                maxLines: 2,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(
-                  labelText: 'Note / description (optional)',
-                  hintText: 'e.g. organic, low-fat, brand preference…',
-                  alignLabelWithHint: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: widget.accent, width: 1.5),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                ),
-              ),
-            ),
-
+            // Description field removed
             const SizedBox(height: 20),
 
             // ── Photo picker ─────────────────────────────────────
@@ -341,7 +407,7 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
                   Navigator.of(context).pop<Map<String, dynamic>>({
                     'name': widget.itemName,
                     'qty': _qty,
-                    'description': _descController.text.trim(),
+                    'priority': _selectedPriority == 'Urgent' ? 1 : 0,
                     'photoPath': _photo?.path,
                     'checked': false,
                   });

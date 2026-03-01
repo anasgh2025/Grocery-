@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart';
 import '../models/grocery_list.dart';
 
 /// Service for handling API calls related to grocery lists
@@ -56,17 +57,25 @@ class ApiService {
           )
           .timeout(timeout);
 
+  // Log response for debugging
+  debugPrint('[ApiService] GET $baseUrl/lists status: ${response.statusCode}');
+  debugPrint('[ApiService] Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);
         return jsonData.map((json) => GroceryList.fromJson(json)).toList();
       } else if (response.statusCode == 401) {
+        debugPrint('[ApiService] Unauthorized: Please login again');
         throw Exception('Unauthorized: Please login again');
       } else if (response.statusCode == 404) {
+        debugPrint('[ApiService] Lists not found');
         throw Exception('Lists not found');
       } else {
+        debugPrint('[ApiService] Failed to load lists: ${response.statusCode}');
         throw Exception('Failed to load lists: ${response.statusCode}');
       }
     } catch (e) {
+      debugPrint('[ApiService] Error fetching lists: $e');
       if (e.toString().contains('TimeoutException')) {
         throw Exception('Request timeout: Please check your internet connection');
       }
@@ -298,16 +307,22 @@ class ApiService {
   /// Fetch a single category by label (includes items).
   Future<Map<String, dynamic>> fetchCategoryByLabel(String label) async {
     try {
+      debugPrint('[DEBUG] fetchCategoryByLabel: label sent = "$label"');
       final encoded = Uri.encodeComponent(label);
+      final url = '$baseUrl/categories/label/$encoded';
+      debugPrint('[DEBUG] fetchCategoryByLabel: url = $url');
       final response = await http
-          .get(Uri.parse('$baseUrl/categories/label/$encoded'))
+          .get(Uri.parse(url))
           .timeout(timeout);
+      debugPrint('[DEBUG] fetchCategoryByLabel: status = ${response.statusCode}');
+      debugPrint('[DEBUG] fetchCategoryByLabel: body = ${response.body}');
 
       if (response.statusCode == 200) {
         return json.decode(response.body) as Map<String, dynamic>;
       }
       throw Exception('Failed to load category: ${response.statusCode}');
     } catch (e) {
+      debugPrint('[DEBUG] fetchCategoryByLabel: error = $e');
       throw Exception('Error fetching category "$label": $e');
     }
   }
