@@ -3,10 +3,8 @@ const cors = require('cors');
 require('dotenv').config();
 // Build: 2026-02-25
 const app = express();
-
 const DEFAULT_PORT = 8081;
 const PORT = process.env.PORT || DEFAULT_PORT;
-
 const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
@@ -19,6 +17,10 @@ server.on("error", (err) => {
     console.error(err);
   }
 });
+//
+//
+
+//
 // Connect to MongoDB (accept full MONGODB_URI or build it from parts)
 const mongoose = require('mongoose');
 
