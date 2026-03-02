@@ -36,7 +36,7 @@ class AppTheme {
       brightness: Brightness.light,
     );
 
-  final textTheme = const TextTheme(
+  const textTheme = TextTheme(
       displayLarge: TextStyle(fontFamily: 'Nunito', fontSize: 56, fontWeight: FontWeight.w700, letterSpacing: -0.5),
       displayMedium: TextStyle(fontFamily: 'Nunito', fontSize: 40, fontWeight: FontWeight.w700, letterSpacing: -0.25),
       displaySmall: TextStyle(fontFamily: 'Nunito', fontSize: 34, fontWeight: FontWeight.w700),

@@ -126,7 +126,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black12,
                   blurRadius: 16,
@@ -143,9 +143,9 @@ class _CreateListDialogState extends State<CreateListDialog> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      const Text(
                         'Create List',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Nunito',
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -161,9 +161,9 @@ class _CreateListDialogState extends State<CreateListDialog> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  Text(
+                  const Text(
                     'LIST NAME',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -201,9 +201,9 @@ class _CreateListDialogState extends State<CreateListDialog> {
                     },
                   ),
                   const SizedBox(height: 20),
-                  Text(
+                  const Text(
                     'SELECT CATEGORY',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -257,9 +257,9 @@ class _CreateListDialogState extends State<CreateListDialog> {
                     }).toList(),
                   ),
                   const SizedBox(height: 20),
-                  Text(
+                  const Text(
                     'PRIORITY',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -336,9 +336,9 @@ class _CreateListDialogState extends State<CreateListDialog> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  Text(
+                  const Text(
                     'DUE DATE',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -404,9 +404,9 @@ class _CreateListDialogState extends State<CreateListDialog> {
                                   AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : Text(
+                        : const Text(
                             'CREATE LIST',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: 'Nunito',
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
