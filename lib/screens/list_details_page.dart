@@ -16,6 +16,93 @@ class ListDetailsPage extends StatefulWidget {
 }
 
 class _ListDetailsPageState extends State<ListDetailsPage> {
+  // Map item names to emoji for display
+  static const Map<String, String> _itemEmojiMap = {
+    'apple': '🍎',
+    'orange': '🍊',
+    'banana': '🍌',
+    'grape': '🍇',
+    'carrot': '🥕',
+    'bread': '🍞',
+    'cheese': '🧀',
+    'milk': '🥛',
+    'egg': '🥚',
+    'chicken': '🍗',
+    'fish': '🐟',
+    'beef': '🥩',
+    'rice': '🍚',
+    'potato': '🥔',
+    'tomato': '🍅',
+    'lettuce': '🥬',
+    'watermelon': '🍉',
+    'lemon': '🍋',
+    'strawberry': '🍓',
+    'avocado': '🥑',
+    'onion': '🧅',
+    'corn': '🌽',
+    'cucumber': '🥒',
+    'pepper': '🫑',
+    'mushroom': '🍄',
+  // 'shrimp': '🦐', // removed duplicate
+    'garlic': '🧄',
+    'pear': '🍐',
+    'peach': '🍑',
+    'kiwi': '🥝',
+    'pineapple': '🍍',
+    'chili': '🌶️',
+    'bacon': '🥓',
+    'sausage': '🌭',
+    'cookie': '🍪',
+    'cake': '🍰',
+    'ice': '🍦',
+    'honey': '🍯',
+    'beans': '🫘',
+    'broccoli': '🥦',
+    'eggplant': '🍆',
+    'pumpkin': '🎃',
+    'cabbage': '🥬',
+    'spinach': '🥬',
+    'basil': '🌿',
+    'mint': '🌿',
+    'sushi': '🍣',
+    'shrimp': '🦐',
+    'crab': '🦀',
+    'lobster': '🦞',
+    'salmon': '🐟',
+    'tuna': '🐟',
+    'turkey': '🦃',
+    'duck': '🦆',
+    'lamb': '🐑',
+    'pasta': '🍝',
+    'noodle': '🍜',
+    'pizza': '🍕',
+    'burger': '🍔',
+    'sandwich': '🥪',
+    'fries': '🍟',
+    'soup': '🍲',
+    'salad': '🥗',
+    'popcorn': '🍿',
+    'chocolate': '🍫',
+    'candy': '🍬',
+    'donut': '🍩',
+    'coffee': '☕',
+    'tea': '🍵',
+    'juice': '🧃',
+    'soda': '🥤',
+    'water': '💧',
+    // Add more as needed
+  };
+
+  String _getEmojiForItem(String? name) {
+    if (name == null) return '🛒';
+    final lower = name.toLowerCase();
+    for (final entry in _itemEmojiMap.entries) {
+      if (lower.contains(entry.key)) {
+        return entry.value;
+      }
+    }
+    return '🛒';
+  }
   final TextEditingController _addItemController = TextEditingController();
   final ApiService _api = ApiService();
   List<dynamic> _items = [];
@@ -76,38 +163,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
         foregroundColor: Colors.black,
         elevation: 0.5,
         iconTheme: const IconThemeData(color: Colors.black),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert_rounded),
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
-            onSelected: (value) {
-              if (value == 'delete') {} // implement delete
-              if (value == 'share') {} // implement share
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'share',
-                child: Row(
-                  children: [
-                    Icon(Icons.share_outlined, color: Colors.black87, size: 20),
-                    SizedBox(width: 10),
-                    Text('Share list'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
-                    SizedBox(width: 10),
-                    Text('Delete list', style: TextStyle(color: Colors.redAccent)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
+        // Removed 3-dots menu (PopupMenuButton)
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -190,57 +246,103 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                             );
                           }
                         },
-                        child: Stack(
-                          children: [
-                            // Card shadow/background
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.transparent,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color.fromRGBO(0, 0, 0, 0.06),
-                                    blurRadius: 6,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
-                              ),
+                        onLongPress: () async {
+                          final shouldDelete = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete Item'),
+                              content: Text('Are you sure you want to delete "${item['name']}"?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(false),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(true),
+                                  child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                ),
+                              ],
                             ),
-                            // Foreground content only (no background image)
-                            Container(
-                              decoration: BoxDecoration(
-                                color: isChecked ? Colors.grey[300] : Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Icon(Icons.shopping_bag_outlined, color: widget.accent, size: 28),
-                                      const Spacer(),
-                                      if (isChecked)
-                                        const Icon(Icons.check_circle, color: Colors.green, size: 22),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    item['name'] ?? '',
-                                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontSize: 14),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  if (item['qty'] != null)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 2.0),
-                                      child: Text('Qty: ${item['qty']}', style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
+                          );
+                          if (shouldDelete == true) {
+                            try {
+                              await _api.deleteListItem(widget.list.id, item['id']);
+                              if (!mounted) return;
+                              _fetchItems(notifyParent: true);
+                            } catch (e) {
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed to delete item: $e')),
+                              );
+                            }
+                          }
+                        },
+                        child: SizedBox(
+                          height: 140, // Increased height for long names
+                          child: Stack(
+                            children: [
+                              // Card shadow/background
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color.fromRGBO(0, 0, 0, 0.06),
+                                      blurRadius: 6,
+                                      offset: Offset(0, 2),
                                     ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                              // Foreground content only (no background image)
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: isChecked ? Colors.grey[300] : Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.max,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          _getEmojiForItem(item['name']?.toString()),
+                                          style: const TextStyle(fontSize: 24),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Flexible(
+                                          child: Text(
+                                            item['name'] ?? '',
+                                            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontSize: 14),
+                                            softWrap: true,
+                                            overflow: TextOverflow.visible,
+                                          ),
+                                        ),
+                                        if (isChecked)
+                                          Padding(
+                                            padding: const EdgeInsets.only(left: 8.0, top: 2.0),
+                                            child: Icon(Icons.check_circle, color: Colors.green, size: 22),
+                                          ),
+                                      ],
+                                    ),
+                                    const Spacer(),
+                                    if (item['qty'] != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 2.0, bottom: 2.0),
+                                        child: Text(
+                                          'Qty: ${item['qty']}',
+                                          style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
