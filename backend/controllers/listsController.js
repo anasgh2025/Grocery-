@@ -39,13 +39,14 @@ const getListById = async (req, res) => {
 // Create new list
 const createList = async (req, res) => {
   try {
-    const { name, items, progress, time, icon, priority, category } = req.body;
+  let { name, items, progress, time, icon, priority, category } = req.body;
+  if (!time) time = '';
     
-    // Validate required fields
-    if (!name || items === undefined || progress === undefined || !time || !icon) {
+    // Validate required fields (time is now optional)
+    if (!name || items === undefined || progress === undefined || !icon) {
       return res.status(400).json({
         error: 'Bad Request',
-        message: 'Missing required fields: name, items, progress, time, icon'
+        message: 'Missing required fields: name, items, progress, icon'
       });
     }
 

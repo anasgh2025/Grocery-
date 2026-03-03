@@ -22,7 +22,6 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
   List<GroceryList> _lists = [];
   bool _isLoading = true;
   String? _errorMessage;
-  bool _isRetrying = false;
   int _attempt = 0;
 
   /// Called externally via GlobalKey to force a refresh.
@@ -49,18 +48,13 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
-      _isRetrying = false;
       _attempt = 0;
     });
 
     while (_attempt < maxAttempts) {
       _attempt++;
       try {
-        if (_attempt > 1) {
-          setState(() {
-            _isRetrying = true;
-          });
-        }
+        // Optionally, show retry UI if needed
 
         final lists = await _apiService.fetchGroceryLists();
         // Sort: lists with unchecked items first, lists with all items checked last
@@ -73,7 +67,6 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
         setState(() {
           _lists = lists;
           _isLoading = false;
-          _isRetrying = false;
         });
   // Helper to check if all items in a list are checked
         return;
@@ -88,7 +81,7 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
         setState(() {
           _errorMessage = e.toString();
           _isLoading = false;
-          _isRetrying = false;
+          // Optionally, show retry UI if needed
         });
         // Show a SnackBar so the user sees the error immediately (use post frame to
         // avoid using the BuildContext across async gaps).
@@ -176,10 +169,15 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
           final checked = list.listItems?.where((item) => item['checked'] == true).length ?? 0;
           final itemLabel = total > 0 ? '$checked/$total' : 'No items';
           String? bgAsset;
-          if (list.category?.toLowerCase() == 'party') {
+          final category = list.category?.toLowerCase();
+          if (category == 'party') {
             bgAsset = 'assets/images/party.png';
-          } else if (list.category?.toLowerCase() == 'work') {
+          } else if (category == 'work') {
             bgAsset = 'assets/images/work.png';
+          } else if (category == 'home') {
+            bgAsset = 'assets/images/home.png';
+          } else if (category == 'holiday') {
+            bgAsset = 'assets/images/holiday.png';
           }
           return RepaintBoundary(
             child: _ListCard(
@@ -262,85 +260,61 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
   Widget _buildCreateListCard() {
     return GestureDetector(
       key: const ValueKey('create'),
-      onTap: () {
-        () async {
-          // Open as a half-screen modal bottom sheet
-          final created = await showModalBottomSheet<GroceryList>(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (ctx) {
-              return DraggableScrollableSheet(
-                initialChildSize: 0.7,
-                minChildSize: 0.5,
-                maxChildSize: 0.95,
-                expand: false,
-                builder: (_, controller) {
-                  return Container(
-                    decoration: appBoxDecoration(
-                      context,
-                      color: Colors.white,
-                      radius: 20,
+      onTap: () async {
+        // Open as a half-screen modal bottom sheet
+        final created = await showModalBottomSheet<GroceryList>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (ctx) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.7,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              expand: false,
+              builder: (_, controller) {
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: 420,
+                      minWidth: 320,
                     ),
+                    child: Container(
+                      decoration: appBoxDecoration(
+                        context,
+                        color: Colors.white,
+                        radius: 20,
+                      ),
                       child: SingleChildScrollView(
-                      controller: controller,
-                      child: CreateListDialog(
-                        accent: widget.accent,
-                        onListCreated: () => _fetchLists(),
+                        controller: controller,
+                        child: CreateListDialog(
+                          accent: widget.accent,
+                          onListCreated: () => _fetchLists(),
+                        ),
                       ),
-                    ),
-                  );
-                },
-              );
-            },
-          );
-
-          // If a list was created, refresh and show a simple confirmation dialog
-          if (created != null) {
-            await _fetchLists();
-
-            if (!mounted) return;
-
-            showDialog(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.check_circle, size: 64, color: widget.accent),
-                    const SizedBox(height: 16),
-                    Text(
-                      'List Created!',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '"${created.name}" has been created successfully.',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
-                    ),
-                  ],
-                ),
-                actions: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.of(ctx).pop(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: widget.accent,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text('Done', style: TextStyle(fontWeight: FontWeight.w600)),
                     ),
                   ),
-                ],
-              ),
+                );
+              },
             );
-          }
-        }();
+          },
+        );
+
+        // If a list was created, refresh and show a simple confirmation dialog
+        if (created != null) {
+          await _fetchLists();
+          if (!mounted) return;
+          // Show a toast/snackbar instead of dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('List "${created.name}" created successfully!'),
+              backgroundColor: widget.accent,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(24),
+            ),
+          );
+        }
       },
       child: CustomPaint(
         painter: _DashedRRectPainter(

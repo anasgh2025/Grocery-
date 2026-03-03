@@ -39,6 +39,7 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
   Future<void> _loadItems() async {
     try {
       final cat = await _api.fetchCategoryByLabel(widget.category);
+      if (!mounted) return;
       debugPrint('[DEBUG] Category fetched: $cat');
       final rawItems = (cat['items'] as List<dynamic>?) ?? [];
       debugPrint('[DEBUG] Raw items: $rawItems');
@@ -48,23 +49,21 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
         debugPrint('[DEBUG] Parsed items: $parsedItems');
       } catch (parseError) {
         debugPrint('[DEBUG] Error parsing items: $parseError');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error parsing items: $parseError')),
-          );
-        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error parsing items: $parseError')),
+        );
       }
       setState(() {
         _allItems = parsedItems;
       });
       debugPrint('[DEBUG] _allItems after setState: $_allItems');
     } catch (e) {
-      print('[DEBUG] Error fetching category: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error fetching category: ' + e.toString())),
-        );
-      }
+      debugPrint('[DEBUG] Error fetching category: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching category: $e')),
+      );
       setState(() {
         // Optionally handle error, e.g., log or show a snackbar
       });
@@ -87,11 +86,13 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
       categoryLabel: widget.category,
       accent: widget.accent,
     );
-    if (result != null && mounted) {
+    if (!mounted) return;
+    if (result != null) {
       try {
         final api = ApiService();
         // Fetch current items in the list
         final currentItems = await api.fetchListItems(widget.listId);
+        if (!mounted) return;
         final existing = currentItems.firstWhere(
           (it) => (it['name'] as String).trim().toLowerCase() == (result['name'] as String).trim().toLowerCase(),
           orElse: () => null,
@@ -115,6 +116,7 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
               ],
             ),
           );
+          if (!mounted) return;
           if (shouldAddQty == true) {
             final newQty = (existing['qty'] ?? 1) + (result['qty'] ?? 1);
             await api.updateListItem(widget.listId, existing['id'], {
@@ -242,9 +244,9 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(color: Colors.redAccent.withAlpha(80)),
                                 ),
-                                child: Row(
+                                child: const Row(
                                   mainAxisSize: MainAxisSize.min,
-                                  children: const [
+                                  children: [
                                     Icon(Icons.priority_high, size: 14, color: Colors.redAccent),
                                     SizedBox(width: 4),
                                     Text('Urgent', style: TextStyle(fontSize: 11, color: Colors.redAccent, fontWeight: FontWeight.w600)),

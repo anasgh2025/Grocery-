@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'category_items_page.dart';
@@ -88,6 +90,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                                 ),
                               ),
                             );
+                            if (!mounted) return;
                             if (result == true) {
                               Navigator.of(context).pop(true);
                             }

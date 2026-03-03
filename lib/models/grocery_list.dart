@@ -47,7 +47,7 @@ class GroceryList {
       'items': items,
       'progress': progress,
       'priority': priority,
-      'time': time,
+      'time': (time.isNotEmpty ? time : ''),
       if (category != null) 'category': category,
       'icon': _getIconString(icon),
       if (listItems != null) 'listItems': listItems,

@@ -5,7 +5,7 @@ import 'widgets/landing_header.dart';
 import 'widgets/search_field.dart';
 import 'widgets/list_section_with_api.dart';
 import 'widgets/marketing_card.dart';
-import 'widgets/create_list_dialog.dart';
+import 'widgets/create_list_dialog.dart' show CreateListDialog;
 import 'models/grocery_list.dart';
 
 /// Mobile-first landing page composed from smaller widgets.

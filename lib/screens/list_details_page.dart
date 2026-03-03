@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import '../screens/categories_page.dart';
 import '../services/api_service.dart';
@@ -57,9 +59,19 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Calculate checked/total items
+    final int total = _items.length;
+    final int checked = _items.where((item) => item['checked'] == true).length;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.list.name ?? '', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.list.name ?? '', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            if (total > 0)
+              Text('$checked/$total items checked', style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600], fontSize: 13)),
+          ],
+        ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0.5,
@@ -73,20 +85,20 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
               if (value == 'share') {} // implement share
             },
             itemBuilder: (context) => [
-              PopupMenuItem(
+              const PopupMenuItem(
                 value: 'share',
                 child: Row(
-                  children: const [
+                  children: [
                     Icon(Icons.share_outlined, color: Colors.black87, size: 20),
                     SizedBox(width: 10),
                     Text('Share list'),
                   ],
                 ),
               ),
-              PopupMenuItem(
+              const PopupMenuItem(
                 value: 'delete',
                 child: Row(
-                  children: const [
+                  children: [
                     Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
                     SizedBox(width: 10),
                     Text('Delete list', style: TextStyle(color: Colors.redAccent)),
@@ -124,6 +136,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                                 ),
                               ),
                             );
+                            if (!mounted) return;
                             if (result == true) {
                               _fetchItems();
                             }
@@ -158,6 +171,8 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                       // Item card (shifted by -1)
                       final item = _items[index - 1];
                       final isChecked = item['checked'] == true;
+                      // Determine background asset for special categories
+                      // No background image for item card
                       return GestureDetector(
                         onTap: () async {
                           try {
@@ -166,21 +181,22 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                               item['id'],
                               {'checked': !isChecked},
                             );
+                            if (!mounted) return;
                             _fetchItems(notifyParent: true);
                           } catch (e) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Failed to update item: $e')),
-                              );
-                            }
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Failed to update item: $e')),
+                            );
                           }
                         },
                         child: Stack(
                           children: [
+                            // Card shadow/background
                             Container(
                               decoration: BoxDecoration(
-                                color: isChecked ? Colors.grey[300] : Colors.white,
-                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
                                 boxShadow: const [
                                   BoxShadow(
                                     color: Color.fromRGBO(0, 0, 0, 0.06),
@@ -188,6 +204,13 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                                     offset: Offset(0, 2),
                                   ),
                                 ],
+                              ),
+                            ),
+                            // Foreground content only (no background image)
+                            Container(
+                              decoration: BoxDecoration(
+                                color: isChecked ? Colors.grey[300] : Colors.white,
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
                               child: Column(
