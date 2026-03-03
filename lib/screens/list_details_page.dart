@@ -323,8 +323,8 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                                           ),
                                         ),
                                         if (isChecked)
-                                          Padding(
-                                            padding: const EdgeInsets.only(left: 8.0, top: 2.0),
+                                          const Padding(
+                                            padding: EdgeInsets.only(left: 8.0, top: 2.0),
                                             child: Icon(Icons.check_circle, color: Colors.green, size: 22),
                                           ),
                                       ],
