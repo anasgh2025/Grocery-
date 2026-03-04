@@ -300,13 +300,13 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                               ),
                               // Foreground content only (no background image)
                               Container(
+                                height: 140,
                                 decoration: BoxDecoration(
                                   color: isChecked ? Colors.grey[300] : Colors.white,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
                                 child: Column(
-                                  mainAxisSize: MainAxisSize.max,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
@@ -317,30 +317,37 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                                           style: const TextStyle(fontSize: 24),
                                         ),
                                         const SizedBox(width: 8),
-                                        Flexible(
+                                        Expanded(
                                           child: Text(
                                             item['name'] ?? '',
                                             style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontSize: 14),
                                             softWrap: true,
-                                            overflow: TextOverflow.visible,
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 2,
                                           ),
                                         ),
+                                      ],
+                                    ),
+                                    const Spacer(),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        if (item['qty'] != null)
+                                          Padding(
+                                            padding: const EdgeInsets.only(left: 2.0, bottom: 2.0),
+                                            child: Text(
+                                              'Qty: ${item['qty']}',
+                                              style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.grey[700]),
+                                            ),
+                                          ),
                                         if (isChecked)
                                           const Padding(
-                                            padding: EdgeInsets.only(left: 8.0, top: 2.0),
+                                            padding: EdgeInsets.only(right: 2.0, bottom: 2.0),
                                             child: Icon(Icons.check_circle, color: Colors.green, size: 22),
                                           ),
                                       ],
                                     ),
-                                    const Spacer(),
-                                    if (item['qty'] != null)
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 2.0, bottom: 2.0),
-                                        child: Text(
-                                          'Qty: ${item['qty']}',
-                                          style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
-                                        ),
-                                      ),
                                   ],
                                 ),
                               ),
