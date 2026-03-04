@@ -22,6 +22,10 @@ app.get("/health", (req, res) => {
 const listsRoutes = require("./routes/lists");
 app.use("/api/lists", listsRoutes);
 
+// ---- Mount marketing routes ----
+const marketingRoutes = require("./routes/marketing");
+app.use("/api/marketing", marketingRoutes);
+
 // ---- 404 handler ----
 app.use((req, res) => {
   res.status(404).json({ error: "Not Found" });
