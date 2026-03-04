@@ -17,10 +17,10 @@ app.get("/health", (req, res) => {
   res.status(200).json({ ok: true, service: "grocery-backend" });
 });
 
-// ---- Your routes go here ----
-// Example:
-// const apiRoutes = require("./routes");
-// app.use("/api", apiRoutes);
+
+// ---- Mount lists routes ----
+const listsRoutes = require("./routes/lists");
+app.use("/api/lists", listsRoutes);
 
 // ---- 404 handler ----
 app.use((req, res) => {
