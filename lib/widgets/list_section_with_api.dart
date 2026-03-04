@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter/scheduler.dart';
 import '../models/grocery_list.dart';
 import '../services/api_service.dart';
@@ -240,7 +241,26 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
                 );
               },
               onShare: (ctx) {
-                // TODO: Implement share logic
+                final listName = list.name;
+                final items = (list.listItems is List) ? list.listItems as List : [];
+                final itemsText = items.isNotEmpty
+                  ? items.map((item) {
+                      final name = item['name'] ?? '';
+                      final qty = item['qty'] != null ? ' (Qty: ${item['qty']})' : '';
+                      return '• $name$qty';
+                    }).join('\n')
+                  : 'No items in the list.';
+                final shareText = 'Here is the list of $listName\n$itemsText\n\nThank you for using the app';
+                print('DEBUG: Share tapped. Message: $shareText');
+                final box = ctx.findRenderObject() as RenderBox?;
+                if (box != null) {
+                  Share.share(
+                    shareText,
+                    sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size,
+                  );
+                } else {
+                  Share.share(shareText);
+                }
               },
             ),
           );

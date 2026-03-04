@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import '../screens/categories_page.dart';
 import '../services/api_service.dart';
 import '../widgets/box_styles.dart';
@@ -143,29 +144,57 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
     super.dispose();
   }
 
+  void _shareList() {
+    final listName = widget.list.name;
+    final items = _items;
+    final itemsText = items.isNotEmpty
+        ? items.map((item) {
+            final name = item['name'] ?? '';
+            final qty = item['qty'] != null ? ' (Qty: ${item['qty']})' : '';
+            return '• $name$qty';
+          }).join('\n')
+        : 'No items in the list.';
+    final shareText = 'Here is the list of $listName\n$itemsText\n\nThank you for using the app';
+    final box = context.findRenderObject() as RenderBox?;
+    if (box != null) {
+      Share.share(
+        shareText,
+        sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size,
+      );
+    } else {
+      Share.share(shareText);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     // Calculate checked/total items
     final int total = _items.length;
     final int checked = _items.where((item) => item['checked'] == true).length;
-    return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(widget.list.name ?? '', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-            if (total > 0)
-              Text('$checked/$total items checked', style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600], fontSize: 13)),
-          ],
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
-        iconTheme: const IconThemeData(color: Colors.black),
-        // Removed 3-dots menu (PopupMenuButton)
+  return Scaffold(
+    appBar: AppBar(
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.list.name ?? '', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+          if (total > 0)
+            Text('$checked/$total items checked', style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600], fontSize: 13)),
+        ],
       ),
-      body: Padding(
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
+      elevation: 0.5,
+      iconTheme: const IconThemeData(color: Colors.black),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.share),
+          tooltip: 'Share List',
+          onPressed: _shareList,
+        ),
+      ],
+    ),
+    body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: _loading
             ? const Center(child: CircularProgressIndicator())

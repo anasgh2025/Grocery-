@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../widgets/add_item_details_sheet.dart';
 import 'category_items_page.dart';
 
 class CategoriesPage extends StatefulWidget {
@@ -80,19 +81,65 @@ class _CategoriesPageState extends State<CategoriesPage> {
                               : null,
                           trailing: const Icon(Icons.arrow_forward_ios, size: 18),
                           onTap: () async {
-                            final result = await Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => CategoryItemsPage(
-                                  category: cat['label'] ?? '',
-                                  categoryIcon: _iconForCategory(cat['icon']),
-                                  accent: widget.accent,
-                                  listId: widget.listId,
+                            final categoryLabel = cat['label'] ?? '';
+                            if (categoryLabel.trim().toLowerCase() == 'other') {
+                              // Show dialog for free text entry
+                              final controller = TextEditingController();
+                              final customName = await showDialog<String>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Enter custom item'),
+                                  content: TextField(
+                                    controller: controller,
+                                    autofocus: true,
+                                    decoration: const InputDecoration(hintText: 'Item name'),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(ctx).pop(),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+                                      child: const Text('Add'),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            );
-                            if (!mounted) return;
-                            if (result == true) {
-                              Navigator.of(context).pop(true);
+                              );
+                              if (customName == null || customName.isEmpty) return;
+                              // Call _onItemTap in CategoryItemsPage logic for duplicate/quantity dialog
+                              // We need to push CategoryItemsPage and trigger _onItemTap with the custom item
+                              final result = await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => CategoryItemsPage(
+                                    category: categoryLabel,
+                                    categoryIcon: _iconForCategory(cat['icon']),
+                                    accent: widget.accent,
+                                    listId: widget.listId,
+                                    initialCustomItemName: customName,
+                                  ),
+                                ),
+                              );
+                              if (!mounted) return;
+                              if (result == true) {
+                                Navigator.of(context).pop(true);
+                              }
+                              // To trigger _onItemTap, you may need to add logic in CategoryItemsPage to check for an initial custom item and call _onItemTap automatically.
+                            } else {
+                              final result = await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => CategoryItemsPage(
+                                    category: categoryLabel,
+                                    categoryIcon: _iconForCategory(cat['icon']),
+                                    accent: widget.accent,
+                                    listId: widget.listId,
+                                  ),
+                                ),
+                              );
+                              if (!mounted) return;
+                              if (result == true) {
+                                Navigator.of(context).pop(true);
+                              }
                             }
                           },
                         ),

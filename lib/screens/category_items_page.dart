@@ -9,6 +9,7 @@ class CategoryItemsPage extends StatefulWidget {
   final IconData categoryIcon;
   final Color accent;
   final String listId;
+  final String? initialCustomItemName;
 
   const CategoryItemsPage({
     Key? key,
@@ -16,6 +17,7 @@ class CategoryItemsPage extends StatefulWidget {
     required this.categoryIcon,
     required this.accent,
     required this.listId,
+    this.initialCustomItemName,
   }) : super(key: key);
 
   @override
@@ -34,6 +36,12 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
   void initState() {
     super.initState();
     _loadItems();
+    // If initialCustomItemName is provided, trigger _onItemTap automatically
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.initialCustomItemName != null && widget.initialCustomItemName!.isNotEmpty) {
+        _onItemTap({'name': widget.initialCustomItemName!});
+      }
+    });
   }
 
   Future<void> _loadItems() async {
@@ -79,8 +87,36 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
   }
 
   Future<void> _onItemTap(Map<String, dynamic> item) async {
-    final name = item['name'] as String;
-    final result = await showAddItemDetailsSheet(
+    String name = item['name'] as String;
+    Map<String, dynamic>? result;
+    if (name.trim().toLowerCase() == 'other') {
+      // Show dialog for free text entry
+      final controller = TextEditingController();
+      final customName = await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Enter custom item'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(hintText: 'Item name'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+              child: const Text('Add'),
+            ),
+          ],
+        ),
+      );
+      if (customName == null || customName.isEmpty) return;
+      name = customName;
+    }
+    result = await showAddItemDetailsSheet(
       context,
       itemName: name,
       categoryLabel: widget.category,
@@ -93,8 +129,11 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
         // Fetch current items in the list
         final currentItems = await api.fetchListItems(widget.listId);
         if (!mounted) return;
+        final resultName = result['name'] as String?;
+        final resultQty = result['qty'] ?? 1;
+        if (resultName == null) return;
         final existing = currentItems.firstWhere(
-          (it) => (it['name'] as String).trim().toLowerCase() == (result['name'] as String).trim().toLowerCase(),
+          (it) => (it['name'] as String).trim().toLowerCase() == resultName.trim().toLowerCase(),
           orElse: () => null,
         );
         if (existing != null) {
@@ -103,7 +142,7 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
             context: context,
             builder: (ctx) => AlertDialog(
               title: const Text('Item already exists'),
-              content: Text('"${result['name']}" is already in your list. Add ${result['qty']} to the existing quantity?'),
+              content: Text('"$resultName" is already in your list. Add $resultQty to the existing quantity?'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(ctx).pop(false),
@@ -118,7 +157,7 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
           );
           if (!mounted) return;
           if (shouldAddQty == true) {
-            final newQty = (existing['qty'] ?? 1) + (result['qty'] ?? 1);
+            final newQty = (existing['qty'] ?? 1) + (resultQty);
             await api.updateListItem(widget.listId, existing['id'], {
               ...existing,
               'qty': newQty,
@@ -128,8 +167,8 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
           // If cancelled, do nothing
         } else {
           await api.addListItem(widget.listId, {
-            'name': result['name'],
-            'qty': result['qty'],
+            'name': resultName,
+            'qty': resultQty,
             'priority': result['priority'] ?? 0,
             // add other fields if needed
           });

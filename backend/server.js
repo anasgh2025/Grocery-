@@ -27,6 +27,8 @@ app.use("/api/categories", categoriesRoutes);
 
 const marketingRoutes = require("./routes/marketing");
 app.use("/api/marketing", marketingRoutes);
+const usersRoutes = require("./routes/users");
+app.use("/api/users", usersRoutes);
 
 // ---- 404 handler (keep AFTER all routes) ----
 app.use((req, res) => {
