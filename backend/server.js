@@ -1,7 +1,3 @@
-// ---- Mount marketing routes ----
-const marketingRoutes = require("./routes/marketing");
-// Mount after app is initialized
-app.use("/api/marketing", marketingRoutes);
 // backend/server.js
 "use strict";
 
@@ -22,15 +18,17 @@ app.get("/health", (req, res) => {
   res.status(200).json({ ok: true, service: "grocery-backend" });
 });
 
-// ---- Mount lists routes ----
+// ---- Mount routes ----
 const listsRoutes = require("./routes/lists");
 app.use("/api/lists", listsRoutes);
 
-// ---- Mount categories routes ----
 const categoriesRoutes = require("./routes/categories");
 app.use("/api/categories", categoriesRoutes);
 
-// ---- 404 handler ----
+const marketingRoutes = require("./routes/marketing");
+app.use("/api/marketing", marketingRoutes);
+
+// ---- 404 handler (keep AFTER all routes) ----
 app.use((req, res) => {
   res.status(404).json({ error: "Not Found" });
 });
@@ -42,6 +40,7 @@ app.use((err, req, res, next) => {
 });
 
 // ---- Config ----
+// DigitalOcean App Platform should ALWAYS provide process.env.PORT
 const PORT = process.env.PORT;
 if (!PORT) {
   console.error(
@@ -92,8 +91,7 @@ async function start() {
       });
 
       // Close Mongo connection too
-      mongoose
-        .connection
+      mongoose.connection
         .close(false)
         .then(() => console.log("✅ MongoDB connection closed."))
         .catch((e) => console.error("❌ Error closing MongoDB connection:", e));
