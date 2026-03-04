@@ -21,27 +21,19 @@ class LandingHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Image.asset(
-                        'assets/images/Logo.png',
-                        width: 18.3,
-                        height: 15.8,
-                        semanticLabel: 'logo',
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2.0), // fine-tune as needed
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            width: 28,
+                            height: 28,
+                            semanticLabel: 'logo',
+                          ),
                       ),
-                      const SizedBox(width: 8),
-
-                      // Heading text
-                      const Text(
-                        'Grocery',
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontWeight: FontWeight.w800,
-                          fontSize: 20,
-                          height: 28 / 20,
-                          letterSpacing: -0.5,
-                          color: Color(0xFF1A1C1E),
-                        ),
-                      ),
+                      const SizedBox(width: 10),
+                      // Removed 'Grocery' text as requested
                     ],
                   ),
                 ],
