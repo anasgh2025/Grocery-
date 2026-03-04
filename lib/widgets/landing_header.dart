@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 // Using bundled Nunito font from assets (configured in pubspec.yaml)
 
 /// Header: logo, avatar and search field
@@ -40,11 +39,11 @@ class LandingHeader extends StatelessWidget {
                             ),
                           ),
                           // Small logo icon inside
-                          SvgPicture.asset(
-                            'assets/images/logo.svg',
+                          Image.asset(
+                            'assets/images/Logo.png',
                             width: 18.3,
                             height: 15.8,
-                            semanticsLabel: 'logo',
+                            semanticLabel: 'logo',
                           ),
                         ],
                       ),
