@@ -22,9 +22,9 @@ app.get("/health", (req, res) => {
 const listsRoutes = require("./routes/lists");
 app.use("/api/lists", listsRoutes);
 
-// ---- Mount marketing routes ----
-const marketingRoutes = require("./routes/marketing");
-app.use("/api/marketing", marketingRoutes);
+// ---- Mount categories routes ----
+const categoriesRoutes = require("./routes/categories");
+app.use("/api/categories", categoriesRoutes);
 
 // ---- 404 handler ----
 app.use((req, res) => {

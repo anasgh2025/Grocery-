@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'widgets/footer_menu.dart';
 import 'widgets/landing_header.dart';
-import 'widgets/search_field.dart';
 import 'widgets/list_section_with_api.dart';
 import 'widgets/marketing_card.dart';
 import 'widgets/create_list_dialog.dart' show CreateListDialog;
@@ -44,14 +43,6 @@ class _LandingPageState extends State<LandingPage> {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: horPad),
                 child: const LandingHeader(),
-              ),
-            ),
-            // ── Fixed search bar ────────────────────────────────────
-            SizedBox(
-              height: 52,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(horPad, 4, horPad, 0),
-                child: const SearchField(),
               ),
             ),
             // ── Fixed marketing card ────────────────────────────────

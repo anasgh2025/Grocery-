@@ -258,8 +258,11 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                                   child: const Text('Cancel'),
                                 ),
                                 TextButton(
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                  ),
                                   onPressed: () => Navigator.of(context).pop(true),
-                                  child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                  child: const Text('Delete', style: TextStyle(color: Colors.white)),
                                 ),
                               ],
                             ),

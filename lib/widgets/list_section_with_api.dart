@@ -213,6 +213,7 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
                         ),
                         onPressed: () async {
                           Navigator.of(dialogCtx).pop();
