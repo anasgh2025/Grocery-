@@ -1,5 +1,6 @@
 // ---- Mount marketing routes ----
 const marketingRoutes = require("./routes/marketing");
+// Mount after app is initialized
 app.use("/api/marketing", marketingRoutes);
 // backend/server.js
 "use strict";
