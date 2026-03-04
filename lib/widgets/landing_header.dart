@@ -22,32 +22,12 @@ class LandingHeader extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      // Logo background circle with shadow (32x32)
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE53935), // #E53935
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: const [
-                                BoxShadow(color: Color(0x29E53935), blurRadius: 15, offset: Offset(0, 10)),
-                                BoxShadow(color: Color(0x29E53935), blurRadius: 6, offset: Offset(0, 4)),
-                              ],
-                            ),
-                          ),
-                          // Small logo icon inside
-                          Image.asset(
-                            'assets/images/Logo.png',
-                            width: 18.3,
-                            height: 15.8,
-                            semanticLabel: 'logo',
-                          ),
-                        ],
+                      Image.asset(
+                        'assets/images/Logo.png',
+                        width: 18.3,
+                        height: 15.8,
+                        semanticLabel: 'logo',
                       ),
-
                       const SizedBox(width: 8),
 
                       // Heading text
