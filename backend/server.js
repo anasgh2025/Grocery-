@@ -58,6 +58,9 @@ if (!MONGODB_URI) {
 }
 
 // ---- DB Connect + Start Server ----
+
+const { seedDefaults } = require("./data/categoriesStore.mongodb");
+
 async function start() {
   try {
     // Fail fast with clearer errors than buffering timeouts
@@ -69,6 +72,9 @@ async function start() {
     });
 
     console.log("✅ MongoDB connected");
+
+    // Seed categories if needed
+    await seedDefaults();
 
     const server = app.listen(Number(PORT), "0.0.0.0", () => {
       console.log(`✅ Server running on port ${PORT}`);
