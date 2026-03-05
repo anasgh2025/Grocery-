@@ -407,7 +407,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
                                             valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                           ),
                                         )
-                                      : const FittedBox(
+                                      : FittedBox(
                                           fit: BoxFit.scaleDown,
                                           child: Text(
                                             AppLocalizations.of(context)!.createListButton,
