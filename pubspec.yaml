@@ -13,9 +13,11 @@ dependencies:
   google_fonts: ^8.0.1
   flutter_svg: ^2.0.7
   http: ^1.1.0
-  share_plus: ^8.0.0
+  share_plus: ^12.0.1
   image_picker: ^1.1.2
   flutter_secure_storage: ^8.0.0
+  flutter_localizations:
+    sdk: flutter
   # Directly added to allow newer transitive versions where safe
   # characters is pinned by the Flutter SDK; keep it transitive
   # material_color_utilities is pinned by the Flutter SDK; keep it transitive

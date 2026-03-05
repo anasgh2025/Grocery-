@@ -4,8 +4,6 @@ import 'widgets/footer_menu.dart';
 import 'widgets/landing_header.dart';
 import 'widgets/list_section_with_api.dart';
 import 'widgets/marketing_card.dart';
-import 'widgets/create_list_dialog.dart' show CreateListDialog;
-import 'models/grocery_list.dart';
 
 /// Mobile-first landing page composed from smaller widgets.
 class LandingPage extends StatefulWidget {
@@ -93,42 +91,7 @@ class _LandingPageState extends State<LandingPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final messenger = ScaffoldMessenger.of(context);
-          final created = await showModalBottomSheet<GroceryList>(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (ctx) => DraggableScrollableSheet(
-              initialChildSize: 0.7,
-              minChildSize: 0.5,
-              maxChildSize: 0.95,
-              expand: false,
-              builder: (_, controller) => Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                ),
-                child: SingleChildScrollView(
-                  controller: controller,
-                  child: CreateListDialog(accent: accent),
-                ),
-              ),
-            ),
-          );
-
-          if (created != null) {
-            messenger.showSnackBar(const SnackBar(content: Text('List created')));
-          }
-        },
-        backgroundColor: accent,
-        child: const Icon(Icons.add, size: 28),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      // Removed FloatingActionButton (+)
       bottomNavigationBar: FooterMenu(accent: accent),
     );
   }

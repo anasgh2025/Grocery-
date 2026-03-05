@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screens/profile_landing_page.dart';
 import '../landing_page.dart';
+import '../screens/settings_page.dart';
 
 /// Footer menu (BottomAppBar) separated for clarity
 class FooterMenu extends StatelessWidget {
@@ -39,7 +40,6 @@ class FooterMenu extends StatelessWidget {
               ],
             ),
           ),
-          // Categories button removed
           InkWell(
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ProfileLandingPage()));
@@ -52,6 +52,21 @@ class FooterMenu extends StatelessWidget {
                 Icon(Icons.person_outline, color: accent, size: 26),
                 const SizedBox(height: 2),
                 Text('Profile', style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
+          InkWell(
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SettingsPage()));
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.settings_outlined, color: accent, size: 26),
+                const SizedBox(height: 2),
+                Text('Settings', style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.w500)),
               ],
             ),
           ),
