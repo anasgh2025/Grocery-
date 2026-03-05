@@ -252,7 +252,8 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (_, i) {
                       final item = items[i];
-                      final name = (item['name'] ?? '') as String;
+                      final locale = Localizations.localeOf(context).languageCode;
+                      final name = (locale == 'ar' ? (item['name_ar'] ?? item['name']) : (item['name'] ?? '')) as String;
                       final emoji = (item['emoji'] ?? '🛒') as String;
                       final priority = (item['priority'] ?? 0) as int;
                       return Stack(
