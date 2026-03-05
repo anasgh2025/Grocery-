@@ -87,7 +87,8 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
   }
 
   Future<void> _onItemTap(Map<String, dynamic> item) async {
-    String name = item['name'] as String;
+  final locale = Localizations.localeOf(context).languageCode;
+  String name = (locale == 'ar' ? (item['name_ar'] ?? item['name']) : (item['name'] ?? '')) as String;
     Map<String, dynamic>? result;
     if (name.trim().toLowerCase() == 'other') {
       // Show dialog for free text entry
