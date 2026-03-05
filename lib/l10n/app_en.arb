@@ -1,0 +1,15 @@
+{
+  "@@locale": "en",
+  "appTitle": "ShopSmart",
+  "settings": "Settings",
+  "changeLanguage": "Change Language",
+  "english": "English",
+  "arabic": "Arabic",
+  "aboutUs": "About Us",
+  "aboutUsContent": "ShopSmart helps you elevate your grocery experience.",
+  "shareApp": "Share the app with a friend",
+  "theme": "Dark Mode",
+  "chooseLanguage": "Choose Language",
+  "ok": "OK",
+  "cancel": "Cancel"
+}

@@ -18,6 +18,8 @@ dependencies:
   flutter_secure_storage: ^8.0.0
   flutter_localizations:
     sdk: flutter
+  flutter_gen: ^5.13.0
+  intl: ^0.20.2
   # Directly added to allow newer transitive versions where safe
   # characters is pinned by the Flutter SDK; keep it transitive
   # material_color_utilities is pinned by the Flutter SDK; keep it transitive
@@ -31,6 +33,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
   assets:
     - assets/images/
   fonts:

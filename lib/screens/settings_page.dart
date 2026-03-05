@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../main.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import '../l10n/app_localizations.dart';
 
 
 class SettingsPage extends StatefulWidget {
@@ -16,9 +17,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(loc.settings),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 0.5,
@@ -35,7 +37,7 @@ class _SettingsPageState extends State<SettingsPage> {
               child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 leading: const Icon(Icons.language, color: Colors.redAccent, size: 28),
-                title: const Text('Change Language', style: TextStyle(fontWeight: FontWeight.bold)),
+                title: Text(loc.changeLanguage, style: const TextStyle(fontWeight: FontWeight.bold)),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -49,7 +51,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             localeNotifier.value = const Locale('en');
                           },
                         ),
-                        const Text('English'),
+                        Text(loc.english),
                       ],
                     ),
                     Row(
@@ -62,7 +64,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             localeNotifier.value = const Locale('ar');
                           },
                         ),
-                        const Text('العربية'),
+                        Text(loc.arabic),
                       ],
                     ),
                   ],
@@ -79,17 +81,17 @@ class _SettingsPageState extends State<SettingsPage> {
               child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 leading: const Icon(Icons.info_outline, color: Colors.redAccent, size: 28),
-                title: const Text('About Us', style: TextStyle(fontWeight: FontWeight.bold)),
+                title: Text(loc.aboutUs, style: const TextStyle(fontWeight: FontWeight.bold)),
                 onTap: () {
                   showAboutDialog(
                     context: context,
-                    applicationName: 'ShopSmart',
+                    applicationName: loc.appTitle,
                     applicationVersion: '1.0.0',
                     applicationLegalese: '© 2026 ShopSmart',
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.only(top: 16.0),
-                        child: Text('ShopSmart helps you elevate your grocery experience.'),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: Text(loc.aboutUsContent),
                       ),
                     ],
                   );
@@ -106,7 +108,7 @@ class _SettingsPageState extends State<SettingsPage> {
               child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 leading: const Icon(Icons.share, color: Colors.redAccent, size: 28),
-                title: const Text('Share the app with a friend', style: TextStyle(fontWeight: FontWeight.bold)),
+                title: Text(loc.shareApp, style: const TextStyle(fontWeight: FontWeight.bold)),
                 onTap: () {
                   Share.share('Check out ShopSmart Grocery App! Download now: https://shopsmart.app');
                 },
@@ -125,7 +127,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   return ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     leading: const Icon(Icons.brightness_6_outlined, color: Colors.redAccent, size: 28),
-                    title: const Text('Dark Mode', style: TextStyle(fontWeight: FontWeight.bold)),
+                    title: Text(loc.theme, style: const TextStyle(fontWeight: FontWeight.bold)),
                     trailing: Switch(
                       value: mode == ThemeMode.dark,
                       onChanged: (val) {
