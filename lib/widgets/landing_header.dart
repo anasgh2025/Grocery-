@@ -12,22 +12,7 @@ class LandingHeader extends StatelessWidget {
       color: const Color(0xFFF9FAFB),
       child: Row(
         children: [
-          // Left: Logo (30%)
-          Expanded(
-            flex: 3,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 20.0),
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  width: 36,
-                  height: 36,
-                  semanticLabel: 'logo',
-                ),
-              ),
-            ),
-          ),
+          // Left: (Logo removed)
           // Right: Notification and Language icons (70%)
           Expanded(
             flex: 7,

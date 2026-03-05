@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'landing_page.dart';
+import 'screens/splash_screen.dart';
 import 'theme.dart';
 
 void main() async {
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Grocery App Landing',
       theme: AppTheme.light(),
-      home: const LandingPage(),
+  home: SplashScreen(),
     );
   }
 }
