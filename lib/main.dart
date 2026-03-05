@@ -4,6 +4,7 @@ import 'landing_page.dart';
 import 'screens/splash_screen.dart';
 import 'theme.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
 
 
 final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.light);
@@ -36,15 +37,8 @@ class MyApp extends StatelessWidget {
               ),
               themeMode: mode,
               locale: locale,
-              supportedLocales: const [
-                Locale('en'),
-                Locale('ar'),
-              ],
-              localizationsDelegates: [
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
+              supportedLocales: AppLocalizations.supportedLocales,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
               home: const SplashScreen(),
             );
           },
