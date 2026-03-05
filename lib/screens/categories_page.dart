@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../l10n/app_localizations.dart';
 import 'category_items_page.dart';
 
 class CategoriesPage extends StatefulWidget {
@@ -47,16 +48,17 @@ class _CategoriesPageState extends State<CategoriesPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Categories', style: theme.textTheme.titleLarge),
+        title: Text(loc.categories, style: theme.textTheme.titleLarge),
         centerTitle: true,
         backgroundColor: widget.accent,
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : (_error != null)
-              ? Center(child: Text('Failed to load categories.\n$_error', textAlign: TextAlign.center))
+              ? Center(child: Text('${loc.failedToLoadCategories}\n$_error', textAlign: TextAlign.center))
         : ListView.builder(
           padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: _categories.length,
@@ -76,7 +78,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           subtitle: (cat['itemCount'] != null)
-                              ? Text('${cat['itemCount']} items', style: theme.textTheme.bodySmall)
+                              ? Text('${cat['itemCount']} ${loc.items}', style: theme.textTheme.bodySmall)
                               : null,
                           trailing: const Icon(Icons.arrow_forward_ios, size: 18),
                           onTap: () async {
@@ -87,20 +89,20 @@ class _CategoriesPageState extends State<CategoriesPage> {
                               final customName = await showDialog<String>(
                                 context: context,
                                 builder: (ctx) => AlertDialog(
-                                  title: const Text('Enter custom item'),
+                                  title: Text(loc.enterCustomItem),
                                   content: TextField(
                                     controller: controller,
                                     autofocus: true,
-                                    decoration: const InputDecoration(hintText: 'Item name'),
+                                    decoration: InputDecoration(hintText: loc.itemName),
                                   ),
                                   actions: [
                                     TextButton(
                                       onPressed: () => Navigator.of(ctx).pop(),
-                                      child: const Text('Cancel'),
+                                      child: Text(loc.cancel),
                                     ),
                                     ElevatedButton(
                                       onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-                                      child: const Text('Add'),
+                                      child: Text(loc.add),
                                     ),
                                   ],
                                 ),

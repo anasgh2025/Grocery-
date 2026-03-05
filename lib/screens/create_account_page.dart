@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../l10n/app_localizations.dart';
 
 class CreateAccountPage extends StatefulWidget {
   /// Allow injecting an ApiService for testability. Defaults to a new instance.
@@ -39,11 +40,12 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
+  final primary = Theme.of(context).colorScheme.primary;
+  final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.of(context).pop()),
-        title: const Text('Create Account'),
+        title: Text(loc.createAccount),
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.black87,
@@ -60,41 +62,41 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 8),
-                    const Text('Full Name', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    Text(loc.fullName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                     const SizedBox(height: 6),
                     TextFormField(
                       controller: _nameCtrl,
-                      decoration: _fieldDecoration('John Doe'),
+                      decoration: _fieldDecoration(loc.nameHint),
                       textInputAction: TextInputAction.next,
-                      validator: (v) => (v ?? '').trim().isEmpty ? 'Please enter your full name' : null,
+                      validator: (v) => (v ?? '').trim().isEmpty ? loc.enterFullName : null,
                     ),
 
                     const SizedBox(height: 12),
-                    const Text('Email Address', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    Text(loc.emailAddress, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                     const SizedBox(height: 6),
                     TextFormField(
                       controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: _fieldDecoration('email@example.com'),
+                      decoration: _fieldDecoration(loc.emailHint),
                       textInputAction: TextInputAction.next,
                       validator: (v) {
                         final s = (v ?? '').trim();
-                        if (s.isEmpty) return 'Please enter your email';
+                        if (s.isEmpty) return loc.enterEmail;
                         final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}");
-                        if (!emailRegex.hasMatch(s)) return 'Please enter a valid email';
+                        if (!emailRegex.hasMatch(s)) return loc.enterValidEmail;
                         return null;
                       },
                     ),
 
                     const SizedBox(height: 12),
-                    const Text('Password', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    Text(loc.password, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                     const SizedBox(height: 6),
                     TextFormField(
                       controller: _passwordCtrl,
                       obscureText: _obscure,
-                      decoration: _fieldDecoration('At least 6 characters'),
+                      decoration: _fieldDecoration(loc.passwordHint),
                       textInputAction: TextInputAction.done,
-                      validator: (v) => (v ?? '').length < 6 ? 'Password must be 6+ chars' : null,
+                      validator: (v) => (v ?? '').length < 6 ? loc.password6chars : null,
                     ),
                     const SizedBox(height: 6),
                     Align(
@@ -109,7 +111,14 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
               ),
 
               const SizedBox(height: 18),
-              const Row(children: [Expanded(child: Divider()), Padding(padding: EdgeInsets.symmetric(horizontal: 8.0), child: Text('OR JOIN WITH', style: TextStyle(color: Colors.black45, fontSize: 12))), Expanded(child: Divider())]),
+              Row(children: [
+                const Expanded(child: Divider()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(loc.orJoinWith, style: const TextStyle(color: Colors.black45, fontSize: 12)),
+                ),
+                const Expanded(child: Divider()),
+              ]),
               const SizedBox(height: 14),
 
               Row(children: [
@@ -117,7 +126,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   child: OutlinedButton.icon(
                     onPressed: () {},
                     icon: const Icon(Icons.g_mobiledata, color: Colors.redAccent),
-                    label: const Text('Google'),
+                    label: Text(loc.google),
                     style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                   ),
                 ),
@@ -126,7 +135,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   child: ElevatedButton.icon(
                     onPressed: () {},
                     icon: const Icon(Icons.apple),
-                    label: const Text('Apple'),
+                    label: Text(loc.apple),
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                   ),
                 ),
@@ -148,7 +157,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                           await api.createUser(name: name, email: email, password: password);
                           if (!mounted) return;
                           // ignore: use_build_context_synchronously
-                          ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Account created successfully')));
+                          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(loc.accountCreated)));
                           // ignore: use_build_context_synchronously
                           Navigator.of(ctx).pop();
                         } catch (e) {
@@ -163,17 +172,17 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                 style: ElevatedButton.styleFrom(backgroundColor: primary, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), elevation: 4),
                 child: _loading
                   ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
-                  : const Text('Sign Up', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                  : Text(loc.signUp, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
               ),
 
               const SizedBox(height: 12),
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                const Text('Already have an account?', style: TextStyle(color: Colors.black54)),
-                TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Log In')),
+                Text(loc.alreadyHaveAccount, style: const TextStyle(color: Colors.black54)),
+                TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(loc.logIn)),
               ]),
 
               const SizedBox(height: 8),
-              const Text('By signing up, you agree to our Terms of Service and Privacy Policy', textAlign: TextAlign.center, style: TextStyle(color: Colors.black38, fontSize: 12)),
+              Text(loc.terms, textAlign: TextAlign.center, style: const TextStyle(color: Colors.black38, fontSize: 12)),
             ],
           ),
         ),

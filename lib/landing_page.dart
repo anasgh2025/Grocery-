@@ -4,6 +4,7 @@ import 'widgets/footer_menu.dart';
 import 'widgets/landing_header.dart';
 import 'widgets/list_section_with_api.dart';
 import 'widgets/marketing_card.dart';
+import 'l10n/app_localizations.dart';
 
 /// Mobile-first landing page composed from smaller widgets.
 class LandingPage extends StatefulWidget {
@@ -29,6 +30,7 @@ class _LandingPageState extends State<LandingPage> {
     final width = MediaQuery.sizeOf(context).width;
     final horPad = width > 420 ? 28.0 : 20.0;
 
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
@@ -60,7 +62,7 @@ class _LandingPageState extends State<LandingPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Active Lists',
+                    loc.activeLists,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -68,7 +70,7 @@ class _LandingPageState extends State<LandingPage> {
                   TextButton(
                     // Calls refresh() on the section without rebuilding this widget
                     onPressed: () => _listKey.currentState?.refresh(),
-                    child: Text('Refresh', style: TextStyle(color: accent)),
+                    child: Text(loc.refresh, style: TextStyle(color: accent)),
                   ),
                 ],
               ),

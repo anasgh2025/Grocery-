@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../screens/profile_landing_page.dart';
 import '../landing_page.dart';
 import '../screens/settings_page.dart';
+import '../l10n/app_localizations.dart';
 
 /// Footer menu (BottomAppBar) separated for clarity
 class FooterMenu extends StatelessWidget {
@@ -12,6 +13,7 @@ class FooterMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return BottomAppBar(
       shape: const CircularNotchedRectangle(),
       notchMargin: 6,
@@ -20,57 +22,57 @@ class FooterMenu extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          InkWell(
-            onTap: () {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const LandingPage()),
-                (route) => false,
-              );
-            },
-            borderRadius: BorderRadius.circular(8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.home, color: accent, size: 26),
-                const SizedBox(height: 2),
-                Text('Home', style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.w500)),
-              ],
-            ),
-          ),
-          InkWell(
-            onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ProfileLandingPage()));
-            },
-            borderRadius: BorderRadius.circular(8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.person_outline, color: accent, size: 26),
-                const SizedBox(height: 2),
-                Text('Profile', style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.w500)),
-              ],
-            ),
-          ),
-          InkWell(
-            onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SettingsPage()));
-            },
-            borderRadius: BorderRadius.circular(8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.settings_outlined, color: accent, size: 26),
-                const SizedBox(height: 2),
-                Text('Settings', style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.w500)),
-              ],
-            ),
-          ),
-        ],
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              InkWell(
+                onTap: () {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LandingPage()),
+                    (route) => false,
+                  );
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.home, color: accent, size: 26),
+                    const SizedBox(height: 2),
+                    Text(loc.home, style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
+              InkWell(
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ProfileLandingPage()));
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.person_outline, color: accent, size: 26),
+                    const SizedBox(height: 2),
+                    Text(loc.profile, style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
+              InkWell(
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SettingsPage()));
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.settings_outlined, color: accent, size: 26),
+                    const SizedBox(height: 2),
+                    Text(loc.settings, style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
