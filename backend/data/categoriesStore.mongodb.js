@@ -31,6 +31,21 @@ const toPlain = (doc) => {
 
 // ── Default seed data (matches the old hard-coded Flutter map) ──────────
 const defaultCategories = [
+  // Example: Arabic-only demo category
+  {
+    id: 'cat-arabic-demo',
+    label: 'منتجات عربية',
+    label_ar: 'منتجات عربية',
+    icon: 'star',
+    order: 100,
+    items: [
+      { name: 'تمر', name_ar: 'تمر', emoji: '🌴' },
+      { name: 'طحينة', name_ar: 'طحينة', emoji: '🥄' },
+      { name: 'حمص', name_ar: 'حمص', emoji: '🫙' },
+      { name: 'لبنة', name_ar: 'لبنة', emoji: '🥛' },
+      { name: 'زعتر', name_ar: 'زعتر', emoji: '🌿' },
+    ],
+  },
   {
     id: 'cat-fruits', label: 'Fruits', label_ar: 'فواكه', icon: 'apple', order: 0,
     items: [

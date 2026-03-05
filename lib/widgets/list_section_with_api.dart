@@ -6,6 +6,7 @@ import '../services/api_service.dart';
 import 'create_list_dialog.dart';
 import 'box_styles.dart';
 import '../screens/list_details_page.dart';
+import '../l10n/app_localizations.dart';
 
 /// Example widget showing how to use the API service to fetch lists
 /// This is a stateful version that fetches data from the backend
@@ -347,22 +348,18 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
         ),
         child: Container(
           decoration: BoxDecoration(
-            // Make the create-card transparent so underlying page/bg shows
-            // through while keeping the dashed rounded border from the
-            // surrounding CustomPaint. This preserves tappability and
-            // visual separation via the painted border.
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Column(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.add_circle_outline, size: 24, color: Colors.grey),
-              SizedBox(height: 6),
+              const Icon(Icons.add_circle_outline, size: 24, color: Colors.grey),
+              const SizedBox(height: 6),
               Text(
-                'Create\nNew List',
+                AppLocalizations.of(context)!.createNewList,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.w500),
+                style: const TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.w500),
               ),
             ],
           ),

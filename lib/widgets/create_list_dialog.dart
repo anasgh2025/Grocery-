@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/grocery_list.dart';
+import '../l10n/app_localizations.dart';
 
 class CreateListDialog extends StatefulWidget {
 
@@ -142,9 +143,9 @@ class _CreateListDialogState extends State<CreateListDialog> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'Create List',
-                                style: TextStyle(
+                              Text(
+                                AppLocalizations.of(context)!.createList,
+                                style: const TextStyle(
                                   fontFamily: 'Nunito',
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
@@ -160,9 +161,9 @@ class _CreateListDialogState extends State<CreateListDialog> {
                             ],
                           ),
                           const SizedBox(height: 24),
-                          const Text(
-                            'LIST NAME',
-                            style: TextStyle(
+                          Text(
+                            AppLocalizations.of(context)!.listName,
+                            style: const TextStyle(
                               fontFamily: 'Nunito',
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -174,7 +175,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
                           TextFormField(
                             controller: _nameController,
                             decoration: InputDecoration(
-                              hintText: 'Enter list name (e.g., Weekly Groceries)',
+                              hintText: AppLocalizations.of(context)!.listNameHint,
                               hintStyle: const TextStyle(
                                 fontFamily: 'Nunito',
                                 fontSize: 14,
@@ -194,15 +195,15 @@ class _CreateListDialogState extends State<CreateListDialog> {
                             style: const TextStyle(fontFamily: 'Nunito', fontSize: 14),
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Please enter a list name';
+                                return AppLocalizations.of(context)!.listNameRequired;
                               }
                               return null;
                             },
                           ),
                           const SizedBox(height: 20),
-                          const Text(
-                            'SELECT CATEGORY',
-                            style: TextStyle(
+                          Text(
+                            AppLocalizations.of(context)!.selectCategory,
+                            style: const TextStyle(
                               fontFamily: 'Nunito',
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -256,9 +257,9 @@ class _CreateListDialogState extends State<CreateListDialog> {
                             }).toList(),
                           ),
                           const SizedBox(height: 20),
-                          const Text(
-                            'PRIORITY',
-                            style: TextStyle(
+                          Text(
+                            AppLocalizations.of(context)!.priority,
+                            style: const TextStyle(
                               fontFamily: 'Nunito',
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -286,7 +287,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
                                     ),
                                     child: Center(
                                       child: Text(
-                                        'Urgent',
+                                        AppLocalizations.of(context)!.urgent,
                                         style: TextStyle(
                                           fontFamily: 'Nunito',
                                           fontSize: 14,
@@ -318,7 +319,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
                                     ),
                                     child: Center(
                                       child: Text(
-                                        'Normal',
+                                        AppLocalizations.of(context)!.normal,
                                         style: TextStyle(
                                           fontFamily: 'Nunito',
                                           fontSize: 14,
@@ -335,9 +336,9 @@ class _CreateListDialogState extends State<CreateListDialog> {
                             ],
                           ),
                           const SizedBox(height: 20),
-                          const Text(
-                            'DUE DATE (optional)',
-                            style: TextStyle(
+                          Text(
+                            AppLocalizations.of(context)!.dueDateOptional,
+                            style: const TextStyle(
                               fontFamily: 'Nunito',
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -409,8 +410,8 @@ class _CreateListDialogState extends State<CreateListDialog> {
                                       : const FittedBox(
                                           fit: BoxFit.scaleDown,
                                           child: Text(
-                                            'CREATE LIST',
-                                            style: TextStyle(
+                                            AppLocalizations.of(context)!.createListButton,
+                                            style: const TextStyle(
                                               fontFamily: 'Nunito',
                                               fontSize: 15,
                                               fontWeight: FontWeight.bold,
