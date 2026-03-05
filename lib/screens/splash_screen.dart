@@ -24,52 +24,19 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 90,
-              height: 90,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE53935),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  width: 48,
-                  height: 48,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'ShopSmart',
-              style: GoogleFonts.nunito(
-                fontWeight: FontWeight.w800,
-                fontSize: 32,
-                color: const Color(0xFF1A1C1E),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'ELEVATE YOUR GROCERY EXPERIENCE',
-              style: GoogleFonts.nunito(
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-                color: Colors.blueGrey.shade900.withOpacity(0.7),
-                letterSpacing: 1.2,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+              child: Image.asset(
+                'assets/images/logo-h.png',
+                width: screenWidth,
+                fit: BoxFit.contain,
               ),
             ),
             const SizedBox(height: 32),
