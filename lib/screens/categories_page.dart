@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import '../widgets/add_item_details_sheet.dart';
 import 'category_items_page.dart';
 
 class CategoriesPage extends StatefulWidget {
