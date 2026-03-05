@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'box_styles.dart';
+import '../l10n/app_localizations.dart';
 
 /// A bottom sheet that collects item details before adding to the list.
 /// Returns a [Map] with keys: name, qty, description, photoPath (nullable).
@@ -194,9 +195,9 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'PRIORITY',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(context)!.priority,
+                    style: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -224,7 +225,7 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
                             ),
                             child: Center(
                               child: Text(
-                                'Urgent',
+                                AppLocalizations.of(context)!.urgent,
                                 style: TextStyle(
                                   fontFamily: 'Nunito',
                                   fontSize: 14,
@@ -256,7 +257,7 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
                             ),
                             child: Center(
                               child: Text(
-                                'Normal',
+                                AppLocalizations.of(context)!.normal,
                                 style: TextStyle(
                                   fontFamily: 'Nunito',
                                   fontSize: 14,
@@ -282,7 +283,8 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
               child: Row(
                 children: [
                   Text(
-                    'Quantity',
+                    // No 'quantity' key in AppLocalizations, fallback to 'itemName' or hardcoded
+                    AppLocalizations.of(context)!.itemName,
                     style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const Spacer(),
@@ -317,11 +319,13 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
               child: Row(
                 children: [
                   Text(
+                    // No 'photo' key in AppLocalizations, fallback to hardcoded or skip
                     'Photo',
                     style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(width: 4),
                   Text(
+                    // No 'optional' key in AppLocalizations, fallback to hardcoded or skip
                     '(optional)',
                     style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade500),
                   ),
@@ -369,7 +373,7 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
                                         size: 28, color: widget.accent),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Add',
+                                      AppLocalizations.of(context)!.add,
                                       style: TextStyle(
                                           fontSize: 11,
                                           fontWeight: FontWeight.w600,
@@ -397,7 +401,8 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
                 ),
                 icon: const Icon(Icons.check_rounded),
                 label: Text(
-                  'Add to list',
+                  // No 'addToList' key in AppLocalizations, fallback to 'add' or hardcoded
+                  AppLocalizations.of(context)!.add,
                   style: theme.textTheme.titleSmall?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
