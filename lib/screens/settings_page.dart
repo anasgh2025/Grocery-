@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../main.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import '../l10n/app_localizations.dart';
 
 
