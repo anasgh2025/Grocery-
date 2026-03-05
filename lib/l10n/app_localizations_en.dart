@@ -9,6 +9,36 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get createList => 'Create List';
+
+  @override
+  String get listName => 'LIST NAME';
+
+  @override
+  String get listNameHint => 'Enter list name (e.g., Weekly Groceries)';
+
+  @override
+  String get listNameRequired => 'Please enter a list name';
+
+  @override
+  String get selectCategory => 'SELECT CATEGORY';
+
+  @override
+  String get priority => 'PRIORITY';
+
+  @override
+  String get urgent => 'Urgent';
+
+  @override
+  String get normal => 'Normal';
+
+  @override
+  String get dueDateOptional => 'DUE DATE (optional)';
+
+  @override
+  String get createListButton => 'CREATE LIST';
+
+  @override
   String get welcomeBack => 'Welcome back';
 
   @override

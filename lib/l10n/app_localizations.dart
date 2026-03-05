@@ -95,6 +95,66 @@ abstract class AppLocalizations {
     Locale('en')
   ];
 
+  /// No description provided for @createList.
+  ///
+  /// In en, this message translates to:
+  /// **'Create List'**
+  String get createList;
+
+  /// No description provided for @listName.
+  ///
+  /// In en, this message translates to:
+  /// **'LIST NAME'**
+  String get listName;
+
+  /// No description provided for @listNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter list name (e.g., Weekly Groceries)'**
+  String get listNameHint;
+
+  /// No description provided for @listNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a list name'**
+  String get listNameRequired;
+
+  /// No description provided for @selectCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'SELECT CATEGORY'**
+  String get selectCategory;
+
+  /// No description provided for @priority.
+  ///
+  /// In en, this message translates to:
+  /// **'PRIORITY'**
+  String get priority;
+
+  /// No description provided for @urgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent'**
+  String get urgent;
+
+  /// No description provided for @normal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get normal;
+
+  /// No description provided for @dueDateOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'DUE DATE (optional)'**
+  String get dueDateOptional;
+
+  /// No description provided for @createListButton.
+  ///
+  /// In en, this message translates to:
+  /// **'CREATE LIST'**
+  String get createListButton;
+
   /// No description provided for @welcomeBack.
   ///
   /// In en, this message translates to:

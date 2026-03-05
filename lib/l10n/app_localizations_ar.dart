@@ -9,6 +9,36 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get createList => 'إنشاء قائمة';
+
+  @override
+  String get listName => 'اسم القائمة';
+
+  @override
+  String get listNameHint => 'أدخل اسم القائمة (مثال: مشتريات الأسبوع)';
+
+  @override
+  String get listNameRequired => 'يرجى إدخال اسم القائمة';
+
+  @override
+  String get selectCategory => 'اختر الفئة';
+
+  @override
+  String get priority => 'الأولوية';
+
+  @override
+  String get urgent => 'عاجل';
+
+  @override
+  String get normal => 'عادي';
+
+  @override
+  String get dueDateOptional => 'تاريخ الاستحقاق (اختياري)';
+
+  @override
+  String get createListButton => 'إنشاء القائمة';
+
+  @override
   String get welcomeBack => 'مرحبًا بعودتك';
 
   @override
