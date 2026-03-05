@@ -2,16 +2,18 @@ const mongoose = require('mongoose');
 
 // ── Schema ──────────────────────────────────────────────────────────────
 const categoryItemSchema = new mongoose.Schema({
-  name:  { type: String, required: true },
-  emoji: { type: String, default: '🛒' },
+  name:    { type: String, required: true },
+  name_ar: { type: String, required: false },
+  emoji:   { type: String, default: '🛒' },
 }, { _id: false });
 
 const categorySchema = new mongoose.Schema({
-  id:    { type: String, required: true, unique: true },
-  label: { type: String, required: true },
-  icon:  { type: String, default: 'shopping_bag' },   // Flutter icon name
-  order: { type: Number, default: 0 },
-  items: { type: [categoryItemSchema], default: [] },
+  id:      { type: String, required: true, unique: true },
+  label:   { type: String, required: true },
+  label_ar:{ type: String, required: false },
+  icon:    { type: String, default: 'shopping_bag' },   // Flutter icon name
+  order:   { type: Number, default: 0 },
+  items:   { type: [categoryItemSchema], default: [] },
 }, { timestamps: true });
 
 const Category = mongoose.model('Category', categorySchema);
@@ -30,18 +32,28 @@ const toPlain = (doc) => {
 // ── Default seed data (matches the old hard-coded Flutter map) ──────────
 const defaultCategories = [
   {
-    id: 'cat-fruits', label: 'Fruits', icon: 'apple', order: 0,
+    id: 'cat-fruits', label: 'Fruits', label_ar: 'فواكه', icon: 'apple', order: 0,
     items: [
-      { name: 'Apple', emoji: '🍎' }, { name: 'Banana', emoji: '🍌' },
-      { name: 'Orange', emoji: '🍊' }, { name: 'Grapes', emoji: '🍇' },
-      { name: 'Strawberry', emoji: '🍓' }, { name: 'Watermelon', emoji: '🍉' },
-      { name: 'Mango', emoji: '🥭' }, { name: 'Pineapple', emoji: '🍍' },
-      { name: 'Peach', emoji: '🍑' }, { name: 'Pear', emoji: '🍐' },
-      { name: 'Cherry', emoji: '🍒' }, { name: 'Lemon', emoji: '🍋' },
-      { name: 'Coconut', emoji: '🥥' }, { name: 'Blueberry', emoji: '🫐' },
-      { name: 'Kiwi', emoji: '🥝' }, { name: 'Avocado', emoji: '🥑' },
-      { name: 'Melon', emoji: '🍈' }, { name: 'Pomegranate', emoji: '🍑' },
-      { name: 'Plum', emoji: '🍑' }, { name: 'Fig', emoji: '🫐' },
+      { name: 'Apple', name_ar: 'تفاح', emoji: '🍎' },
+      { name: 'Banana', name_ar: 'موز', emoji: '🍌' },
+      { name: 'Orange', name_ar: 'برتقال', emoji: '🍊' },
+      { name: 'Grapes', name_ar: 'عنب', emoji: '🍇' },
+      { name: 'Strawberry', name_ar: 'فراولة', emoji: '🍓' },
+      { name: 'Watermelon', name_ar: 'بطيخ', emoji: '🍉' },
+      { name: 'Mango', name_ar: 'مانجو', emoji: '🥭' },
+      { name: 'Pineapple', name_ar: 'أناناس', emoji: '🍍' },
+      { name: 'Peach', name_ar: 'خوخ', emoji: '🍑' },
+      { name: 'Pear', name_ar: 'كمثرى', emoji: '🍐' },
+      { name: 'Cherry', name_ar: 'كرز', emoji: '🍒' },
+      { name: 'Lemon', name_ar: 'ليمون', emoji: '🍋' },
+      { name: 'Coconut', name_ar: 'جوز الهند', emoji: '🥥' },
+      { name: 'Blueberry', name_ar: 'توت أزرق', emoji: '🫐' },
+      { name: 'Kiwi', name_ar: 'كيوي', emoji: '🥝' },
+      { name: 'Avocado', name_ar: 'أفوكادو', emoji: '🥑' },
+      { name: 'Melon', name_ar: 'شمام', emoji: '🍈' },
+      { name: 'Pomegranate', name_ar: 'رمان', emoji: '🍑' },
+      { name: 'Plum', name_ar: 'برقوق', emoji: '🍑' },
+      { name: 'Fig', name_ar: 'تين', emoji: '🫐' },
     ],
   },
   {

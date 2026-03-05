@@ -19,11 +19,15 @@ class _CategoriesPageState extends State<CategoriesPage> {
   bool _loading = true;
   String? _error;
   List<Map<String, dynamic>> _categories = [];
+  bool _initialized = false;
 
   @override
-  void initState() {
-    super.initState();
-    _loadCategories();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      _loadCategories();
+    }
   }
 
   Future<void> _loadCategories() async {
@@ -32,7 +36,8 @@ class _CategoriesPageState extends State<CategoriesPage> {
       _error = null;
     });
     try {
-      final cats = await _api.fetchCategories();
+      final lang = Localizations.localeOf(context).languageCode;
+      final cats = await _api.fetchCategories(lang: lang);
       setState(() {
         _categories = cats;
         _loading = false;

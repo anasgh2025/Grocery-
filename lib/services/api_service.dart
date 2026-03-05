@@ -289,9 +289,13 @@ class ApiService {
 
   /// Fetch all categories (summary: id, label, icon, order, itemCount).
   /// Pass [full] = true to include the items array for each category.
-  Future<List<Map<String, dynamic>>> fetchCategories({bool full = false}) async {
+  Future<List<Map<String, dynamic>>> fetchCategories({bool full = false, String? lang}) async {
     try {
-      final uri = Uri.parse('$baseUrl/categories${full ? '?full=true' : ''}');
+      final params = <String>[];
+      if (full) params.add('full=true');
+      if (lang != null) params.add('lang=$lang');
+      final query = params.isNotEmpty ? '?${params.join('&')}' : '';
+      final uri = Uri.parse('$baseUrl/categories$query');
       final response = await http.get(uri).timeout(timeout);
 
       if (response.statusCode == 200) {

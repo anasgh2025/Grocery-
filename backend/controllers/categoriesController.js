@@ -6,11 +6,23 @@ const getAllCategories = async (req, res) => {
   try {
     const categories = await store.getAll();
     // Return summary (without heavy items array) unless ?full=true
+    const lang = req.query.lang === 'ar' ? 'ar' : 'en';
     if (req.query.full === 'true') {
-      return res.json(categories);
+      // Return all fields, but localize if lang=ar
+      if (lang === 'ar') {
+        return res.json(categories.map(cat => ({
+          ...cat,
+          label: cat.label_ar || cat.label,
+          items: cat.items.map(it => ({ ...it, name: it.name_ar || it.name }))
+        })));
+      } else {
+        return res.json(categories);
+      }
     }
-    const summary = categories.map(({ items, ...rest }) => ({
+    // Summary mode: only top-level info, localize label
+    const summary = categories.map(({ items, label, label_ar, ...rest }) => ({
       ...rest,
+      label: lang === 'ar' ? (label_ar || label) : label,
       itemCount: items ? items.length : 0,
     }));
     res.json(summary);
@@ -24,6 +36,10 @@ const getCategoryById = async (req, res) => {
   try {
     const cat = await store.getById(req.params.id);
     if (!cat) return res.status(404).json({ error: 'Not Found', message: `Category ${req.params.id} not found` });
+    if (req.query.lang === 'ar' && cat) {
+      cat.label = cat.label_ar || cat.label;
+      cat.items = cat.items.map(it => ({ ...it, name: it.name_ar || it.name }));
+    }
     res.json(cat);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch category', message: error.message });
