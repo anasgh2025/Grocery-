@@ -17,6 +17,7 @@ class ListDetailsPage extends StatefulWidget {
 }
 
 class _ListDetailsPageState extends State<ListDetailsPage> {
+  String _searchQuery = '';
   // Map item names to emoji for display
   static const Map<String, String> _itemEmojiMap = {
     'apple': '🍎',
@@ -174,230 +175,264 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
     // Calculate checked/total items
     final int total = _items.length;
     final int checked = _items.where((item) => item['checked'] == true).length;
-  return Scaffold(
-    appBar: AppBar(
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(widget.list.name ?? '', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-          if (total > 0)
-            Text('$checked/$total items checked', style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600], fontSize: 13)),
+    return Scaffold(
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.list.name ?? '', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            if (total > 0)
+              Text('$checked/$total items checked', style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600], fontSize: 13)),
+          ],
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0.5,
+        iconTheme: const IconThemeData(color: Colors.black),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            tooltip: 'Share List',
+            onPressed: _shareList,
+          ),
         ],
       ),
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black,
-      elevation: 0.5,
-      iconTheme: const IconThemeData(color: Colors.black),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.share),
-          tooltip: 'Share List',
-          onPressed: _shareList,
-        ),
-      ],
-    ),
-    body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : _error != null
-                ? Center(child: Text('Failed to load items.\n$_error', textAlign: TextAlign.center))
-                : GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.12,
-                    ),
-                    itemCount: _items.length + 1, // +1 for Add New Item card
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        // Add New Item card always first
-                        return GestureDetector(
-                          onTap: () async {
-                            final result = await Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => CategoriesPage(
-                                  accent: widget.accent,
-                                  listId: widget.list.id,
-                                ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error != null
+                      ? Center(child: Text('Failed to load items.\n$_error', textAlign: TextAlign.center))
+                      : Builder(
+                          builder: (context) {
+                            final filteredItems = _searchQuery.isEmpty
+                                ? _items
+                                : _items.where((item) {
+                                    final name = (item['name'] ?? '').toString().toLowerCase();
+                                    return name.contains(_searchQuery.toLowerCase());
+                                  }).toList();
+                            return GridView.builder(
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 1.12,
                               ),
-                            );
-                            if (!mounted) return;
-                            if (result == true) {
-                              _fetchItems();
-                            }
-                          },
-                          child: CustomPaint(
-                            painter: DashedRRectPainter(
-                              color: Colors.grey.shade300,
-                              strokeWidth: 1.6,
-                              radius: 10.0,
-                              dashWidth: 6.0,
-                              dashSpace: 4.0,
-                            ),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.transparent,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.add_circle_outline, size: 32, color: Colors.grey),
-                                    SizedBox(height: 8),
-                                    Text('Add New Item', style: TextStyle(color: Colors.black54, fontSize: 13, fontWeight: FontWeight.w600)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                      // Item card (shifted by -1)
-                      final item = _items[index - 1];
-                      final isChecked = item['checked'] == true;
-                      // Determine background asset for special categories
-                      // No background image for item card
-                      return GestureDetector(
-                        onTap: () async {
-                          try {
-                            await _api.updateListItem(
-                              widget.list.id,
-                              item['id'],
-                              {'checked': !isChecked},
-                            );
-                            if (!mounted) return;
-                            _fetchItems(notifyParent: true);
-                          } catch (e) {
-                            if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Failed to update item: $e')),
-                            );
-                          }
-                        },
-                        onLongPress: () async {
-                          final shouldDelete = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Delete Item'),
-                              content: Text('Are you sure you want to delete "${item['name']}"?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(false),
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  style: TextButton.styleFrom(
-                                    backgroundColor: Colors.red,
-                                  ),
-                                  onPressed: () => Navigator.of(context).pop(true),
-                                  child: const Text('Delete', style: TextStyle(color: Colors.white)),
-                                ),
-                              ],
-                            ),
-                          );
-                          if (shouldDelete == true) {
-                            try {
-                              await _api.deleteListItem(widget.list.id, item['id']);
-                              if (!mounted) return;
-                              _fetchItems(notifyParent: true);
-                            } catch (e) {
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Failed to delete item: $e')),
-                              );
-                            }
-                          }
-                        },
-                        child: SizedBox(
-                          height: 140, // Increased height for long names
-                          child: Stack(
-                            children: [
-                              // Card shadow/background
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.transparent,
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Color.fromRGBO(0, 0, 0, 0.06),
-                                      blurRadius: 6,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // Foreground content only (no background image)
-                              Container(
-                                height: 140,
-                                decoration: BoxDecoration(
-                                  color: isChecked ? Colors.grey[300] : Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          _getEmojiForItem(item['name']?.toString()),
-                                          style: const TextStyle(fontSize: 24),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            item['name'] ?? '',
-                                            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontSize: 14),
-                                            softWrap: true,
-                                            overflow: TextOverflow.ellipsis,
-                                            maxLines: 2,
+                              itemCount: filteredItems.length + 1, // +1 for Add New Item card
+                              itemBuilder: (context, index) {
+                                if (index == 0) {
+                                  // Add New Item card always first
+                                  return GestureDetector(
+                                    onTap: () async {
+                                      final result = await Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => CategoriesPage(
+                                            accent: widget.accent,
+                                            listId: widget.list.id,
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                    const Spacer(),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Expanded(
-                                          child: Row(
+                                      );
+                                      if (!mounted) return;
+                                      if (result == true) {
+                                        _fetchItems(notifyParent: true);
+                                      }
+                                    },
+                                    child: CustomPaint(
+                                      painter: DashedRRectPainter(
+                                        color: Colors.grey.shade300,
+                                        strokeWidth: 1.6,
+                                        radius: 10.0,
+                                        dashWidth: 6.0,
+                                        dashSpace: 4.0,
+                                      ),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.transparent,
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: const Center(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              if (item['qty'] != null)
-                                                Flexible(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.only(left: 2.0, bottom: 2.0),
-                                                    child: Text(
-                                                      'Qty: ${item['qty']}',
-                                                      style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.grey[700]),
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                ),
-                                              // Price removed from added item card.
+                                              Icon(Icons.add_circle_outline, size: 32, color: Colors.grey),
+                                              SizedBox(height: 8),
+                                              Text('Add New Item', style: TextStyle(color: Colors.black54, fontSize: 13, fontWeight: FontWeight.w600)),
                                             ],
                                           ),
                                         ),
-                                        if (isChecked)
-                                          const Padding(
-                                            padding: EdgeInsets.only(right: 2.0, bottom: 2.0),
-                                            child: Icon(Icons.check_circle, color: Colors.green, size: 22),
+                                      ),
+                                    ),
+                                  );
+                                }
+                                // Item card (shifted by -1)
+                                final item = filteredItems[index - 1];
+                                final isChecked = item['checked'] == true;
+                                // Determine background asset for special categories
+                                // No background image for item card
+                                return GestureDetector(
+                                  onTap: () async {
+                                    try {
+                                      await _api.updateListItem(
+                                        widget.list.id,
+                                        item['id'],
+                                        {'checked': !isChecked},
+                                      );
+                                      if (!mounted) return;
+                                      _fetchItems(notifyParent: true);
+                                    } catch (e) {
+                                      if (!mounted) return;
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Failed to update item: $e')),
+                                      );
+                                    }
+                                  },
+                                  onLongPress: () async {
+                                    final shouldDelete = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text('Delete Item'),
+                                        content: Text('Are you sure you want to delete "${item['name']}"?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.of(context).pop(false),
+                                            child: const Text('Cancel'),
                                           ),
+                                          TextButton(
+                                            style: TextButton.styleFrom(
+                                              backgroundColor: Colors.red,
+                                            ),
+                                            onPressed: () => Navigator.of(context).pop(true),
+                                            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (shouldDelete == true) {
+                                      try {
+                                        await _api.deleteListItem(widget.list.id, item['id']);
+                                        if (!mounted) return;
+                                        _fetchItems(notifyParent: true);
+                                      } catch (e) {
+                                        if (!mounted) return;
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Failed to delete item: $e')),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  child: SizedBox(
+                                    height: 140, // Increased height for long names
+                                    child: Stack(
+                                      children: [
+                                        // Card shadow/background
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.transparent,
+                                            borderRadius: BorderRadius.circular(12),
+                                            boxShadow: const [
+                                              BoxShadow(
+                                                color: Color.fromRGBO(0, 0, 0, 0.06),
+                                                blurRadius: 6,
+                                                offset: Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // Foreground content only (no background image)
+                                        Container(
+                                          height: 140,
+                                          decoration: BoxDecoration(
+                                            color: isChecked ? Colors.grey[300] : Colors.white,
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    _getEmojiForItem(item['name']?.toString()),
+                                                    style: const TextStyle(fontSize: 24),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: Text(
+                                                      item['name'] ?? '',
+                                                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontSize: 14),
+                                                      softWrap: true,
+                                                      overflow: TextOverflow.ellipsis,
+                                                      maxLines: 2,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const Spacer(),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                crossAxisAlignment: CrossAxisAlignment.end,
+                                                children: [
+                                                  Expanded(
+                                                    child: Row(
+                                                      children: [
+                                                        if (item['qty'] != null)
+                                                          Flexible(
+                                                            child: Padding(
+                                                              padding: const EdgeInsets.only(left: 2.0, bottom: 2.0),
+                                                              child: Text(
+                                                                'Qty: ${item['qty']}',
+                                                                style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.grey[700]),
+                                                                overflow: TextOverflow.ellipsis,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        // Price removed from added item card.
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  if (isChecked)
+                                                    const Padding(
+                                                      padding: EdgeInsets.only(right: 2.0, bottom: 2.0),
+                                                      child: Icon(Icons.check_circle, color: Colors.green, size: 22),
+                                                    ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ],
                                     ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
+            ),
+          ),
+          // Search field at the bottom
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search items...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              ),
+              onChanged: (val) {
+                setState(() {
+                  _searchQuery = val;
+                });
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
