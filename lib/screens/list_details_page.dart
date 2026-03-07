@@ -17,6 +17,58 @@ class ListDetailsPage extends StatefulWidget {
 }
 
 class _ListDetailsPageState extends State<ListDetailsPage> {
+  // Map item names to logical grocery categories for robust grouping
+  static const Map<String, String> _itemCategoryMap = {
+    'banana': 'fruits',
+    'grape': 'fruits',
+    'grapes': 'fruits',
+    'apple': 'fruits',
+    'orange': 'fruits',
+    'pear': 'fruits',
+    'peach': 'fruits',
+    'kiwi': 'fruits',
+    'pineapple': 'fruits',
+    'watermelon': 'fruits',
+    'lemon': 'fruits',
+    'strawberry': 'fruits',
+    'avocado': 'fruits',
+    'milk': 'dairy',
+    'cheese': 'dairy',
+    'egg': 'dairy',
+    'butter': 'dairy',
+    'yogurt': 'dairy',
+    'croissant': 'bakery',
+    'bread': 'bakery',
+    'cake': 'bakery',
+    'cookie': 'bakery',
+    'carrot': 'vegetables',
+    'potato': 'vegetables',
+    'tomato': 'vegetables',
+    'lettuce': 'vegetables',
+    'onion': 'vegetables',
+    'corn': 'vegetables',
+    'cucumber': 'vegetables',
+    'pepper': 'vegetables',
+    'mushroom': 'vegetables',
+    'garlic': 'vegetables',
+    'beans': 'vegetables',
+    'broccoli': 'vegetables',
+    'eggplant': 'vegetables',
+    'pumpkin': 'vegetables',
+    'cabbage': 'vegetables',
+    'spinach': 'vegetables',
+    // Add more as needed
+  };
+
+  String _getCategoryForItem(Map<String, dynamic> item) {
+    final backendCat = (item['category'] ?? '').toString().toLowerCase();
+    if (backendCat.isNotEmpty) return backendCat;
+    final name = (item['name'] ?? '').toString().toLowerCase();
+    for (final entry in _itemCategoryMap.entries) {
+      if (name.contains(entry.key)) return entry.value;
+    }
+    return 'other';
+  }
   String _searchQuery = '';
   List<Map<String, dynamic>> _suggestions = [];
   bool _suggestionsLoading = false;
@@ -228,224 +280,9 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       ),
       body: Column(
         children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error != null
-                      ? Center(child: Text('Failed to load items.\n$_error', textAlign: TextAlign.center))
-                      : Builder(
-                          builder: (context) {
-                            final filteredItems = _searchQuery.isEmpty
-                                ? _items
-                                : _items.where((item) {
-                                    final name = (item['name'] ?? '').toString().toLowerCase();
-                                    return name.contains(_searchQuery.toLowerCase());
-                                  }).toList();
-                            return GridView.builder(
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
-                                childAspectRatio: 1.12,
-                              ),
-                              itemCount: filteredItems.length + 1, // +1 for Add New Item card
-                              itemBuilder: (context, index) {
-                                if (index == 0) {
-                                  // Add New Item card always first
-                                  return GestureDetector(
-                                    onTap: () async {
-                                      final result = await Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => CategoriesPage(
-                                            accent: widget.accent,
-                                            listId: widget.list.id,
-                                          ),
-                                        ),
-                                      );
-                                      if (!mounted) return;
-                                      if (result == true) {
-                                        _fetchItems(notifyParent: true);
-                                      }
-                                    },
-                                    child: CustomPaint(
-                                      painter: DashedRRectPainter(
-                                        color: Colors.grey.shade300,
-                                        strokeWidth: 1.6,
-                                        radius: 10.0,
-                                        dashWidth: 6.0,
-                                        dashSpace: 4.0,
-                                      ),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.transparent,
-                                          borderRadius: BorderRadius.circular(10),
-                                        ),
-                                        child: const Center(
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(Icons.add_circle_outline, size: 32, color: Colors.grey),
-                                              SizedBox(height: 8),
-                                              Text('Add New Item', style: TextStyle(color: Colors.black54, fontSize: 13, fontWeight: FontWeight.w600)),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }
-                                // Item card (shifted by -1)
-                                final item = filteredItems[index - 1];
-                                final isChecked = item['checked'] == true;
-                                // Determine background asset for special categories
-                                // No background image for item card
-                                return GestureDetector(
-                                  onTap: () async {
-                                    try {
-                                      await _api.updateListItem(
-                                        widget.list.id,
-                                        item['id'],
-                                        {'checked': !isChecked},
-                                      );
-                                      if (!mounted) return;
-                                      _fetchItems(notifyParent: true);
-                                    } catch (e) {
-                                      if (!mounted) return;
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Failed to update item: $e')),
-                                      );
-                                    }
-                                  },
-                                  onLongPress: () async {
-                                    final shouldDelete = await showDialog<bool>(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        title: const Text('Delete Item'),
-                                        content: Text('Are you sure you want to delete "${item['name']}"?'),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.of(context).pop(false),
-                                            child: const Text('Cancel'),
-                                          ),
-                                          TextButton(
-                                            style: TextButton.styleFrom(
-                                              backgroundColor: Colors.red,
-                                            ),
-                                            onPressed: () => Navigator.of(context).pop(true),
-                                            child: const Text('Delete', style: TextStyle(color: Colors.white)),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                    if (shouldDelete == true) {
-                                      try {
-                                        await _api.deleteListItem(widget.list.id, item['id']);
-                                        if (!mounted) return;
-                                        _fetchItems(notifyParent: true);
-                                      } catch (e) {
-                                        if (!mounted) return;
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Failed to delete item: $e')),
-                                        );
-                                      }
-                                    }
-                                  },
-                                  child: SizedBox(
-                                    height: 140, // Increased height for long names
-                                    child: Stack(
-                                      children: [
-                                        // Card shadow/background
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.transparent,
-                                            borderRadius: BorderRadius.circular(12),
-                                            boxShadow: const [
-                                              BoxShadow(
-                                                color: Color.fromRGBO(0, 0, 0, 0.06),
-                                                blurRadius: 6,
-                                                offset: Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        // Foreground content only (no background image)
-                                        Container(
-                                          height: 140,
-                                          decoration: BoxDecoration(
-                                            color: isChecked ? Colors.grey[300] : Colors.white,
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    _getEmojiForItem(item['name']?.toString()),
-                                                    style: const TextStyle(fontSize: 24),
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Expanded(
-                                                    child: Text(
-                                                      item['name'] ?? '',
-                                                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontSize: 14),
-                                                      softWrap: true,
-                                                      overflow: TextOverflow.ellipsis,
-                                                      maxLines: 2,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const Spacer(),
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                crossAxisAlignment: CrossAxisAlignment.end,
-                                                children: [
-                                                  Expanded(
-                                                    child: Row(
-                                                      children: [
-                                                        if (item['qty'] != null)
-                                                          Flexible(
-                                                            child: Padding(
-                                                              padding: const EdgeInsets.only(left: 2.0, bottom: 2.0),
-                                                              child: Text(
-                                                                'Qty: ${item['qty']}',
-                                                                style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.grey[700]),
-                                                                overflow: TextOverflow.ellipsis,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        // Price removed from added item card.
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  if (isChecked)
-                                                    const Padding(
-                                                      padding: EdgeInsets.only(right: 2.0, bottom: 2.0),
-                                                      child: Icon(Icons.check_circle, color: Colors.green, size: 22),
-                                                    ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-            ),
-          ),
-          // Search field at the bottom
+          // Search field at the top
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: Column(
               children: [
                 TextField(
@@ -497,7 +334,61 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                           leading: Text(s['emoji'] ?? '🛒', style: const TextStyle(fontSize: 22)),
                           title: Text(displayName),
                           onTap: () async {
-                            // Add item to list
+                            // Check if item already exists in _items
+                            final existingItem = _items.firstWhere(
+                              (item) => (item['name'] ?? '').toString().toLowerCase() == (s['name'] ?? '').toString().toLowerCase(),
+                              orElse: () => null,
+                            );
+                            if (existingItem != null) {
+                              if (existingItem['checked'] == true) {
+                                // If item is already ticked, show info dialog only
+                                await showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Item already completed'),
+                                    content: const Text('This item is already in your list and marked as completed.'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.of(context).pop(),
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                return;
+                              }
+                              int currentQty = (existingItem['qty'] ?? 1) is int ? (existingItem['qty'] ?? 1) : int.tryParse(existingItem['qty'].toString()) ?? 1;
+                              final shouldIncrease = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Item already exists'),
+                                  content: Text('This item is already in your list. Do you want to increase the quantity?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(true),
+                                      child: const Text('Increase Qty'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (shouldIncrease == true) {
+                                await _api.updateListItem(
+                                  widget.list.id,
+                                  existingItem['id'],
+                                  {'qty': currentQty + 1},
+                                );
+                                setState(() {
+                                  _searchQuery = '';
+                                  _suggestions = [];
+                                });
+                                _fetchItems(notifyParent: true);
+                              }
+                              return;
+                            }
                             await _api.addListItem(widget.list.id, {
                               'name': s['name'],
                               'qty': 1,
@@ -521,6 +412,404 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                     ),
                   ),
               ],
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error != null
+                      ? Center(child: Text('Failed to load items.\n$_error', textAlign: TextAlign.center))
+                      : Builder(
+                          builder: (context) {
+                            final filteredItems = _searchQuery.isEmpty
+                                ? _items.toList()
+                                : _items.where((item) {
+                                    final name = (item['name'] ?? '').toString().toLowerCase();
+                                    return name.contains(_searchQuery.toLowerCase());
+                                  }).toList();
+                            // Sort: unticked items by category, then checked items
+                            // Define a logical category order for grouping
+                            const categoryOrder = [
+                              'fruits',
+                              'fruit',
+                              'vegetables',
+                              'vegetable',
+                              'dairy',
+                              'meat',
+                              'bakery',
+                              'beverages',
+                              'snacks',
+                              'seafood',
+                              'frozen',
+                              'spices',
+                              'condiments',
+                              'other',
+                            ];
+                            int getCategoryIndex(String cat) {
+                              final idx = categoryOrder.indexWhere((c) => cat == c);
+                              return idx == -1 ? categoryOrder.length : idx;
+                            }
+                            filteredItems.sort((a, b) {
+                              final aChecked = a['checked'] == true ? 1 : 0;
+                              final bChecked = b['checked'] == true ? 1 : 0;
+                              if (aChecked != bChecked) {
+                                return aChecked.compareTo(bChecked);
+                              }
+                              // Both unticked or both checked: if unticked, sort by logical category order only
+                              if (aChecked == 0 && bChecked == 0) {
+                                final aCat = _getCategoryForItem(a);
+                                final bCat = _getCategoryForItem(b);
+                                final aIdx = getCategoryIndex(aCat);
+                                final bIdx = getCategoryIndex(bCat);
+                                return aIdx.compareTo(bIdx);
+                              }
+                              // Both checked: preserve order
+                              return 0;
+                            });
+                            return ListView.builder(
+                              itemCount: filteredItems.length + 1, // +1 for Add New Item card
+                              itemBuilder: (context, index) {
+                                if (index == 0) {
+                                  // Add New Item card always first
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 10.0),
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        final result = await Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) => CategoriesPage(
+                                              accent: widget.accent,
+                                              listId: widget.list.id,
+                                            ),
+                                          ),
+                                        );
+                                        if (!mounted) return;
+                                        if (result == true) {
+                                          _fetchItems(notifyParent: true);
+                                        }
+                                      },
+                                      child: CustomPaint(
+                                        painter: DashedRRectPainter(
+                                          color: Colors.grey.shade300,
+                                          strokeWidth: 1.6,
+                                          radius: 10.0,
+                                          dashWidth: 6.0,
+                                          dashSpace: 4.0,
+                                        ),
+                                        child: Container(
+                                          height: 60,
+                                          decoration: BoxDecoration(
+                                            color: Colors.transparent,
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          child: const Center(
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Icon(Icons.add_circle_outline, size: 28, color: Colors.grey),
+                                                SizedBox(width: 10),
+                                                Text('Add New Item', style: TextStyle(color: Colors.black54, fontSize: 15, fontWeight: FontWeight.w600)),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }
+                                // Item card (shifted by -1)
+                                final item = filteredItems[index - 1];
+                                final isChecked = item['checked'] == true;
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 10.0),
+                                  child: isChecked
+                                      ? Container(
+                                          height: 70,
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[300],
+                                            borderRadius: BorderRadius.circular(12),
+                                            boxShadow: const [
+                                              BoxShadow(
+                                                color: Color.fromRGBO(0, 0, 0, 0.06),
+                                                blurRadius: 6,
+                                                offset: Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                _getEmojiForItem(item['name']?.toString()),
+                                                style: const TextStyle(fontSize: 24),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Text(
+                                                  item['name'] ?? '',
+                                                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontSize: 15),
+                                                  softWrap: true,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  maxLines: 2,
+                                                ),
+                                              ),
+                                              if (item['qty'] != null)
+                                                Padding(
+                                                  padding: const EdgeInsets.only(left: 10.0),
+                                                  child: Text(
+                                                    'Qty: ${item['qty']}',
+                                                    style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.grey[700], decoration: TextDecoration.underline),
+                                                  ),
+                                                ),
+                                              const Padding(
+                                                padding: EdgeInsets.only(left: 10.0),
+                                                child: Icon(Icons.check_circle, color: Colors.green, size: 22),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : Dismissible(
+                                          key: ValueKey(item['id']),
+                                          direction: DismissDirection.horizontal, // Allow both left and right
+                                          background: Container(
+                                            alignment: Alignment.centerLeft,
+                                            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                                            color: Colors.red,
+                                            child: const Row(
+                                              children: [
+                                                Icon(Icons.delete, color: Colors.white),
+                                                SizedBox(width: 8),
+                                                Text('Delete', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                              ],
+                                            ),
+                                          ),
+                                          secondaryBackground: Builder(
+                                            builder: (context) {
+                                              return Container(
+                                                alignment: Alignment.centerRight,
+                                                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                                                color: Colors.blue,
+                                                child: Row(
+                                                  mainAxisAlignment: MainAxisAlignment.end,
+                                                  children: [
+                                                    GestureDetector(
+                                                      onTap: () async {
+                                                        await showDialog(
+                                                          context: context,
+                                                          builder: (context) => AlertDialog(
+                                                            title: const Text('Add Photo'),
+                                                            content: const Text('Photo upload feature coming soon.'),
+                                                            actions: [
+                                                              TextButton(
+                                                                onPressed: () => Navigator.of(context).pop(),
+                                                                child: const Text('OK'),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        );
+                                                      },
+                                                      child: const Icon(Icons.photo_camera, color: Colors.white, size: 28),
+                                                    ),
+                                                    const SizedBox(width: 16),
+                                                    GestureDetector(
+                                                      onTap: () async {
+                                                        await showDialog(
+                                                          context: context,
+                                                          builder: (context) => AlertDialog(
+                                                            title: const Text('Favorite'),
+                                                            content: const Text('Favorite feature coming soon.'),
+                                                            actions: [
+                                                              TextButton(
+                                                                onPressed: () => Navigator.of(context).pop(),
+                                                                child: const Text('OK'),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        );
+                                                      },
+                                                      child: const Icon(Icons.star, color: Colors.orange, size: 28),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          confirmDismiss: (direction) async {
+                                            if (direction == DismissDirection.startToEnd) {
+                                              // Delete
+                                              return await showDialog<bool>(
+                                                context: context,
+                                                builder: (context) => AlertDialog(
+                                                  title: const Text('Delete Item'),
+                                                  content: Text('Are you sure you want to delete "${item['name']}"?'),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () => Navigator.of(context).pop(false),
+                                                      child: const Text('Cancel'),
+                                                    ),
+                                                    TextButton(
+                                                      style: TextButton.styleFrom(
+                                                        backgroundColor: Colors.red,
+                                                      ),
+                                                      onPressed: () => Navigator.of(context).pop(true),
+                                                      child: const Text('Delete', style: TextStyle(color: Colors.white)),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            } else if (direction == DismissDirection.endToStart) {
+                                              // Prevent dismiss, icons are now clickable
+                                              return false;
+                                            }
+                                            return false;
+                                          },
+                                          onDismissed: (direction) async {
+                                            if (direction == DismissDirection.startToEnd) {
+                                              try {
+                                                await _api.deleteListItem(widget.list.id, item['id']);
+                                                if (!mounted) return;
+                                                _fetchItems(notifyParent: true);
+                                              } catch (e) {
+                                                if (!mounted) return;
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text('Failed to delete item: $e')),
+                                                );
+                                              }
+                                            }
+                                          },
+                                          child: GestureDetector(
+                                            onTap: () async {
+                                              try {
+                                                await _api.updateListItem(
+                                                  widget.list.id,
+                                                  item['id'],
+                                                  {'checked': !isChecked},
+                                                );
+                                                if (!mounted) return;
+                                                _fetchItems(notifyParent: true);
+                                              } catch (e) {
+                                                if (!mounted) return;
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text('Failed to update item: $e')),
+                                                );
+                                              }
+                                            },
+                                            child: Container(
+                                              height: 70,
+                                              decoration: BoxDecoration(
+                                                color: isChecked ? Colors.grey[300] : Colors.white,
+                                                borderRadius: BorderRadius.circular(12),
+                                                boxShadow: const [
+                                                  BoxShadow(
+                                                    color: Color.fromRGBO(0, 0, 0, 0.06),
+                                                    blurRadius: 6,
+                                                    offset: Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                              child: Row(
+                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    _getEmojiForItem(item['name']?.toString()),
+                                                    style: const TextStyle(fontSize: 24),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    child: Text(
+                                                      item['name'] ?? '',
+                                                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontSize: 15),
+                                                      softWrap: true,
+                                                      overflow: TextOverflow.ellipsis,
+                                                      maxLines: 2,
+                                                    ),
+                                                  ),
+                                                  if (item['qty'] != null)
+                                                    Padding(
+                                                      padding: const EdgeInsets.only(left: 10.0),
+                                                      child: GestureDetector(
+                                                        onTap: () async {
+                                                          int currentQty = (item['qty'] ?? 1) is int ? (item['qty'] ?? 1) : int.tryParse(item['qty'].toString()) ?? 1;
+                                                          int newQty = currentQty;
+                                                          final result = await showDialog<int>(
+                                                            context: context,
+                                                            builder: (context) {
+                                                              return AlertDialog(
+                                                                title: const Text('Change Quantity'),
+                                                                content: Row(
+                                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                                  children: [
+                                                                    IconButton(
+                                                                      icon: const Icon(Icons.remove_circle_outline),
+                                                                      onPressed: newQty > 1
+                                                                          ? () {
+                                                                              if (newQty > 1) {
+                                                                                newQty--;
+                                                                              }
+                                                                              (context as Element).markNeedsBuild();
+                                                                            }
+                                                                          : null,
+                                                                    ),
+                                                                    Padding(
+                                                                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                                                      child: Text('$newQty', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                                                                    ),
+                                                                    IconButton(
+                                                                      icon: const Icon(Icons.add_circle_outline),
+                                                                      onPressed: () {
+                                                                        newQty++;
+                                                                        (context as Element).markNeedsBuild();
+                                                                      },
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                                actions: [
+                                                                  TextButton(
+                                                                    onPressed: () => Navigator.of(context).pop(),
+                                                                    child: const Text('Cancel'),
+                                                                  ),
+                                                                  TextButton(
+                                                                    onPressed: () => Navigator.of(context).pop(newQty),
+                                                                    child: const Text('Update'),
+                                                                  ),
+                                                                ],
+                                                              );
+                                                            },
+                                                          );
+                                                          if (result != null && result != currentQty) {
+                                                            await _api.updateListItem(
+                                                              widget.list.id,
+                                                              item['id'],
+                                                              {'qty': result},
+                                                            );
+                                                            _fetchItems(notifyParent: true);
+                                                          }
+                                                        },
+                                                        child: Text(
+                                                          'Qty: ${item['qty']}',
+                                                          style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.grey[700], decoration: TextDecoration.underline),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  if (isChecked)
+                                                    const Padding(
+                                                      padding: EdgeInsets.only(left: 10.0),
+                                                      child: Icon(Icons.check_circle, color: Colors.green, size: 22),
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                  );
+                              },
+                            );
+                          },
+                        ),
             ),
           ),
         ],
