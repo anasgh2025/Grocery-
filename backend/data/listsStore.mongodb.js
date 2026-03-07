@@ -7,6 +7,7 @@ const listItemSchema = new mongoose.Schema({
   qty:      { type: Number, default: 1 },
   checked:  { type: Boolean, default: false },
   priority: { type: Number, default: 0 },
+  price:    { type: Number, default: 0 },
 }, { _id: false });
 
 const groceryListSchema = new mongoose.Schema({

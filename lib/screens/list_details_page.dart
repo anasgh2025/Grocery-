@@ -151,7 +151,9 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
         ? items.map((item) {
             final name = item['name'] ?? '';
             final qty = item['qty'] != null ? ' (Qty: ${item['qty']})' : '';
-            return '• $name$qty';
+            final price = item['price'] ?? 0;
+            final checked = item['checked'] == true ? '✔️' : '❌';
+            return '• $name$qty [Price: $price] [$checked]';
           }).join('\n')
         : 'No items in the list.';
     final shareText = 'Here is the list of $listName\n$itemsText\n\nThank you for using the app';
@@ -362,14 +364,24 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
-                                        if (item['qty'] != null)
-                                          Padding(
-                                            padding: const EdgeInsets.only(left: 2.0, bottom: 2.0),
-                                            child: Text(
-                                              'Qty: ${item['qty']}',
-                                              style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.grey[700]),
-                                            ),
+                                        Expanded(
+                                          child: Row(
+                                            children: [
+                                              if (item['qty'] != null)
+                                                Flexible(
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.only(left: 2.0, bottom: 2.0),
+                                                    child: Text(
+                                                      'Qty: ${item['qty']}',
+                                                      style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.grey[700]),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ),
+                                              // Price removed from added item card.
+                                            ],
                                           ),
+                                        ),
                                         if (isChecked)
                                           const Padding(
                                             padding: EdgeInsets.only(right: 2.0, bottom: 2.0),

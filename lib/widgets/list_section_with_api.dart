@@ -170,17 +170,8 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
           final total = list.listItems?.length ?? 0;
           final checked = list.listItems?.where((item) => item['checked'] == true).length ?? 0;
           final itemLabel = total > 0 ? '$checked/$total' : 'No items';
-          String? bgAsset;
-          final category = list.category?.toLowerCase();
-          if (category == 'party') {
-            bgAsset = 'assets/images/party.png';
-          } else if (category == 'work') {
-            bgAsset = 'assets/images/work.png';
-          } else if (category == 'home') {
-            bgAsset = 'assets/images/home.png';
-          } else if (category == 'holiday') {
-            bgAsset = 'assets/images/holiday.png';
-          }
+          // Removed unused bgAsset variable.
+          // Background image logic removed; no image based on category.
           return RepaintBoundary(
             child: _ListCard(
               key: ValueKey(list.id),
@@ -200,7 +191,7 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
               total: total,
               checked: checked,
               itemLabel: itemLabel,
-              bgAsset: bgAsset,
+              bgAsset: null,
               onDelete: (ctx) {
                 showDialog(
                   context: ctx,
@@ -460,23 +451,7 @@ class _ListCard extends StatelessWidget {
               radius: 12,
             ),
           ),
-          // Optional background image for special categories (party/work).
-          if (bgAsset != null)
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.asset(
-                      bgAsset!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          // Background image logic removed.
           // Card content
           Container(
             padding: const EdgeInsets.all(5),
@@ -527,7 +502,7 @@ class _ListCard extends StatelessWidget {
                         const SizedBox(height: 4),
                       ],
                     ),
-                    // ── Item count + status/urgent icon ─────────────────
+                    // ── Item count + price + status/urgent icon ─────────────
                     Row(
                       children: [
                         Expanded(
@@ -555,6 +530,15 @@ class _ListCard extends StatelessWidget {
                                 ),
                               ),
                             ),
+                          ),
+                        ),
+                        // Show price on the right
+                        Text(
+                          'Price:  0${(list.listItems != null && list.listItems!.isNotEmpty && list.listItems![0]['price'] != null) ? list.listItems![0]['price'] : 0}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black54,
                           ),
                         ),
                         if (total > 0 && checked < total)
