@@ -1,8 +1,8 @@
-// Search for items (suggestions)
-router.get('/items/search', ctrl.searchItems);
 const express = require('express');
 const router = express.Router();
 const ctrl = require('../controllers/categoriesController');
+// Search for items (suggestions)
+router.get('/items/search', ctrl.searchItems);
 
 // GET all categories (summary by default, ?full=true for items)
 router.get('/', ctrl.getAllCategories);
