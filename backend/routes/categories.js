@@ -1,3 +1,5 @@
+// Search for items (suggestions)
+router.get('/items/search', ctrl.searchItems);
 const express = require('express');
 const router = express.Router();
 const ctrl = require('../controllers/categoriesController');

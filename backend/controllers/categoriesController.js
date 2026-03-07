@@ -1,3 +1,15 @@
+// GET /categories/items/search?q=term&lang=en|ar
+const searchItems = async (req, res) => {
+  try {
+    const q = req.query.q || '';
+    const lang = req.query.lang === 'ar' ? 'ar' : 'en';
+    if (q.length < 3) return res.json([]);
+    const results = await store.searchItems(q, lang);
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to search items', message: error.message });
+  }
+};
 const { v4: uuidv4 } = require('uuid');
 const store = require('../data/categoriesStore.mongodb');
 
@@ -108,4 +120,5 @@ module.exports = {
   createCategory,
   updateCategory,
   deleteCategory,
+  searchItems,
 };

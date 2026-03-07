@@ -6,6 +6,25 @@ import '../models/grocery_list.dart';
 
 /// Service for handling API calls related to grocery lists
 class ApiService {
+
+  /// Search for item suggestions (across all categories)
+  Future<List<Map<String, dynamic>>> searchItemSuggestions(String query, {String? lang}) async {
+    if (query.length < 3) return [];
+    try {
+      final params = <String>[];
+      params.add('q=${Uri.encodeComponent(query)}');
+      if (lang != null) params.add('lang=$lang');
+      final url = '$baseUrl/categories/items/search?${params.join('&')}';
+      final response = await http.get(Uri.parse(url)).timeout(timeout);
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonData = json.decode(response.body);
+        return jsonData.cast<Map<String, dynamic>>();
+      }
+      throw Exception('Failed to fetch item suggestions: ${response.statusCode}');
+    } catch (e) {
+      throw Exception('Error fetching item suggestions: $e');
+    }
+  }
   // ── Production backend on DigitalOcean App Platform ──
   // Override at build-time with: --dart-define=API_BASE_URL=https://your-url.com/api
   static const String _prodBaseUrl = String.fromEnvironment(

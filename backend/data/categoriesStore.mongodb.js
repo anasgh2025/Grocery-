@@ -1,3 +1,26 @@
+// Search for items by name (across all categories, case-insensitive, supports Arabic)
+const searchItems = async (query, lang = 'en') => {
+  if (!query || query.length < 3) return [];
+  const regex = new RegExp(query, 'i');
+  const docs = await Category.find().lean();
+  let results = [];
+  for (const cat of docs) {
+    for (const item of cat.items) {
+      const name = lang === 'ar' ? (item.name_ar || item.name) : item.name;
+      if (name && regex.test(name)) {
+        results.push({
+          name: item.name,
+          name_ar: item.name_ar,
+          emoji: item.emoji,
+          categoryId: cat.id,
+          categoryLabel: cat.label,
+          categoryLabelAr: cat.label_ar,
+        });
+      }
+    }
+  }
+  return results;
+};
 const mongoose = require('mongoose');
 
 // ── Schema ──────────────────────────────────────────────────────────────
@@ -598,4 +621,5 @@ module.exports = {
   remove,
   seedDefaults,
   Category,
+  searchItems,
 };

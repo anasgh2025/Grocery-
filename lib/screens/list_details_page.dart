@@ -18,6 +18,8 @@ class ListDetailsPage extends StatefulWidget {
 
 class _ListDetailsPageState extends State<ListDetailsPage> {
   String _searchQuery = '';
+  List<Map<String, dynamic>> _suggestions = [];
+  bool _suggestionsLoading = false;
   // Map item names to emoji for display
   static const Map<String, String> _itemEmojiMap = {
     'apple': '🍎',
@@ -110,6 +112,35 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
   List<dynamic> _items = [];
   bool _loading = true;
   String? _error;
+
+  // Fetch suggestions from backend
+  Future<void> _fetchSuggestions(String query) async {
+    if (query.length < 3) {
+      setState(() {
+        _suggestions = [];
+        _suggestionsLoading = false;
+      });
+      return;
+    }
+    setState(() {
+      _suggestionsLoading = true;
+    });
+    try {
+      // Exclude items already in the list
+      final currentNames = _items.map((it) => (it['name'] ?? '').toString().toLowerCase()).toSet();
+      final lang = Localizations.localeOf(context).languageCode;
+      final suggestions = await _api.searchItemSuggestions(query, lang: lang);
+      setState(() {
+        _suggestions = suggestions.where((s) => !currentNames.contains((s['name'] ?? '').toString().toLowerCase())).toList();
+        _suggestionsLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _suggestions = [];
+        _suggestionsLoading = false;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -416,20 +447,74 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
           ),
           // Search field at the bottom
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search items...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-              ),
-              onChanged: (val) {
-                setState(() {
-                  _searchQuery = val;
-                });
-              },
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Column(
+              children: [
+                TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search items...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                  ),
+                  onChanged: (val) {
+                    setState(() {
+                      _searchQuery = val;
+                    });
+                    _fetchSuggestions(val);
+                  },
+                ),
+                if (_suggestionsLoading)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8.0),
+                    child: LinearProgressIndicator(minHeight: 2),
+                  ),
+                if (_suggestions.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _suggestions.length,
+                      separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[200]),
+                      itemBuilder: (context, idx) {
+                        final s = _suggestions[idx];
+                        final displayName = Localizations.localeOf(context).languageCode == 'ar'
+                            ? (s['name_ar'] ?? s['name'] ?? '')
+                            : (s['name'] ?? '');
+                        return ListTile(
+                          leading: Text(s['emoji'] ?? '🛒', style: const TextStyle(fontSize: 22)),
+                          title: Text(displayName),
+                          onTap: () async {
+                            // Add item to list
+                            await _api.addListItem(widget.list.id, {
+                              'name': s['name'],
+                              'qty': 1,
+                            });
+                            setState(() {
+                              _searchQuery = '';
+                              _suggestions = [];
+                            });
+                            _fetchItems(notifyParent: true);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
