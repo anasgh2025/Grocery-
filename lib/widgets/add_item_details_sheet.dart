@@ -47,8 +47,6 @@ class _AddItemDetailsSheet extends StatefulWidget {
 class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
   String _selectedPriority = 'Normal';
   int _qty = 1;
-  double _price = 0;
-  final TextEditingController _priceController = TextEditingController(text: '0');
   // Removed description controller
   XFile? _photo;
   bool _pickingPhoto = false;
@@ -110,7 +108,6 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
 
   @override
   void dispose() {
-  _priceController.dispose();
   super.dispose();
   }
 
@@ -308,36 +305,6 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
                 ],
               ),
             ),
-            // ── Price input ────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Row(
-                children: [
-                  Text(
-                    'Price',
-                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      controller: _priceController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        hintText: '0',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                        contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                      ),
-                      onChanged: (val) {
-                        setState(() {
-                          _price = double.tryParse(val) ?? 0;
-                        });
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
             const SizedBox(height: 20),
 
@@ -446,7 +413,6 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
                     'priority': _selectedPriority == 'Urgent' ? 1 : 0,
                     'photoPath': _photo?.path,
                     'checked': false,
-                    'price': _price,
                   });
                 },
               ),

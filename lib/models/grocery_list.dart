@@ -35,13 +35,7 @@ class GroceryList {
       time: json['time'] as String,
       category: (json['category'] as String?) ?? (json['type'] as String?),
       icon: _getIconFromString(json['icon'] as String?),
-      listItems: json['listItems'] != null
-          ? (json['listItems'] as List).map((item) {
-              final map = Map<String, dynamic>.from(item as Map);
-              if (!map.containsKey('price')) map['price'] = 0;
-              return map;
-            }).toList()
-          : null,
+      listItems: json['listItems'] != null ? List<dynamic>.from(json['listItems'] as List) : null,
     );
   }
 
@@ -56,12 +50,7 @@ class GroceryList {
       'time': (time.isNotEmpty ? time : ''),
       if (category != null) 'category': category,
       'icon': _getIconString(icon),
-      if (listItems != null)
-        'listItems': listItems!.map((item) {
-          final map = Map<String, dynamic>.from(item as Map);
-          if (!map.containsKey('price')) map['price'] = 0;
-          return map;
-        }).toList(),
+      if (listItems != null) 'listItems': listItems,
     };
   }
 

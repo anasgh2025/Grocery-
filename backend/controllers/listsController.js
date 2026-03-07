@@ -174,8 +174,8 @@ const deleteList = async (req, res) => {
   // Add item to a list (accepts optional 'priority')
   const addListItem = async (req, res) => {
     try {
-      const { id } = req.params;
-      const { name, qty, priority, price } = req.body;
+  const { id } = req.params;
+  const { name, qty, priority } = req.body;
       if (!name) return res.status(400).json({ error: 'Bad Request', message: 'Missing item name' });
 
       const list = await store.getById(id);
@@ -186,7 +186,6 @@ const deleteList = async (req, res) => {
         name,
         qty: qty || 1,
         checked: false,
-        price: price !== undefined ? price : 0,
       };
       if (priority !== undefined) newItem.priority = priority;
 
@@ -205,7 +204,7 @@ const deleteList = async (req, res) => {
   const updateListItem = async (req, res) => {
     try {
       const { id, itemId } = req.params;
-      const { name, qty, checked, priority, price } = req.body;
+  const { name, qty, checked, priority } = req.body;
       const list = await store.getById(id);
       if (!list) return res.status(404).json({ error: 'Not Found', message: `List ${id} not found` });
 
@@ -219,7 +218,6 @@ const deleteList = async (req, res) => {
         name: name !== undefined ? name : item.name,
         qty: qty !== undefined ? qty : item.qty,
         checked: checked !== undefined ? checked : item.checked,
-        price: price !== undefined ? price : (item.price !== undefined ? item.price : 0),
       };
       if (priority !== undefined) updatedItem.priority = priority;
       else if (item.priority !== undefined) updatedItem.priority = item.priority;

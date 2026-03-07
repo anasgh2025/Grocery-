@@ -532,15 +532,7 @@ class _ListCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        // Show price on the right
-                        Text(
-                          'Price:  0${(list.listItems != null && list.listItems!.isNotEmpty && list.listItems![0]['price'] != null) ? list.listItems![0]['price'] : 0}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black54,
-                          ),
-                        ),
+                        // Price display removed
                         if (total > 0 && checked < total)
                           const Icon(Icons.error_outline, size: 20, color: Colors.redAccent),
                       ],
