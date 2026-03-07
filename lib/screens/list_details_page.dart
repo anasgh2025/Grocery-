@@ -126,12 +126,10 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       _suggestionsLoading = true;
     });
     try {
-      // Exclude items already in the list
-      final currentNames = _items.map((it) => (it['name'] ?? '').toString().toLowerCase()).toSet();
       final lang = Localizations.localeOf(context).languageCode;
       final suggestions = await _api.searchItemSuggestions(query, lang: lang);
       setState(() {
-        _suggestions = suggestions.where((s) => !currentNames.contains((s['name'] ?? '').toString().toLowerCase())).toList();
+        _suggestions = suggestions;
         _suggestionsLoading = false;
       });
     } catch (e) {
@@ -512,6 +510,14 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                           },
                         );
                       },
+                    ),
+                  ),
+                if (!_suggestionsLoading && _searchQuery.length >= 3 && _suggestions.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12.0),
+                    child: Text(
+                      'No data match',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 15),
                     ),
                   ),
               ],
