@@ -169,15 +169,23 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
                 key: ValueKey(list.id),
                 list: list,
                 onTap: () async {
+                  // Always fetch the latest list from backend before opening details
+                  final latestLists = await _apiService.fetchGroceryLists();
+                  final latest = latestLists.firstWhere(
+                    (l) => l.id == list.id,
+                    orElse: () => list,
+                  );
                   await Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => ListDetailsPage(
-                        list: list,
+                        list: latest,
                         accent: widget.accent,
                         onItemsChanged: _fetchLists,
                       ),
                     ),
                   );
+                  // Always refresh after returning from item details page
+                  await _fetchLists();
                 },
                 allChecked: allChecked,
                 total: total,

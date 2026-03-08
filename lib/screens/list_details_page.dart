@@ -1,8 +1,9 @@
-
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/footer_menu.dart';
 import 'categories_page.dart';
+import '../services/api_service.dart';
+
 // Dashed border painter for the 'Create New Item' card
 class _DashedRRectPainter extends CustomPainter {
   final Color color;
@@ -43,7 +44,9 @@ class _DashedRRectPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
+
+
+  }
 
 
 class ListDetailsPage extends StatefulWidget {
@@ -59,6 +62,19 @@ class ListDetailsPage extends StatefulWidget {
 }
 
 class _ListDetailsPageState extends State<ListDetailsPage> {
+
+  Future<void> _refreshListItems() async {
+    try {
+      final api = ApiService();
+      final items = await api.fetchListItems(widget.list.id);
+      setState(() {
+        widget.list.listItems = items;
+      });
+    } catch (e) {
+      // Optionally show error
+      debugPrint('Failed to refresh items: $e');
+    }
+  }
   final TextEditingController _searchController = TextEditingController();
   bool _showSuggestions = false;
   List<Map<String, dynamic>> _suggestions = [];
@@ -98,12 +114,17 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
     });
   }
 
-  void _onTapSuggestion(Map<String, dynamic> suggestion) {
+  void _onTapSuggestion(Map<String, dynamic> suggestion) async {
     // TODO: Add item from suggestion
     setState(() {
       _showSuggestions = false;
       _searchController.clear();
     });
+    // After adding, refresh the list
+    await _refreshListItems();
+    if (widget.onItemsChanged != null) {
+      widget.onItemsChanged!();
+    }
   }
 
       void _onQuantityTap(Map<String, dynamic> item) async {
@@ -134,78 +155,32 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       Widget _buildItemCard(Map<String, dynamic> item, {bool checked = false}) {
         final theme = Theme.of(context);
         final emoji = item['emoji'] as String?;
-        return Dismissible(
-          key: ValueKey(item['id'] ?? item['name']),
-          background: Container(
-            color: Colors.redAccent,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.only(left: 24),
-            child: const Icon(Icons.delete, color: Colors.white),
-          ),
-          secondaryBackground: Container(
-            color: Colors.blue.shade100,
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 24),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.photo_camera),
-                  onPressed: () => _onPhotoTap(item),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.star_border),
-                  onPressed: () => _onFavoriteTap(item),
-                ),
-              ],
-            ),
-          ),
-          confirmDismiss: (direction) async {
-            if (direction == DismissDirection.startToEnd) {
-              _onDeleteItem(item);
-              return true;
-            } else if (direction == DismissDirection.endToStart) {
-              return false;
-            }
-            return false;
-          },
-          child: GestureDetector(
-            onTap: () => _onCheckChanged(item, !(item['checked'] == true)),
-            child: Card(
-              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 2,
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                leading: (emoji != null && emoji.isNotEmpty)
-                    ? Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: Text(emoji, style: const TextStyle(fontSize: 24)),
-                      )
-                    : null,
-                title: Text(
-                  item['name']?.toString() ?? '',
-                  style: (item['checked'] == true)
-                      ? const TextStyle(decoration: TextDecoration.lineThrough, color: Colors.grey)
-                      : theme.textTheme.bodyLarge,
-                ),
-                subtitle: GestureDetector(
-                  onTap: () => _onQuantityTap(item),
-                  child: item['qty'] != null
-                      ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('Qty: ${item['qty']}'),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.edit, size: 14, color: Colors.grey),
-                          ],
-                        )
-                      : null,
-                ),
-                trailing: (item['checked'] == true)
-                    ? const Icon(Icons.check_circle, color: Colors.green)
-                    : null,
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Material(
+            color: Colors.white,
+            elevation: 0.5,
+            borderRadius: BorderRadius.circular(14),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              leading: (emoji != null && emoji.isNotEmpty)
+                  ? Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Text(emoji, style: const TextStyle(fontSize: 24)),
+                    )
+                  : null,
+              title: Text(
+                item['name']?.toString() ?? '',
+                style: (item['checked'] == true)
+                    ? const TextStyle(decoration: TextDecoration.lineThrough, color: Colors.grey)
+                    : theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
+              subtitle: item['qty'] != null
+                  ? Text('Qty: ${item['qty']}', style: theme.textTheme.bodySmall)
+                  : null,
+              trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+              onTap: () => _onCheckChanged(item, !(item['checked'] == true)),
+              onLongPress: () => _onQuantityTap(item),
             ),
           ),
         );
@@ -215,7 +190,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       Widget build(BuildContext context) {
         final theme = Theme.of(context);
         final loc = AppLocalizations.of(context)!;
-        return Scaffold(
+  return Scaffold(
           appBar: AppBar(
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
@@ -279,8 +254,8 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
+                  onTap: () async {
+                    await Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => CategoriesPage(
                           accent: widget.accent,
@@ -288,6 +263,11 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                         ),
                       ),
                     );
+                    // Always refresh after returning from add item screen
+                    await _refreshListItems();
+                    if (widget.onItemsChanged != null) {
+                      widget.onItemsChanged!();
+                    }
                   },
                   child: CustomPaint(
                     painter: _DashedRRectPainter(
