@@ -178,8 +178,23 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
               subtitle: item['qty'] != null
                   ? Text('Qty: ${item['qty']}', style: theme.textTheme.bodySmall)
                   : null,
-              trailing: const Icon(Icons.arrow_forward_ios, size: 18),
-              onTap: () => _onCheckChanged(item, !(item['checked'] == true)),
+              // Removed trailing arrow
+              onTap: () async {
+                final newChecked = !(item['checked'] == true);
+                setState(() {
+                  item['checked'] = newChecked;
+                });
+                try {
+                  final api = ApiService();
+                  await api.updateListItem(widget.list.id, item['_id'], {'checked': newChecked});
+                } catch (e) {
+                  debugPrint('Failed to update item checked state: $e');
+                  // Optionally show error to user
+                }
+                if (widget.onItemsChanged != null) {
+                  widget.onItemsChanged!();
+                }
+              },
               onLongPress: () => _onQuantityTap(item),
             ),
           ),

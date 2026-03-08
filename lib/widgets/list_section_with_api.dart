@@ -103,7 +103,6 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
   @override
   Widget build(BuildContext context) {
     Widget mainContent;
-    // ── Loading state ──────────────────────────────────────────────────────
     if (_isLoading) {
       mainContent = SliverToBoxAdapter(
         child: SizedBox(
@@ -130,7 +129,6 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
         ),
       );
     } else if (_lists.isEmpty) {
-      // ── Empty state ────────────────────────────────────────────────────────
       mainContent = SliverPadding(
         padding: const EdgeInsets.only(left: 0, top: 0),
         sliver: SliverGrid(
@@ -147,7 +145,6 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
         ),
       );
     } else {
-      // ── Grid — the only thing returned when data is loaded ─────────────────
       mainContent = SliverGrid(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
@@ -157,7 +154,6 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
         ),
         delegate: SliverChildBuilderDelegate(
           (context, index) {
-            // Always show the 'Add New List' card as the first card
             if (index == 0) return _buildCreateListCard();
             final list = _lists[index - 1];
             final allChecked = _allItemsChecked(list);
@@ -169,7 +165,6 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
                 key: ValueKey(list.id),
                 list: list,
                 onTap: () async {
-                  // Always fetch the latest list from backend before opening details
                   final latestLists = await _apiService.fetchGroceryLists();
                   final latest = latestLists.firstWhere(
                     (l) => l.id == list.id,
@@ -184,7 +179,6 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
                       ),
                     ),
                   );
-                  // Always refresh after returning from item details page
                   await _fetchLists();
                 },
                 allChecked: allChecked,
@@ -266,16 +260,12 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
         ),
       );
     }
-
-    // Only return the sliver content. Footer menu should be added in the parent Scaffold.
     return mainContent;
   }
-
   Widget _buildCreateListCard() {
     return GestureDetector(
       key: const ValueKey('create'),
       onTap: () async {
-        // Open as a half-screen modal bottom sheet
         final created = await showModalBottomSheet<GroceryList>(
           context: context,
           isScrollControlled: true,
@@ -313,12 +303,9 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
             );
           },
         );
-
-        // If a list was created, refresh and show a simple confirmation dialog
         if (created != null) {
           await _fetchLists();
           if (!mounted) return;
-          // Show a toast/snackbar instead of dialog
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('List "${created.name}" created successfully!'),
