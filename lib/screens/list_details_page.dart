@@ -186,7 +186,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                 });
                 try {
                   final api = ApiService();
-                  await api.updateListItem(widget.list.id, item['_id'], {'checked': newChecked});
+                  await api.updateListItem(widget.list.id, item['id'], {'checked': newChecked});
                 } catch (e) {
                   debugPrint('Failed to update item checked state: $e');
                   // Optionally show error to user
