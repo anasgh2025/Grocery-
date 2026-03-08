@@ -464,8 +464,7 @@ class _ListCard extends StatelessWidget {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.shopping_basket, size: 20, color: Colors.orange),
-                                const SizedBox(width: 6),
+                                // No icon or emoji
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                                   decoration: BoxDecoration(
