@@ -175,26 +175,27 @@ const deleteList = async (req, res) => {
   const addListItem = async (req, res) => {
     try {
   const { id } = req.params;
-  const { name, qty, priority } = req.body;
-      if (!name) return res.status(400).json({ error: 'Bad Request', message: 'Missing item name' });
+  const { name, qty, priority, emoji } = req.body;
+  if (!name) return res.status(400).json({ error: 'Bad Request', message: 'Missing item name' });
 
-      const list = await store.getById(id);
-      if (!list) return res.status(404).json({ error: 'Not Found', message: `List ${id} not found` });
+  const list = await store.getById(id);
+  if (!list) return res.status(404).json({ error: 'Not Found', message: `List ${id} not found` });
 
-      const newItem = {
-        id: uuidv4(),
-        name,
-        qty: qty || 1,
-        checked: false,
-      };
-      if (priority !== undefined) newItem.priority = priority;
+  const newItem = {
+    id: uuidv4(),
+    name,
+    qty: qty || 1,
+    checked: false,
+  };
+  if (priority !== undefined) newItem.priority = priority;
+  if (emoji !== undefined) newItem.emoji = emoji;
 
-      list.listItems = list.listItems || [];
-      list.listItems.push(newItem);
+  list.listItems = list.listItems || [];
+  list.listItems.push(newItem);
 
-      await store.update(id, list);
+  await store.update(id, list);
 
-      res.status(201).json(newItem);
+  res.status(201).json(newItem);
     } catch (error) {
       res.status(500).json({ error: 'Failed to add item', message: error.message });
     }
