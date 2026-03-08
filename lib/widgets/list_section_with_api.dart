@@ -157,6 +157,7 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
         ),
         delegate: SliverChildBuilderDelegate(
           (context, index) {
+            // Always show the 'Add New List' card as the first card
             if (index == 0) return _buildCreateListCard();
             final list = _lists[index - 1];
             final allChecked = _allItemsChecked(list);
@@ -443,7 +444,6 @@ class _ListCard extends StatelessWidget {
               radius: 12,
             ),
           ),
-          // Background image logic removed.
           // Card content
           Container(
             padding: const EdgeInsets.all(5),
@@ -462,20 +462,26 @@ class _ListCard extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF3F4F6),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                list.time,
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.black54,
-                                  fontWeight: FontWeight.w500,
+                            Row(
+                              children: [
+                                const Icon(Icons.shopping_basket, size: 20, color: Colors.orange),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF3F4F6),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    list.time,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.black54,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                             if (allChecked)
                               const Icon(Icons.check_circle, size: 20, color: Colors.green),
@@ -524,7 +530,6 @@ class _ListCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        // Price display removed
                         if (total > 0 && checked < total)
                           const Icon(Icons.error_outline, size: 20, color: Colors.redAccent),
                       ],
@@ -544,11 +549,11 @@ class _ListCard extends StatelessWidget {
                       }
                     },
                     itemBuilder: (ctx) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'share',
                         child: ListTile(
-                          leading: Icon(Icons.share),
-                          title: Text('Share'),
+                          leading: const Icon(Icons.share),
+                          title: Text(AppLocalizations.of(context)!.share),
                         ),
                       ),
                       const PopupMenuItem(

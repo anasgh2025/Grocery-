@@ -138,6 +138,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get add => 'Add';
 
   @override
+  String get quantity => 'Quantity';
+
+  @override
+  String get photo => 'Photo';
+
+  @override
+  String get optional => '(optional)';
+
+  @override
+  String get addToList => 'Add to list';
+
+  @override
   String get appTitle => 'ShopSmart';
 
   @override
@@ -226,4 +238,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get terms => 'By signing up, you agree to our Terms of Service and Privacy Policy';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get favorite => 'Favorite';
+
+  @override
+  String get addPhoto => 'Add Photo';
+
+  @override
+  String get noSuggestions => 'No suggestions found.';
+
+  @override
+  String get completed => 'Completed';
 }

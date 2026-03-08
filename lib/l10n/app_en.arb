@@ -75,4 +75,10 @@
   "alreadyHaveAccount": "Already have an account?",
   "logIn": "Log In",
   "terms": "By signing up, you agree to our Terms of Service and Privacy Policy"
+,
+  "share": "Share",
+  "favorite": "Favorite",
+  "addPhoto": "Add Photo",
+  "noSuggestions": "No suggestions found.",
+  "completed": "Completed"
 }

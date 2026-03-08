@@ -341,6 +341,30 @@ abstract class AppLocalizations {
   /// **'Add'**
   String get add;
 
+  /// No description provided for @quantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get quantity;
+
+  /// No description provided for @photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get photo;
+
+  /// No description provided for @optional.
+  ///
+  /// In en, this message translates to:
+  /// **'(optional)'**
+  String get optional;
+
+  /// No description provided for @addToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to list'**
+  String get addToList;
+
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
@@ -520,6 +544,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'By signing up, you agree to our Terms of Service and Privacy Policy'**
   String get terms;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// No description provided for @favorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get favorite;
+
+  /// No description provided for @addPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Photo'**
+  String get addPhoto;
+
+  /// No description provided for @noSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'No suggestions found.'**
+  String get noSuggestions;
+
+  /// No description provided for @completed.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get completed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

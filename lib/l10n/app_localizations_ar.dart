@@ -138,6 +138,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get add => 'إضافة';
 
   @override
+  String get quantity => 'الكمية';
+
+  @override
+  String get photo => 'صورة';
+
+  @override
+  String get optional => '(اختياري)';
+
+  @override
+  String get addToList => 'أضف إلى القائمة';
+
+  @override
   String get appTitle => 'شوب سمارت';
 
   @override
@@ -226,4 +238,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get terms => 'بالتسجيل، أنت توافق على شروط الخدمة وسياسة الخصوصية الخاصة بنا';
+
+  @override
+  String get share => 'مشاركة';
+
+  @override
+  String get favorite => 'مفضلة';
+
+  @override
+  String get addPhoto => 'إضافة صورة';
+
+  @override
+  String get noSuggestions => 'لا توجد اقتراحات.';
+
+  @override
+  String get completed => 'مكتمل';
 }
