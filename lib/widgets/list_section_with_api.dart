@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/scheduler.dart';
@@ -100,9 +102,10 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
 
   @override
   Widget build(BuildContext context) {
+    Widget mainContent;
     // ── Loading state ──────────────────────────────────────────────────────
     if (_isLoading) {
-      return SliverToBoxAdapter(
+      mainContent = SliverToBoxAdapter(
         child: SizedBox(
           height: 180,
           child: Center(
@@ -126,20 +129,15 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
           ),
         ),
       );
-    }
-
-    // ── Empty state ────────────────────────────────────────────────────────
-    if (_lists.isEmpty) {
-      // Show the create-card in the top-left (first grid position).
-      return SliverPadding(
+    } else if (_lists.isEmpty) {
+      // ── Empty state ────────────────────────────────────────────────────────
+      mainContent = SliverPadding(
         padding: const EdgeInsets.only(left: 0, top: 0),
         sliver: SliverGrid(
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            // Show two cards per row on the landing page
             crossAxisCount: 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            // Slightly taller cards to suit two-column layout on mobile
             childAspectRatio: 1.12,
           ),
           delegate: SliverChildBuilderDelegate(
@@ -148,126 +146,120 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
           ),
         ),
       );
+    } else {
+      // ── Grid — the only thing returned when data is loaded ─────────────────
+      mainContent = SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.12,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if (index == 0) return _buildCreateListCard();
+            final list = _lists[index - 1];
+            final allChecked = _allItemsChecked(list);
+            final total = list.listItems?.length ?? 0;
+            final checked = list.listItems?.where((item) => item['checked'] == true).length ?? 0;
+            final itemLabel = total > 0 ? '$checked/$total' : 'No items';
+            return RepaintBoundary(
+              child: _ListCard(
+                key: ValueKey(list.id),
+                list: list,
+                onTap: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ListDetailsPage(
+                        list: list,
+                        accent: widget.accent,
+                        onItemsChanged: _fetchLists,
+                      ),
+                    ),
+                  );
+                },
+                allChecked: allChecked,
+                total: total,
+                checked: checked,
+                itemLabel: itemLabel,
+                bgAsset: null,
+                onDelete: (ctx) {
+                  showDialog(
+                    context: ctx,
+                    builder: (dialogCtx) => AlertDialog(
+                      title: const Text('Delete List'),
+                      content: const Text('Are you sure you want to delete this list? This action cannot be undone.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(dialogCtx).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: () async {
+                            Navigator.of(dialogCtx).pop();
+                            try {
+                              await _apiService.deleteGroceryList(list.id);
+                              await _fetchLists();
+                              if (ctx.mounted) {
+                                ScaffoldMessenger.of(ctx).showSnackBar(
+                                  const SnackBar(content: Text('List deleted successfully.')),
+                                );
+                              }
+                            } catch (e) {
+                              if (ctx.mounted) {
+                                ScaffoldMessenger.of(ctx).showSnackBar(
+                                  SnackBar(content: Text('Failed to delete list: $e')),
+                                );
+                              }
+                            }
+                          },
+                          child: const Text('Delete'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                onShare: (ctx) {
+                  final listName = list.name;
+                  final items = (list.listItems is List) ? list.listItems as List : [];
+                  final itemsText = items.isNotEmpty
+                    ? items.map((item) {
+                        final name = item['name'] ?? '';
+                        final qty = item['qty'] != null ? ' (Qty: ${item['qty']})' : '';
+                        return '• $name$qty';
+                      }).join('\n')
+                    : 'No items in the list.';
+                  final shareText = 'Here is the list of $listName\n$itemsText\n\nThank you for using the app';
+                  final box = ctx.findRenderObject() as RenderBox?;
+                  if (box != null) {
+                    Share.share(
+                      shareText,
+                      sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size,
+                    );
+                  } else {
+                    Share.share(shareText);
+                  }
+                },
+              ),
+            );
+          },
+          childCount: _lists.length + 1,
+          findChildIndexCallback: (key) {
+            if (key == const ValueKey('create')) return 0;
+            final id = (key as ValueKey<String>).value;
+            final i = _lists.indexWhere((l) => l.id == id);
+            return i < 0 ? null : i + 1;
+          },
+        ),
+      );
     }
 
-    // ── Grid — the only thing returned when data is loaded ─────────────────
-    // No SliverMainAxisGroup, no header sliver, no dynamic object construction.
-    // A bare SliverGrid is layout-stable across scroll frames.
-    return SliverGrid(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        // Two columns keeps rows balanced on most phone widths
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        // Card is slightly taller to better fit two-up layout
-        childAspectRatio: 1.12,
-      ),
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          if (index == 0) return _buildCreateListCard();
-          final list = _lists[index - 1];
-          final allChecked = _allItemsChecked(list);
-          final total = list.listItems?.length ?? 0;
-          final checked = list.listItems?.where((item) => item['checked'] == true).length ?? 0;
-          final itemLabel = total > 0 ? '$checked/$total' : 'No items';
-          // Removed unused bgAsset variable.
-          // Background image logic removed; no image based on category.
-          return RepaintBoundary(
-            child: _ListCard(
-              key: ValueKey(list.id),
-              list: list,
-              onTap: () async {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ListDetailsPage(
-                      list: list,
-                      accent: widget.accent,
-                      onItemsChanged: _fetchLists,
-                    ),
-                  ),
-                );
-              },
-              allChecked: allChecked,
-              total: total,
-              checked: checked,
-              itemLabel: itemLabel,
-              bgAsset: null,
-              onDelete: (ctx) {
-                showDialog(
-                  context: ctx,
-                  builder: (dialogCtx) => AlertDialog(
-                    title: const Text('Delete List'),
-                    content: const Text('Are you sure you want to delete this list? This action cannot be undone.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(dialogCtx).pop(),
-                        child: const Text('Cancel'),
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                        ),
-                        onPressed: () async {
-                          Navigator.of(dialogCtx).pop();
-                          try {
-                            await _apiService.deleteGroceryList(list.id);
-                            await _fetchLists();
-                            if (ctx.mounted) {
-                              ScaffoldMessenger.of(ctx).showSnackBar(
-                                const SnackBar(content: Text('List deleted successfully.')),
-                              );
-                            }
-                          } catch (e) {
-                            if (ctx.mounted) {
-                              ScaffoldMessenger.of(ctx).showSnackBar(
-                                SnackBar(content: Text('Failed to delete list: $e')),
-                              );
-                            }
-                          }
-                        },
-                        child: const Text('Delete'),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              onShare: (ctx) {
-                final listName = list.name;
-                final items = (list.listItems is List) ? list.listItems as List : [];
-                final itemsText = items.isNotEmpty
-                  ? items.map((item) {
-                      final name = item['name'] ?? '';
-                      final qty = item['qty'] != null ? ' (Qty: ${item['qty']})' : '';
-                      return '• $name$qty';
-                    }).join('\n')
-                  : 'No items in the list.';
-                final shareText = 'Here is the list of $listName\n$itemsText\n\nThank you for using the app';
-                print('DEBUG: Share tapped. Message: $shareText');
-                final box = ctx.findRenderObject() as RenderBox?;
-                if (box != null) {
-                  Share.share(
-                    shareText,
-                    sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size,
-                  );
-                } else {
-                  Share.share(shareText);
-                }
-              },
-            ),
-          );
-        },
-        childCount: _lists.length + 1,
-        // Stable key → Flutter reuses existing render objects instead of
-        // recreating them, which eliminates the position-jump on rebuild.
-        findChildIndexCallback: (key) {
-          if (key == const ValueKey('create')) return 0;
-          final id = (key as ValueKey<String>).value;
-          final i = _lists.indexWhere((l) => l.id == id);
-          return i < 0 ? null : i + 1;
-        },
-      ),
-    );
+    // Only return the sliver content. Footer menu should be added in the parent Scaffold.
+    return mainContent;
   }
 
   Widget _buildCreateListCard() {
@@ -427,7 +419,7 @@ class _ListCard extends StatelessWidget {
   });
 
   final GroceryList list;
-  final VoidCallback onTap;
+  final void Function() onTap;
   final bool allChecked;
   final int total;
   final int checked;

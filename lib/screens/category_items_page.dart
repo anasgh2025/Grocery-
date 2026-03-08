@@ -118,6 +118,7 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
       name = customName;
     }
     result = await showAddItemDetailsSheet(
+      // ignore: use_build_context_synchronously
       context,
       itemName: name,
       categoryLabel: widget.category,
