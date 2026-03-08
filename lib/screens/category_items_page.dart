@@ -172,7 +172,17 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
             'name': resultName,
             'qty': resultQty,
             'priority': result['priority'] ?? 0,
-            // add other fields if needed
+            // Use emoji from DB if available for this item name, else fallback
+            'emoji': (() {
+              final dbItem = _allItems.firstWhere(
+                (it) => (it['name'] as String).trim().toLowerCase() == resultName.trim().toLowerCase(),
+                orElse: () => <String, dynamic>{},
+              );
+              if (dbItem.containsKey('emoji') && (dbItem['emoji'] as String).isNotEmpty) {
+                return dbItem['emoji'];
+              }
+              return '🛒';
+            })(),
           });
           if (mounted) Navigator.of(context).pop(true);
         }
