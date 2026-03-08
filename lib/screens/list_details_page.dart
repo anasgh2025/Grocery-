@@ -157,6 +157,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
           : '🛒';
       final itemToAdd = Map<String, dynamic>.from(suggestion);
       itemToAdd['emoji'] = emoji;
+      // Ensure emoji is included in DB
       await api.addListItem(widget.list.id, itemToAdd);
     } catch (e) {
       debugPrint('Failed to add item from suggestion: $e');
@@ -315,7 +316,8 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: GestureDetector(
                   onTap: () async {
-                    await Navigator.of(context).push(
+                    // Navigate to category selection and expect result with item info
+                    final result = await Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => CategoriesPage(
                           accent: widget.accent,
@@ -323,6 +325,16 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                         ),
                       ),
                     );
+                    // If result is a map and has name, add item with emoji
+                    if (result is Map<String, dynamic> && result['name'] != null) {
+                      final api = ApiService();
+                      final emoji = (result['emoji'] is String && (result['emoji'] as String).isNotEmpty)
+                          ? result['emoji'] as String
+                          : '🛒';
+                      final itemToAdd = Map<String, dynamic>.from(result);
+                      itemToAdd['emoji'] = emoji;
+                      await api.addListItem(widget.list.id, itemToAdd);
+                    }
                     // Always refresh after returning from add item screen
                     await _refreshListItems();
                     if (widget.onItemsChanged != null) {
