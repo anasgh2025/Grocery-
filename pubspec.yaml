@@ -20,6 +20,7 @@ dependencies:
     sdk: flutter
   flutter_gen: ^5.13.0
   intl: ^0.20.2
+  speech_to_text: ^7.3.0
   # Directly added to allow newer transitive versions where safe
   # characters is pinned by the Flutter SDK; keep it transitive
   # material_color_utilities is pinned by the Flutter SDK; keep it transitive

@@ -3,6 +3,7 @@ import '../l10n/app_localizations.dart';
 import '../widgets/footer_menu.dart';
 import 'categories_page.dart';
 import '../services/api_service.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 // Dashed border painter for the 'Create New Item' card
 class _DashedRRectPainter extends CustomPainter {
@@ -62,7 +63,124 @@ class ListDetailsPage extends StatefulWidget {
 }
 
 class _ListDetailsPageState extends State<ListDetailsPage> {
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _voiceInput = '';
+  bool _speechAvailable = false;
+  @override
+  void initState() {
+    super.initState();
+    _speech = stt.SpeechToText();
+    _initSpeech();
+  }
+
+  Future<void> _initSpeech() async {
+    _speechAvailable = await _speech.initialize(
+      onStatus: (status) {
+        if (status == 'done' || status == 'notListening') {
+          setState(() => _isListening = false);
+        }
+      },
+      onError: (error) {
+        setState(() => _isListening = false);
+      },
+    );
+    setState(() {});
+  }
+
+  void _startListening() async {
+    if (!_speechAvailable) {
+      await _initSpeech();
+    }
+    if (_speechAvailable) {
+      setState(() {
+        _isListening = true;
+        _voiceInput = '';
+      });
+      await _speech.listen(
+        onResult: (result) {
+          setState(() {
+            _voiceInput = result.recognizedWords;
+          });
+          if (result.finalResult) {
+            _processVoiceInput(_voiceInput);
+            _speech.stop();
+            setState(() => _isListening = false);
+          }
+        },
+        listenFor: const Duration(seconds: 6),
+        pauseFor: const Duration(seconds: 2),
+        localeId: 'en_US',
+        cancelOnError: true,
+        partialResults: true,
+      );
+    }
+  }
+
+  void _stopListening() async {
+    await _speech.stop();
+    setState(() => _isListening = false);
+  }
+
+  Future<void> _processVoiceInput(String input) async {
+    // Simple parsing: look for "add [qty] [item]" or "[qty] [item]" or just "[item]"
+    final RegExp reg = RegExp(r'(?:(?:add|and)\s+)?(?:(\d+)\s+)?([\w\s]+)', caseSensitive: false);
+    final match = reg.firstMatch(input.trim());
+    if (match != null) {
+      final qtyStr = match.group(1);
+      final name = match.group(2)?.trim();
+      if (name != null && name.isNotEmpty) {
+        int qty = 1;
+        if (qtyStr != null) {
+          qty = int.tryParse(qtyStr) ?? 1;
+        }
+        // Add item via API
+        try {
+          final api = ApiService();
+          final itemToAdd = {
+            'name': name,
+            'qty': qty,
+            'emoji': '🛒',
+          };
+          await api.addListItem(widget.list.id, itemToAdd);
+          await _refreshListItems();
+          if (widget.onItemsChanged != null) {
+            widget.onItemsChanged!();
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Added "$name" (Qty: $qty) from voice input.')),
+          );
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to add item from voice: $e')),
+          );
+        }
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not understand item name.')),
+      );
+    }
+  }
       Widget _buildListTile(Map<String, dynamic> item, ThemeData theme, String? emoji) {
+        // Debug prints for crash diagnosis
+        debugPrint('Building ListTile for item: $item');
+        debugPrint('widget.list: [33m${widget.list}[0m');
+        debugPrint('widget.list.id: [33m${widget.list != null && widget.list is Map && widget.list["id"] != null ? widget.list["id"] : widget.list?.id}[0m');
+        debugPrint('item["id"]: [33m${item['id']}[0m');
+        if (widget.list == null) {
+          debugPrint('ERROR: widget.list is null');
+          return const ListTile(title: Text('Error: List is null'));
+        }
+        final listId = widget.list is Map ? widget.list['id'] : widget.list.id;
+        if (listId == null) {
+          debugPrint('ERROR: widget.list.id is null');
+          return const ListTile(title: Text('Error: List ID is null'));
+        }
+        if (item['id'] == null) {
+          debugPrint('ERROR: item["id"] is null');
+          return const ListTile(title: Text('Error: Item ID is null'));
+        }
         return Material(
           color: Colors.white,
           elevation: 0.5,
@@ -105,13 +223,19 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
             ),
             onTap: () async {
               final newChecked = !(item['checked'] == true);
-              setState(() {
-                item['checked'] = newChecked;
-              });
+              bool mounted = true;
+              try {
+                setState(() {
+                  item['checked'] = newChecked;
+                });
+              } catch (e) {
+                debugPrint('setState error: $e');
+                mounted = false;
+              }
               try {
                 final api = ApiService();
                 await api.updateListItem(
-                  widget.list.id,
+                  listId,
                   item['id'],
                   {
                     'checked': newChecked,
@@ -121,8 +245,12 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
               } catch (e) {
                 debugPrint('Failed to update item checked state: $e');
               }
-              if (widget.onItemsChanged != null) {
-                widget.onItemsChanged!();
+              if (mounted && widget.onItemsChanged != null) {
+                try {
+                  widget.onItemsChanged!();
+                } catch (e) {
+                  debugPrint('onItemsChanged error: $e');
+                }
               }
             },
           ),
@@ -375,12 +503,27 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
             title: Text(widget.list.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             actions: [
               IconButton(
-                icon: const Icon(Icons.mic, color: Colors.black),
-                onPressed: () {
-                  // TODO: Implement voice input action
-                },
-                tooltip: 'Voice Input',
+                icon: Icon(_isListening ? Icons.mic : Icons.mic_none, color: _isListening ? Colors.red : Colors.black),
+                onPressed: _isListening ? _stopListening : _startListening,
+                tooltip: _isListening ? 'Stop Listening' : 'Voice Input',
               ),
+          if (_isListening)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.hearing, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _voiceInput.isEmpty ? 'Listening...' : _voiceInput,
+                      style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w500),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             ],
           ),
           body: Column(
