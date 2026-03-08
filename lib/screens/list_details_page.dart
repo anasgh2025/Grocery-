@@ -95,27 +95,72 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
   Map<String, List<Map<String, dynamic>>> get groupedUntickedItems {
     final Map<String, List<Map<String, dynamic>>> grouped = {};
     for (final item in untickedItems) {
-      final cat = item['category'] ?? 'Other';
+      final cat = (item['category'] is String && (item['category'] as String).isNotEmpty)
+          ? item['category'] as String
+          : 'Other';
       grouped.putIfAbsent(cat, () => []).add(item);
     }
-    return grouped;
+    // Logical group order
+    const logicalOrder = [
+      'Fruit', 'Vegetable', 'Veg', 'Meat', 'Dairy', 'Bakery', 'Beverage', 'Pantry', 'Frozen', 'Snacks', 'Other'
+    ];
+    final keys = grouped.keys.toList();
+    keys.sort((a, b) {
+      final ia = logicalOrder.indexWhere((cat) => a.toLowerCase().contains(cat.toLowerCase()));
+      final ib = logicalOrder.indexWhere((cat) => b.toLowerCase().contains(cat.toLowerCase()));
+      if (ia == -1 && ib == -1) return a.compareTo(b); // both not found, fallback alpha
+      if (ia == -1) return 1; // a not found, b found
+      if (ib == -1) return -1; // b not found, a found
+      return ia.compareTo(ib);
+    });
+    final Map<String, List<Map<String, dynamic>>> sortedGrouped = {};
+    for (final k in keys) {
+      sortedGrouped[k] = grouped[k]!;
+    }
+    return sortedGrouped;
   }
 
   void _onSearchChanged(String value) async {
+    if (value.length < 3) {
+      setState(() {
+        _showSuggestions = false;
+        _suggestions = [];
+      });
+      return;
+    }
     setState(() {
-      _showSuggestions = value.isNotEmpty;
+      _showSuggestions = true;
       _loadingSuggestions = true;
     });
-    // TODO: Call your API for suggestions
-    await Future.delayed(const Duration(milliseconds: 300));
-    setState(() {
-      _suggestions = [];
-      _loadingSuggestions = false;
-    });
+    try {
+      final api = ApiService();
+      final results = await api.searchItemSuggestions(value);
+      setState(() {
+        _suggestions = results;
+        _loadingSuggestions = false;
+      });
+    } catch (e) {
+      setState(() {
+        _suggestions = [];
+        _loadingSuggestions = false;
+      });
+      debugPrint('Failed to fetch suggestions: $e');
+    }
   }
 
   void _onTapSuggestion(Map<String, dynamic> suggestion) async {
-    // TODO: Add item from suggestion
+    try {
+      final api = ApiService();
+      // Always add emoji if present, fallback to 🛒
+      final emoji = (suggestion['emoji'] is String && (suggestion['emoji'] as String).isNotEmpty)
+          ? suggestion['emoji'] as String
+          : '🛒';
+      final itemToAdd = Map<String, dynamic>.from(suggestion);
+      itemToAdd['emoji'] = emoji;
+      await api.addListItem(widget.list.id, itemToAdd);
+    } catch (e) {
+      debugPrint('Failed to add item from suggestion: $e');
+    }
     setState(() {
       _showSuggestions = false;
       _searchController.clear();
