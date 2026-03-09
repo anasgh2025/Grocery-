@@ -3,6 +3,8 @@ import '../l10n/app_localizations.dart';
 import '../widgets/footer_menu.dart';
 import 'categories_page.dart';
 import '../services/api_service.dart';
+import '../services/openai_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 // Dashed border painter for the 'Create New Item' card
@@ -123,42 +125,94 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
   }
 
   Future<void> _processVoiceInput(String input) async {
-    // Simple parsing: look for "add [qty] [item]" or "[qty] [item]" or just "[item]"
-    final RegExp reg = RegExp(r'(?:(?:add|and)\s+)?(?:(\d+)\s+)?([\w\s]+)', caseSensitive: false);
-    final match = reg.firstMatch(input.trim());
-    if (match != null) {
-      final qtyStr = match.group(1);
-      final name = match.group(2)?.trim();
-      if (name != null && name.isNotEmpty) {
-        int qty = 1;
-        if (qtyStr != null) {
-          qty = int.tryParse(qtyStr) ?? 1;
-        }
-        // Add item via API
-        try {
-          final api = ApiService();
-          final itemToAdd = {
-            'name': name,
-            'qty': qty,
-            'emoji': '🛒',
-          };
+    // Use OpenAI to extract product and qty
+    final openaiApiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
+    if (openaiApiKey.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('OpenAI API key not set.')),
+      );
+      return;
+    }
+    final openai = OpenAIService(openaiApiKey);
+    final aiResult = await openai.extractProductAndQty(input);
+    if (aiResult == null || aiResult['product'] == null || (aiResult['product'] as String).isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not understand item name from voice.')),
+      );
+      return;
+    }
+    final name = aiResult['product'].toString();
+    final qty = aiResult['qty'] is int ? aiResult['qty'] : int.tryParse(aiResult['qty']?.toString() ?? '1') ?? 1;
+    try {
+      final api = ApiService();
+      // Search for item suggestions using the AI-extracted name
+      final suggestions = await api.searchItemSuggestions(name);
+      if (suggestions.isNotEmpty) {
+        // Show dialog to let user pick or confirm
+        final selected = await showDialog<Map<String, dynamic>>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Did you mean:'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  ...suggestions.map((s) => ListTile(
+                    title: Text(s['name'] ?? ''),
+                    subtitle: s['category'] != null ? Text(s['category']) : null,
+                    onTap: () => Navigator.of(ctx).pop(s),
+                  )),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancel'),
+              ),
+            ],
+          ),
+        );
+        if (selected != null) {
+          // Use the selected suggestion, but override qty if parsed
+          final itemToAdd = Map<String, dynamic>.from(selected);
+          itemToAdd['qty'] = qty;
+          if (itemToAdd['emoji'] == null || (itemToAdd['emoji'] as String).isEmpty) {
+            itemToAdd['emoji'] = '🛒';
+          }
           await api.addListItem(widget.list.id, itemToAdd);
           await _refreshListItems();
           if (widget.onItemsChanged != null) {
             widget.onItemsChanged!();
           }
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Added "$name" (Qty: $qty) from voice input.')),
+            SnackBar(content: Text('Added "${itemToAdd['name']}" (Qty: $qty) from voice input.')),
           );
-        } catch (e) {
+        } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to add item from voice: $e')),
+            const SnackBar(content: Text('No item added.')), 
           );
         }
+      } else {
+        // No suggestions found, fallback to add as custom item
+        final itemToAdd = {
+          'name': name,
+          'qty': qty,
+          'emoji': '🛒',
+        };
+        await api.addListItem(widget.list.id, itemToAdd);
+        await _refreshListItems();
+        if (widget.onItemsChanged != null) {
+          widget.onItemsChanged!();
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Added "$name" (Qty: $qty) from voice input.')),
+        );
       }
-    } else {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not understand item name.')),
+        SnackBar(content: Text('Failed to add item from voice: $e')),
       );
     }
   }
@@ -550,7 +604,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                           color: Colors.white,
                           border: Border.all(color: Colors.grey.shade200),
                           borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
+                          boxShadow: const [
                             BoxShadow(
                               color: Colors.black12,
                               blurRadius: 4,
@@ -619,14 +673,14 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 18),
-                      child: Row(
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.add_circle_outline, size: 22, color: Colors.grey),
-                          const SizedBox(width: 8),
+                          Icon(Icons.add_circle_outline, size: 22, color: Colors.grey),
+                          SizedBox(width: 8),
                           Text(
                             'Create New Item',
-                            style: const TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.w500),
+                            style: TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),

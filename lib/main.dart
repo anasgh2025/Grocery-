@@ -1,4 +1,6 @@
+
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'screens/splash_screen.dart';
 import 'theme.dart';
@@ -11,6 +13,7 @@ final ValueNotifier<Locale?> localeNotifier = ValueNotifier<Locale?>(const Local
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
   // Nunito font is now loaded locally via assets/fonts and registered in pubspec.yaml.
   runApp(const MyApp());
 }
