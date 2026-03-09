@@ -128,7 +128,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
 
   Future<void> _processVoiceInput(String input) async {
     // Use OpenAI to extract product and qty
-    final openaiApiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
+  const openaiApiKey = String.fromEnvironment('OPENAI_API_KEY', defaultValue: '');
     debugPrint('[VOICE] OpenAI API Key loaded: ${openaiApiKey.isNotEmpty}');
     if (openaiApiKey.isEmpty) {
       debugPrint('[VOICE][ERROR] OpenAI API key not set.');
