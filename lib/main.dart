@@ -11,12 +11,63 @@ final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.light
 final ValueNotifier<Locale?> localeNotifier = ValueNotifier<Locale?>(const Locale('en'));
 
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load();
-  // Nunito font is now loaded locally via assets/fonts and registered in pubspec.yaml.
-  runApp(const MyApp());
+  print('Before dotenv.load');
+  try {
+    await dotenv.load(fileName: ".env");
+    print('After dotenv.load');
+  } catch (e, st) {
+    print('dotenv.load error:');
+    print(e);
+    print(st);
+  }
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Material(
+      color: Colors.white,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.red, size: 48),
+              const SizedBox(height: 16),
+              Text(
+                'Oops! An error occurred.',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                details.exceptionAsString(),
+                style: const TextStyle(fontSize: 14, color: Colors.black87),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  };
+    runApp(const MyApp());
 }
+
+class DebugApp extends StatelessWidget {
+  const DebugApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: Center(child: Text('Dotenv loaded!', style: TextStyle(fontSize: 32))),
+      ),
+    );
+  }
+}
+
+// ...existing code...
 
 
 class MyApp extends StatelessWidget {

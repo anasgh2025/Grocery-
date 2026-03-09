@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/grocery_list.dart';
 
 /// Service for handling API calls related to grocery lists
@@ -26,17 +27,18 @@ class ApiService {
     }
   }
   // ── Production backend on DigitalOcean App Platform ──
-  // Override at build-time with: --dart-define=API_BASE_URL=https://your-url.com/api
-  static const String _prodBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'https://coral-app-qjq4a.ondigitalocean.app/api',
-  );
+  // Uses .env if available, otherwise falls back to default.
+  static String get baseUrl {
+    final envUrl = dotenv.env['API_BASE_URL'];
+    return (envUrl != null && envUrl.isNotEmpty)
+        ? envUrl
+        : 'https://coral-app-qjq4a.ondigitalocean.app/api';
+  }
 
   // Secure storage for auth token
   static const _tokenKey = 'auth_token';
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
-  static String get baseUrl => _prodBaseUrl;
 
   // Timeout duration for API calls
   static const Duration timeout = Duration(seconds: 30);

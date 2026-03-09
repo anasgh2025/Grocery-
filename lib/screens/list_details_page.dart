@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/footer_menu.dart';
@@ -127,15 +129,29 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
   Future<void> _processVoiceInput(String input) async {
     // Use OpenAI to extract product and qty
     final openaiApiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
+    debugPrint('[VOICE] OpenAI API Key loaded: ${openaiApiKey.isNotEmpty}');
     if (openaiApiKey.isEmpty) {
+      debugPrint('[VOICE][ERROR] OpenAI API key not set.');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('OpenAI API key not set.')),
       );
       return;
     }
     final openai = OpenAIService(openaiApiKey);
-    final aiResult = await openai.extractProductAndQty(input);
+    Map<String, dynamic>? aiResult;
+    try {
+      debugPrint('[VOICE] Sending to OpenAI: "$input"');
+      aiResult = await openai.extractProductAndQty(input);
+      debugPrint('[VOICE] OpenAI result: $aiResult');
+    } catch (e, stack) {
+      debugPrint('[VOICE][ERROR] Exception during OpenAI call: $e\n$stack');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('OpenAI error: $e')),
+      );
+      return;
+    }
     if (aiResult == null || aiResult['product'] == null || (aiResult['product'] as String).isEmpty) {
+      debugPrint('[VOICE][ERROR] Could not understand item name from voice. aiResult: $aiResult');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not understand item name from voice.')),
       );
@@ -145,8 +161,9 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
     final qty = aiResult['qty'] is int ? aiResult['qty'] : int.tryParse(aiResult['qty']?.toString() ?? '1') ?? 1;
     try {
       final api = ApiService();
-      // Search for item suggestions using the AI-extracted name
+      debugPrint('[VOICE] Searching item suggestions for "$name"');
       final suggestions = await api.searchItemSuggestions(name);
+      debugPrint('[VOICE] Suggestions: $suggestions');
       if (suggestions.isNotEmpty) {
         // Show dialog to let user pick or confirm
         final selected = await showDialog<Map<String, dynamic>>(
@@ -174,6 +191,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
             ],
           ),
         );
+        debugPrint('[VOICE] User selected: $selected');
         if (selected != null) {
           // Use the selected suggestion, but override qty if parsed
           final itemToAdd = Map<String, dynamic>.from(selected);
@@ -190,12 +208,13 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
             SnackBar(content: Text('Added "${itemToAdd['name']}" (Qty: $qty) from voice input.')),
           );
         } else {
+          debugPrint('[VOICE] No item selected in dialog.');
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No item added.')), 
+            const SnackBar(content: Text('No item added.')),
           );
         }
       } else {
-        // No suggestions found, fallback to add as custom item
+        debugPrint('[VOICE] No suggestions found, adding as custom item.');
         final itemToAdd = {
           'name': name,
           'qty': qty,
@@ -210,7 +229,8 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
           SnackBar(content: Text('Added "$name" (Qty: $qty) from voice input.')),
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('[VOICE][ERROR] Exception during item add: $e\n$stack');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to add item from voice: $e')),
       );
