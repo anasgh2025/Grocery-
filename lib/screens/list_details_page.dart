@@ -512,32 +512,41 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
 
   Future<void> _onQuantityTap(Map<String, dynamic> item) async {
     final theme = Theme.of(context);
-    int qty = item['qty'] ?? 1;
+    int initialQty = item['qty'] ?? 1;
+    int tempQty = initialQty;
     final result = await showAppDialog<int>(
       context: context,
       title: const Text('Change Quantity'),
       content: StatefulBuilder(
-        builder: (context, setState) => Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.remove_circle_outline),
-              onPressed: qty > 1 ? () => setState(() => qty--) : null,
-            ),
-            Text('$qty', style: theme.textTheme.headlineSmall),
-            IconButton(
-              icon: const Icon(Icons.add_circle_outline),
-              onPressed: () => setState(() => qty++),
-            ),
-          ],
-        ),
+        builder: (context, setState) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.remove_circle_outline),
+                onPressed: tempQty > 1 ? () => setState(() { tempQty--; }) : null,
+              ),
+              Text('$tempQty', style: theme.textTheme.headlineSmall),
+              IconButton(
+                icon: const Icon(Icons.add_circle_outline),
+                onPressed: () => setState(() { tempQty++; }),
+              ),
+            ],
+          );
+        },
       ),
       actions: [
         appDialogCancelButton(onPressed: () => Navigator.of(context).pop()),
-        appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(qty), text: 'Done'),
+        appDialogConfirmButton(
+          onPressed: () {
+            Navigator.of(context).pop(tempQty);
+          },
+          text: 'Done',
+          color: Colors.red,
+        ),
       ],
     );
-    if (result != null && result != qty) {
+    if (result != null && result != (item['qty'] ?? 1)) {
       setState(() {
         item['qty'] = result;
       });
