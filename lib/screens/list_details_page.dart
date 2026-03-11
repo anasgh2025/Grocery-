@@ -7,6 +7,7 @@ import 'categories_page.dart';
 import '../services/api_service.dart';
 import '../services/openai_service.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // Dashed border painter for the 'Create New Item' card
 class _DashedRRectPainter extends CustomPainter {
@@ -126,9 +127,9 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
   }
 
   Future<void> _processVoiceInput(String input) async {
-    // Use OpenAI to extract product and qty
-  const openaiApiKey = String.fromEnvironment('OPENAI_API_KEY', defaultValue: '');
-    debugPrint('[VOICE] OpenAI API Key loaded: ${openaiApiKey.isNotEmpty}');
+  // Use OpenAI to extract product and qty
+    final openaiApiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
+    debugPrint('[VOICE] OpenAI API Key loaded: [32m${openaiApiKey.isNotEmpty}[0m');
     if (openaiApiKey.isEmpty) {
       debugPrint('[VOICE][ERROR] OpenAI API key not set.');
       ScaffoldMessenger.of(context).showSnackBar(
