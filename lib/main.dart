@@ -1,4 +1,6 @@
 
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -34,7 +36,7 @@ void main() async {
             children: [
               const Icon(Icons.error_outline, color: Colors.red, size: 48),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Oops! An error occurred.',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red),
                 textAlign: TextAlign.center,
@@ -59,7 +61,7 @@ class DebugApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       home: Scaffold(
         body: Center(child: Text('Dotenv loaded!', style: TextStyle(fontSize: 32))),
       ),

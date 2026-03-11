@@ -214,14 +214,15 @@ const deleteList = async (req, res) => {
       if (idx === -1) return res.status(404).json({ error: 'Not Found', message: `Item ${itemId} not found` });
 
       const item = list.listItems[idx];
-      const updatedItem = {
-        id: item.id,
-        name: name !== undefined ? name : item.name,
-        qty: qty !== undefined ? qty : item.qty,
-        checked: checked !== undefined ? checked : item.checked,
-      };
-      if (priority !== undefined) updatedItem.priority = priority;
-      else if (item.priority !== undefined) updatedItem.priority = item.priority;
+        const updatedItem = {
+          id: item.id,
+          name: name !== undefined ? name : item.name,
+          qty: qty !== undefined ? qty : item.qty,
+          checked: checked !== undefined ? checked : item.checked,
+          emoji: item.emoji !== undefined ? item.emoji : undefined,
+        };
+        if (priority !== undefined) updatedItem.priority = priority;
+        else if (item.priority !== undefined) updatedItem.priority = item.priority;
 
       list.listItems[idx] = updatedItem;
 

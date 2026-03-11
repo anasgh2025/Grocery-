@@ -6,7 +6,6 @@ import '../widgets/footer_menu.dart';
 import 'categories_page.dart';
 import '../services/api_service.dart';
 import '../services/openai_service.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 // Dashed border painter for the 'Create New Item' card
@@ -417,15 +416,69 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
   }
 
   void _onTapSuggestion(Map<String, dynamic> suggestion) async {
+    final api = ApiService();
+    final emoji = (suggestion['emoji'] is String && (suggestion['emoji'] as String).isNotEmpty)
+        ? suggestion['emoji'] as String
+        : '🛒';
+    final itemName = (suggestion['name'] ?? '').toString().trim().toLowerCase();
+    final existingItem = widget.list.listItems.firstWhere(
+      (item) => (item['name']?.toString().trim().toLowerCase() ?? '') == itemName,
+      orElse: () => null,
+    );
+    if (existingItem != null) {
+      // Show custom dialog for duplicate (matching attached design)
+      final result = await showDialog<bool>(
+        context: context,
+        builder: (ctx) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text('Item already exists'),
+            content: Text('"${existingItem['name']}" is already in your list. Add 1 to the existing quantity?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancel', style: TextStyle(color: Colors.red)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  elevation: 0,
+                ),
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Add Quantity'),
+              ),
+            ],
+          );
+        },
+      );
+      if (result == true) {
+        final newQty = (existingItem['qty'] ?? 1) + 1;
+        try {
+          // Only update qty, do not touch emoji or other fields
+          await api.updateListItem(widget.list.id, existingItem['id'], {'qty': newQty});
+          setState(() {
+            existingItem['qty'] = newQty;
+            _showSuggestions = false;
+            _searchController.clear();
+          });
+          if (widget.onItemsChanged != null) widget.onItemsChanged!();
+        } catch (e) {
+          debugPrint('Failed to update item qty: $e');
+        }
+      } else {
+        setState(() {
+          _showSuggestions = false;
+          _searchController.clear();
+        });
+      }
+      return;
+    }
+    // No duplicate, add as new item
+    final itemToAdd = Map<String, dynamic>.from(suggestion);
+    itemToAdd['emoji'] = emoji;
     try {
-      final api = ApiService();
-      // Always add emoji if present, fallback to 🛒
-      final emoji = (suggestion['emoji'] is String && (suggestion['emoji'] as String).isNotEmpty)
-          ? suggestion['emoji'] as String
-          : '🛒';
-      final itemToAdd = Map<String, dynamic>.from(suggestion);
-      itemToAdd['emoji'] = emoji;
-      // Ensure emoji is included in DB
       await api.addListItem(widget.list.id, itemToAdd);
     } catch (e) {
       debugPrint('Failed to add item from suggestion: $e');
@@ -434,138 +487,130 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       _showSuggestions = false;
       _searchController.clear();
     });
-    // After adding, refresh the list
     await _refreshListItems();
     if (widget.onItemsChanged != null) {
       widget.onItemsChanged!();
     }
   }
 
-
-
-      // Move _onQuantityTap above _buildItemCard
-      // Only one correct _onQuantityTap method should exist
-      Widget _buildItemCard(Map<String, dynamic> item, {bool checked = false}) {
-        final theme = Theme.of(context);
-        final emoji = item['emoji'] as String?;
-        final tile = _buildListTile(item, theme, emoji);
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: (item['checked'] == true)
-              ? tile
-              : Dismissible(
-                  key: ValueKey(item['id']),
-                  direction: DismissDirection.startToEnd,
-                  background: Container(
-                    alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.only(left: 24),
-                    color: Colors.redAccent,
-                    child: const Icon(Icons.delete, color: Colors.white, size: 28),
-                  ),
-                  confirmDismiss: (direction) async {
-                    return await showDialog<bool>(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text('Delete Item'),
-                        content: Text('Are you sure you want to delete "${item['name']}"?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(ctx).pop(false),
-                            child: const Text('Cancel'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () => Navigator.of(ctx).pop(true),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.redAccent,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: const Text('Delete'),
-                          ),
-                        ],
-                      ),
-                    ) ?? false;
-                  },
-                  onDismissed: (direction) async {
-                    try {
-                      final api = ApiService();
-                      await api.deleteListItem(widget.list.id, item['id']);
-                      setState(() {
-                        widget.list.listItems.removeWhere((it) => it['id'] == item['id']);
-                      });
-                      if (widget.onItemsChanged != null) {
-                        widget.onItemsChanged!();
-                      }
-                    } catch (e) {
-                      debugPrint('Failed to delete item: $e');
-                    }
-                  },
-                  child: tile,
+  Future<void> _onQuantityTap(Map<String, dynamic> item) async {
+    final theme = Theme.of(context);
+    int qty = item['qty'] ?? 1;
+    final result = await showDialog<int>(
+      context: context,
+      builder: (ctx) {
+        int tempQty = qty;
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: const Text('Change Quantity'),
+            content: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed: tempQty > 1 ? () => setState(() => tempQty--) : null,
                 ),
-        );
-      }
-
-      // ...existing code...
-      Future<void> _onQuantityTap(Map<String, dynamic> item) async {
-        final theme = Theme.of(context);
-        int qty = item['qty'] ?? 1;
-        final result = await showDialog<int>(
-          context: context,
-          builder: (ctx) {
-            int tempQty = qty;
-            return StatefulBuilder(
-              builder: (context, setState) => AlertDialog(
-                title: const Text('Change Quantity'),
-                content: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle_outline),
-                      onPressed: tempQty > 1 ? () => setState(() => tempQty--) : null,
-                    ),
-                    Text('$tempQty', style: theme.textTheme.headlineSmall),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle_outline),
-                      onPressed: () => setState(() => tempQty++),
-                    ),
-                  ],
+                Text('$tempQty', style: theme.textTheme.headlineSmall),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed: () => setState(() => tempQty++),
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(),
-                    child: const Text('Cancel'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => Navigator.of(ctx).pop(tempQty),
-                    child: const Text('Done'),
-                  ),
-                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancel'),
               ),
-            );
-          },
+              ElevatedButton(
+                onPressed: () => Navigator.of(ctx).pop(tempQty),
+                child: const Text('Done'),
+              ),
+            ],
+          ),
         );
-        if (result != null && result != qty) {
-          setState(() {
-            item['qty'] = result;
-          });
-          try {
-            final api = ApiService();
-            await api.updateListItem(widget.list.id, item['id'], {'qty': result});
-          } catch (e) {
-            debugPrint('Failed to update item qty: $e');
-          }
-          if (widget.onItemsChanged != null) {
-            widget.onItemsChanged!();
-          }
-        }
+      },
+    );
+    if (result != null && result != qty) {
+      setState(() {
+        item['qty'] = result;
+      });
+      try {
+        final api = ApiService();
+        await api.updateListItem(widget.list.id, item['id'], {'qty': result});
+      } catch (e) {
+        debugPrint('Failed to update item qty: $e');
       }
-        // Removed duplicate/erroneous dialog code
+      if (widget.onItemsChanged != null) {
+        widget.onItemsChanged!();
+      }
+    }
+  }
 
-      @override
-      @override
-      Widget build(BuildContext context) {
-        final theme = Theme.of(context);
-        final loc = AppLocalizations.of(context)!;
-        return Scaffold(
+  Widget _buildItemCard(Map<String, dynamic> item, {bool checked = false}) {
+    final theme = Theme.of(context);
+    final emoji = item['emoji'] as String?;
+    final tile = _buildListTile(item, theme, emoji);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: (item['checked'] == true)
+          ? tile
+          : Dismissible(
+              key: ValueKey(item['id']),
+              direction: DismissDirection.startToEnd,
+              background: Container(
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.only(left: 24),
+                color: Colors.redAccent,
+                child: const Icon(Icons.delete, color: Colors.white, size: 28),
+              ),
+              confirmDismiss: (direction) async {
+                return await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Delete Item'),
+                    content: Text('Are you sure you want to delete "${item['name']}"?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                        child: const Text('Cancel'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Delete'),
+                      ),
+                    ],
+                  ),
+                ) ?? false;
+              },
+              onDismissed: (direction) async {
+                try {
+                  final api = ApiService();
+                  await api.deleteListItem(widget.list.id, item['id']);
+                  setState(() {
+                    widget.list.listItems.removeWhere((it) => it['id'] == item['id']);
+                  });
+                  if (widget.onItemsChanged != null) {
+                    widget.onItemsChanged!();
+                  }
+                } catch (e) {
+                  debugPrint('Failed to delete item: $e');
+                }
+              },
+              child: tile,
+            ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context)!;
+    return Scaffold(
           appBar: AppBar(
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
