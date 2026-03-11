@@ -38,6 +38,7 @@ flutter:
   generate: true
   assets:
     - assets/images/
+    - .env
   fonts:
     - family: Nunito
       fonts:
