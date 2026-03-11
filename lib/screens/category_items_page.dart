@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../widgets/add_item_details_sheet.dart';
+import '../widgets/app_dialog.dart';
 
 /// Full-screen page showing all items for a given grocery category.
 /// Items are loaded from the backend API (MongoDB).
@@ -93,26 +94,18 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
     if (name.trim().toLowerCase() == 'other') {
       // Show dialog for free text entry
       final controller = TextEditingController();
-      final customName = await showDialog<String>(
+      final customName = await showAppDialog<String>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Enter custom item'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            decoration: const InputDecoration(hintText: 'Item name'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-              child: const Text('Add'),
-            ),
-          ],
+        title: const Text('Enter custom item'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: 'Item name'),
         ),
+        actions: [
+          appDialogCancelButton(onPressed: () => Navigator.of(context).pop()),
+          appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(controller.text.trim()), text: 'Add'),
+        ],
       );
       if (customName == null || customName.isEmpty) return;
       name = customName;
@@ -140,22 +133,14 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
         );
         if (existing != null) {
           // Show dialog to ask user if they want to add to quantity
-          final shouldAddQty = await showDialog<bool>(
+          final shouldAddQty = await showAppDialog<bool>(
             context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Item already exists'),
-              content: Text('"$resultName" is already in your list. Add $resultQty to the existing quantity?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                  child: const Text('Add Quantity'),
-                ),
-              ],
-            ),
+            title: const Text('Item already exists'),
+            content: Text('"$resultName" is already in your list. Add $resultQty to the existing quantity?'),
+            actions: [
+              appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false)),
+              appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Add Quantity', color: Colors.red),
+            ],
           );
           if (!mounted) return;
           if (shouldAddQty == true) {

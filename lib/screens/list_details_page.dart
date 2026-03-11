@@ -8,6 +8,7 @@ import '../services/api_service.dart';
 import '../services/openai_service.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../widgets/app_dialog.dart';
 
 // Dashed border painter for the 'Create New Item' card
 class _DashedRRectPainter extends CustomPainter {
@@ -164,36 +165,57 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       debugPrint('[VOICE] Searching item suggestions for "$name"');
       final suggestions = await api.searchItemSuggestions(name);
       debugPrint('[VOICE] Suggestions: $suggestions');
-      if (suggestions.isNotEmpty) {
-        // Show dialog to let user pick or confirm
-        final selected = await showDialog<Map<String, dynamic>>(
+      // Check if item already exists in the list
+      final existingItem = widget.list.listItems.firstWhere(
+        (item) => (item['name']?.toString().trim().toLowerCase() ?? '') == name.trim().toLowerCase(),
+        orElse: () => null,
+      );
+      if (existingItem != null) {
+        // Ask user to confirm increasing quantity only
+        final confirm = await showAppDialog<bool>(
           context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Did you mean:'),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  ...suggestions.map((s) => ListTile(
-                    title: Text(s['name'] ?? ''),
-                    subtitle: s['category'] != null ? Text(s['category']) : null,
-                    onTap: () => Navigator.of(ctx).pop(s),
-                  )),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
-              ),
+          title: const Text('Item already exists'),
+          content: Text('"$name" is already in your list. Add $qty to the existing quantity?'),
+          actions: [
+            appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false)),
+            appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Add Quantity', color: Colors.red),
+          ],
+        );
+        if (confirm == true) {
+          final newQty = (existingItem['qty'] ?? 1) + qty;
+          await api.updateListItem(widget.list.id, existingItem['id'], {'qty': newQty});
+          await _refreshListItems();
+          if (widget.onItemsChanged != null) widget.onItemsChanged!();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Increased quantity of "$name" by $qty.')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No item added.')),
+          );
+        }
+      } else if (suggestions.isNotEmpty) {
+        // Show dialog to let user confirm adding the best suggestion
+        final selected = suggestions.first;
+        final confirm = await showAppDialog<bool>(
+          context: context,
+          title: const Text('Did you mean:'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(selected['name'] ?? ''),
+              if (selected['category'] != null) Text(selected['category']),
+              const SizedBox(height: 16),
+              Text('Quantity: $qty'),
             ],
           ),
+          actions: [
+            appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false)),
+            appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Confirm'),
+          ],
         );
-        debugPrint('[VOICE] User selected: $selected');
-        if (selected != null) {
-          // Use the selected suggestion, but override qty if parsed
+        if (confirm == true) {
           final itemToAdd = Map<String, dynamic>.from(selected);
           itemToAdd['qty'] = qty;
           if (itemToAdd['emoji'] == null || (itemToAdd['emoji'] as String).isEmpty) {
@@ -201,33 +223,45 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
           }
           await api.addListItem(widget.list.id, itemToAdd);
           await _refreshListItems();
-          if (widget.onItemsChanged != null) {
-            widget.onItemsChanged!();
-          }
+          if (widget.onItemsChanged != null) widget.onItemsChanged!();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Added "${itemToAdd['name']}" (Qty: $qty) from voice input.')),
           );
         } else {
-          debugPrint('[VOICE] No item selected in dialog.');
+          debugPrint('[VOICE] User cancelled suggestion dialog.');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('No item added.')),
           );
         }
       } else {
-        debugPrint('[VOICE] No suggestions found, adding as custom item.');
-        final itemToAdd = {
-          'name': name,
-          'qty': qty,
-          'emoji': '🛒',
-        };
-        await api.addListItem(widget.list.id, itemToAdd);
-        await _refreshListItems();
-        if (widget.onItemsChanged != null) {
-          widget.onItemsChanged!();
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Added "$name" (Qty: $qty) from voice input.')),
+        debugPrint('[VOICE] No suggestions found for "$name". Asking user to confirm adding as custom item.');
+        final confirm = await showAppDialog<bool>(
+          context: context,
+          title: const Text('Item not found'),
+          content: Text('"$name" (Qty: $qty) is not in the list. Would you like to add it as a custom item?'),
+          actions: [
+            appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: 'No'),
+            appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Yes'),
+          ],
         );
+        if (confirm == true) {
+          final itemToAdd = {
+            'name': name,
+            'qty': qty,
+            'emoji': '🛒',
+          };
+          await api.addListItem(widget.list.id, itemToAdd);
+          await _refreshListItems();
+          if (widget.onItemsChanged != null) widget.onItemsChanged!();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Added "$name" (Qty: $qty) as a custom item.')),
+          );
+        } else {
+          debugPrint('[VOICE] User cancelled adding custom item.');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No item added.')),
+          );
+        }
       }
     } catch (e, stack) {
       debugPrint('[VOICE][ERROR] Exception during item add: $e\n$stack');
@@ -427,37 +461,19 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       orElse: () => null,
     );
     if (existingItem != null) {
-      // Show custom dialog for duplicate (matching attached design)
-      final result = await showDialog<bool>(
+      // Ask user to confirm increasing quantity only
+      final result = await showAppDialog<bool>(
         context: context,
-        builder: (ctx) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Text('Item already exists'),
-            content: Text('"${existingItem['name']}" is already in your list. Add 1 to the existing quantity?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Cancel', style: TextStyle(color: Colors.red)),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  elevation: 0,
-                ),
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Add Quantity'),
-              ),
-            ],
-          );
-        },
+        title: const Text('Item already exists'),
+        content: Text('"${existingItem['name']}" is already in your list. Add 1 to the existing quantity?'),
+        actions: [
+          appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false)),
+          appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Add Quantity', color: Colors.red),
+        ],
       );
       if (result == true) {
         final newQty = (existingItem['qty'] ?? 1) + 1;
         try {
-          // Only update qty, do not touch emoji or other fields
           await api.updateListItem(widget.list.id, existingItem['id'], {'qty': newQty});
           setState(() {
             existingItem['qty'] = newQty;
@@ -497,40 +513,29 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
   Future<void> _onQuantityTap(Map<String, dynamic> item) async {
     final theme = Theme.of(context);
     int qty = item['qty'] ?? 1;
-    final result = await showDialog<int>(
+    final result = await showAppDialog<int>(
       context: context,
-      builder: (ctx) {
-        int tempQty = qty;
-        return StatefulBuilder(
-          builder: (context, setState) => AlertDialog(
-            title: const Text('Change Quantity'),
-            content: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.remove_circle_outline),
-                  onPressed: tempQty > 1 ? () => setState(() => tempQty--) : null,
-                ),
-                Text('$tempQty', style: theme.textTheme.headlineSmall),
-                IconButton(
-                  icon: const Icon(Icons.add_circle_outline),
-                  onPressed: () => setState(() => tempQty++),
-                ),
-              ],
+      title: const Text('Change Quantity'),
+      content: StatefulBuilder(
+        builder: (context, setState) => Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.remove_circle_outline),
+              onPressed: qty > 1 ? () => setState(() => qty--) : null,
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(ctx).pop(tempQty),
-                child: const Text('Done'),
-              ),
-            ],
-          ),
-        );
-      },
+            Text('$qty', style: theme.textTheme.headlineSmall),
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline),
+              onPressed: () => setState(() => qty++),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        appDialogCancelButton(onPressed: () => Navigator.of(context).pop()),
+        appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(qty), text: 'Done'),
+      ],
     );
     if (result != null && result != qty) {
       setState(() {
@@ -566,26 +571,14 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                 child: const Icon(Icons.delete, color: Colors.white, size: 28),
               ),
               confirmDismiss: (direction) async {
-                return await showDialog<bool>(
+                return await showAppDialog<bool>(
                   context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('Delete Item'),
-                    content: Text('Are you sure you want to delete "${item['name']}"?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(ctx).pop(false),
-                        child: const Text('Cancel'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.of(ctx).pop(true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text('Delete'),
-                      ),
-                    ],
-                  ),
+                  title: const Text('Delete Item'),
+                  content: Text('Are you sure you want to delete "${item['name']}"?'),
+                  actions: [
+                    appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false)),
+                    appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Delete', color: Colors.redAccent),
+                  ],
                 ) ?? false;
               },
               onDismissed: (direction) async {

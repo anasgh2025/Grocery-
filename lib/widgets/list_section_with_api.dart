@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import '../models/grocery_list.dart';
 import '../services/api_service.dart';
 import 'create_list_dialog.dart';
+import 'app_dialog.dart';
 import 'box_styles.dart';
 import '../screens/list_details_page.dart';
 import '../l10n/app_localizations.dart';
@@ -187,43 +188,35 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
                 itemLabel: itemLabel,
                 bgAsset: null,
                 onDelete: (ctx) {
-                  showDialog(
+                  showAppDialog<bool>(
                     context: ctx,
-                    builder: (dialogCtx) => AlertDialog(
-                      title: const Text('Delete List'),
-                      content: const Text('Are you sure you want to delete this list? This action cannot be undone.'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(dialogCtx).pop(),
-                          child: const Text('Cancel'),
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
-                          ),
-                          onPressed: () async {
-                            Navigator.of(dialogCtx).pop();
-                            try {
-                              await _apiService.deleteGroceryList(list.id);
-                              await _fetchLists();
-                              if (ctx.mounted) {
-                                ScaffoldMessenger.of(ctx).showSnackBar(
-                                  const SnackBar(content: Text('List deleted successfully.')),
-                                );
-                              }
-                            } catch (e) {
-                              if (ctx.mounted) {
-                                ScaffoldMessenger.of(ctx).showSnackBar(
-                                  SnackBar(content: Text('Failed to delete list: $e')),
-                                );
-                              }
+                    title: const Text('Delete List'),
+                    content: const Text('Are you sure you want to delete this list? This action cannot be undone.'),
+                    actions: [
+                      appDialogCancelButton(onPressed: () => Navigator.of(ctx).pop()),
+                      appDialogConfirmButton(
+                        onPressed: () async {
+                          Navigator.of(ctx).pop(true);
+                          try {
+                            await _apiService.deleteGroceryList(list.id);
+                            await _fetchLists();
+                            if (ctx.mounted) {
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                const SnackBar(content: Text('List deleted successfully.')),
+                              );
                             }
-                          },
-                          child: const Text('Delete'),
-                        ),
-                      ],
-                    ),
+                          } catch (e) {
+                            if (ctx.mounted) {
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                SnackBar(content: Text('Failed to delete list: $e')),
+                              );
+                            }
+                          }
+                        },
+                        text: 'Delete',
+                        color: Colors.red,
+                      ),
+                    ],
                   );
                 },
                 onShare: (ctx) {
