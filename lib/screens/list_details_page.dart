@@ -505,6 +505,19 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       _searchController.clear();
     });
     await _refreshListItems();
+    // Debug print to confirm new item is present
+  final addedName = (itemToAdd['name']?.toString().toLowerCase()) ?? '';
+  final found = widget.list.listItems.any((item) => (item['name']?.toString().toLowerCase() ?? '') == addedName);
+    debugPrint('[SUGGESTION] After refresh, item "$addedName" present: $found');
+    if (!found) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Warning: "$addedName" not found after refresh!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('"$addedName" added and visible in list.')),
+      );
+    }
     if (widget.onItemsChanged != null) {
       widget.onItemsChanged!();
     }
