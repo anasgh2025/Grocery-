@@ -194,9 +194,11 @@ const deleteList = async (req, res) => {
       list.listItems.push(newItem);
 
       await store.update(id, list);
+      console.log('[DEBUG] After store.update, listItems:', list.listItems.map(i => i.name));
 
       // Fetch the updated list from DB to ensure it's saved
       const updatedList = await store.getById(id);
+      console.log('[DEBUG] After store.getById, listItems:', updatedList.listItems.map(i => i.name));
 
       // Respond with the full updated listItems array
       res.status(201).json(updatedList.listItems || []);

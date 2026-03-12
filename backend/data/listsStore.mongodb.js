@@ -85,9 +85,11 @@ const update = async (id, listData) => {
   existing.icon = listData.icon !== undefined ? listData.icon : existing.icon;
   if (listData.priority !== undefined) existing.priority = listData.priority;
 
-  // Handle listItems
-  if (listData.listItems) {
-    existing.listItems = listData.listItems.map(it => ({ ...it }));
+  // Always update listItems and mark as modified, even if empty or mutated in-place
+  if (listData.listItems !== undefined) {
+    existing.listItems = Array.isArray(listData.listItems)
+      ? listData.listItems.map(it => ({ ...it }))
+      : [];
     existing.markModified('listItems');
   }
 
