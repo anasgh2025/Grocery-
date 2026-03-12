@@ -145,7 +145,7 @@ class ApiService {
   }
 
   /// Add an item to a list
-  Future<Map<String, dynamic>> addListItem(String listId, Map<String, dynamic> item) async {
+  Future<List<dynamic>> addListItem(String listId, Map<String, dynamic> item) async {
     try {
       final response = await http
           .post(
@@ -156,7 +156,7 @@ class ApiService {
           .timeout(timeout);
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        return json.decode(response.body) as Map<String, dynamic>;
+        return json.decode(response.body) as List<dynamic>;
       }
       throw Exception('Failed to create item: ${response.statusCode}');
     } catch (e) {
