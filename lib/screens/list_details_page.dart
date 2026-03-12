@@ -481,6 +481,8 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
             _searchController.clear();
           });
           if (widget.onItemsChanged != null) widget.onItemsChanged!();
+          // Pop with result to notify parent
+          Navigator.of(context).pop(true);
         } catch (e) {
           debugPrint('Failed to update item qty: $e');
         }
@@ -497,17 +499,14 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
     itemToAdd['emoji'] = emoji;
     try {
       await api.addListItem(widget.list.id, itemToAdd);
+      // Pop with result to notify parent
+      Navigator.of(context).pop(true);
     } catch (e) {
       debugPrint('Failed to add item from suggestion: $e');
-    }
-    setState(() {
-      _showSuggestions = false;
-      _searchController.clear();
-    });
-    // Always refresh from backend after add
-    await _refreshListItems();
-    if (widget.onItemsChanged != null) {
-      widget.onItemsChanged!();
+      setState(() {
+        _showSuggestions = false;
+        _searchController.clear();
+      });
     }
   }
 

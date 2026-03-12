@@ -171,7 +171,7 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
                     (l) => l.id == list.id,
                     orElse: () => list,
                   );
-                  await Navigator.of(context).push(
+                  final result = await Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => ListDetailsPage(
                         list: latest,
@@ -180,7 +180,9 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
                       ),
                     ),
                   );
-                  await _fetchLists();
+                  if (result == true) {
+                    await _fetchLists();
+                  }
                 },
                 allChecked: allChecked,
                 total: total,
