@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'dart:convert';
 import 'package:flutter/scheduler.dart';
 import '../models/grocery_list.dart';
 import '../services/api_service.dart';
@@ -10,6 +11,21 @@ import 'app_dialog.dart';
 import 'box_styles.dart';
 import '../screens/list_details_page.dart';
 import '../l10n/app_localizations.dart';
+
+
+// Helper to generate invite link (calls backend)
+Future<Uri> generateInviteLink(BuildContext context, String listId) async {
+  final api = ApiService();
+  final baseUrl = ApiService.baseUrl;
+  final url = Uri.parse('$baseUrl/lists/$listId/invite');
+  final response = await api.postRaw(url);
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    return Uri.parse(data['inviteUrl'] as String);
+  } else {
+    throw Exception('Failed to generate invite link: \\${response.statusCode}');
+  }
+}
 
 /// Example widget showing how to use the API service to fetch lists
 /// This is a stateful version that fetches data from the backend
@@ -535,9 +551,74 @@ class _ListCard extends StatelessWidget {
                         onDelete(context);
                       } else if (value == 'share') {
                         onShare(context);
+                      } else if (value == 'invite') {
+                        // Generate invite link and show share dialog
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (ctx) {
+                            return FutureBuilder<Uri>(
+                              future: generateInviteLink(context, list.id),
+                              builder: (ctx, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  return const AlertDialog(
+                                    title: Text('Generating Invite...'),
+                                    content: SizedBox(height: 48, child: Center(child: CircularProgressIndicator())),
+                                  );
+                                }
+                                if (snapshot.hasError) {
+                                  return AlertDialog(
+                                    title: const Text('Error'),
+                                    content: Text('Failed to generate invite link: ${snapshot.error}'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.of(ctx).pop(),
+                                        child: const Text('Close'),
+                                      ),
+                                    ],
+                                  );
+                                }
+                                final inviteUri = snapshot.data;
+                                return AlertDialog(
+                                  title: const Text('Invite'),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text('Share this link to invite others to your list:'),
+                                      const SizedBox(height: 12),
+                                      SelectableText(inviteUri.toString()),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(ctx).pop();
+                                        // Share via WhatsApp or other
+                                        Share.share(inviteUri.toString(), subject: 'Join my grocery list!');
+                                      },
+                                      child: const Text('Share'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.of(ctx).pop(),
+                                      child: const Text('Close'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        );
                       }
+// Helper to generate invite link (calls backend)
                     },
                     itemBuilder: (ctx) => [
+                      PopupMenuItem(
+                        value: 'invite',
+                        child: ListTile(
+                          leading: const Icon(Icons.person_add_alt_1),
+                          title: const Text('Invite'),
+                        ),
+                      ),
                       PopupMenuItem(
                         value: 'share',
                         child: ListTile(

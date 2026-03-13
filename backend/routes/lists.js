@@ -1,3 +1,8 @@
+// Generate invite link for a list
+router.post('/:id/invite', listsController.generateInviteLink);
+
+// Accept invite and link user to list
+router.post('/accept-invite', listsController.acceptInvite);
 const express = require('express');
 const router = express.Router();
 const listsController = require('../controllers/listsController');

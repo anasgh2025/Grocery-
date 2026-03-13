@@ -1,3 +1,56 @@
+// --- Invite Link Handlers ---
+const crypto = require('crypto');
+const inviteTokens = new Map(); // In-memory for now; use DB for production
+
+// Generate invite link for a list
+const generateInviteLink = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const list = await store.getById(id);
+    if (!list) return res.status(404).json({ error: 'Not Found', message: `List ${id} not found` });
+    // Generate a unique token
+    const token = crypto.randomBytes(16).toString('hex');
+    inviteTokens.set(token, { listId: id, created: Date.now() });
+    // Construct invite URL (assume frontend at /invite/:token)
+    const baseUrl = process.env.FRONTEND_URL || 'https://shopsmart.app';
+    const inviteUrl = `${baseUrl}/invite/${token}`;
+    res.json({ inviteUrl, token });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to generate invite link', message: error.message });
+  }
+};
+
+// Accept invite and link user to list
+// POST /lists/accept-invite
+// Body: { token: string, userId: string }
+const acceptInvite = async (req, res) => {
+  try {
+    const { token, userId } = req.body;
+    if (!token || !userId) {
+      return res.status(400).json({ error: 'Bad Request', message: 'Missing token or userId' });
+    }
+    const invite = inviteTokens.get(token);
+    if (!invite) {
+      return res.status(404).json({ error: 'Invalid or expired invite token' });
+    }
+    const { listId } = invite;
+    const list = await store.getById(listId);
+    if (!list) {
+      return res.status(404).json({ error: 'List not found' });
+    }
+    // Add userId to list.sharedWith (create if missing)
+    if (!Array.isArray(list.sharedWith)) list.sharedWith = [];
+    if (!list.sharedWith.includes(userId)) {
+      list.sharedWith.push(userId);
+      await store.update(listId, list);
+    }
+    // Optionally, delete the token after use
+    inviteTokens.delete(token);
+    res.json({ success: true, listId });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to accept invite', message: error.message });
+  }
+};
 const { v4: uuidv4 } = require('uuid');
 const store = require('../data/listsStore.mongodb');
 
@@ -264,9 +317,11 @@ module.exports = {
   getListById,
   createList,
   updateList,
-    getListItems,
-    addListItem,
-    updateListItem,
-    deleteListItem,
-  deleteList
+  getListItems,
+  addListItem,
+  updateListItem,
+  deleteListItem,
+  deleteList,
+  generateInviteLink,
+  acceptInvite,
 };

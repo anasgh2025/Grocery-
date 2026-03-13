@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -7,6 +8,25 @@ import '../models/grocery_list.dart';
 
 /// Service for handling API calls related to grocery lists
 class ApiService {
+  /// Accept an invite and link user to list
+  Future<Map<String, dynamic>> acceptInvite({required String token, required String userId}) async {
+    final url = Uri.parse('${ApiService.baseUrl}/lists/accept-invite');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'token': token, 'userId': userId}),
+    ).timeout(ApiService.timeout);
+    if (response.statusCode == 200) {
+      return json.decode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception('Failed to accept invite: ${response.statusCode}');
+    }
+  }
+
+  /// Raw POST request (for invite link)
+  Future<http.Response> postRaw(Uri url, {Map<String, String>? headers, Object? body}) async {
+    return await http.post(url, headers: headers, body: body).timeout(timeout);
+  }
 
   /// Search for item suggestions (across all categories)
   Future<List<Map<String, dynamic>>> searchItemSuggestions(String query, {String? lang}) async {
