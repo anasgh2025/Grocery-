@@ -9,6 +9,7 @@ import '../services/openai_service.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../widgets/app_dialog.dart';
+import '../widgets/add_item_details_sheet.dart';
 
 // Dashed border painter for the 'Create New Item' card
 class _DashedRRectPainter extends CustomPainter {
@@ -68,6 +69,149 @@ class ListDetailsPage extends StatefulWidget {
 }
 
 class _ListDetailsPageState extends State<ListDetailsPage> {
+  // Helper methods for item card actions (must be at the top for Dart forward reference)
+  void _showItemOptionsModal(Map<String, dynamic> item) async {
+    final isChecked = item['checked'] == true;
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.visibility),
+                title: const Text('View'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _showViewItemDialog(item);
+                },
+              ),
+              ListTile(
+                leading: Icon(isChecked ? Icons.check_box_outline_blank : Icons.check_box),
+                title: Text(isChecked ? 'Uncheck' : 'Check'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  await _toggleItemChecked(item);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text('Delete', style: TextStyle(color: Colors.red)),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  final confirm = await showAppDialog<bool>(
+                    context: context,
+                    title: const Text('Delete Item'),
+                    content: Text('Are you sure you want to delete "${item['name']}"?'),
+                    actions: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false)),
+                          const SizedBox(width: 12),
+                          appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Delete', color: Colors.redAccent),
+                        ],
+                      ),
+                    ],
+                  );
+                  if (confirm == true) {
+                    await _deleteItem(item);
+                  }
+                  // If confirm is null or false, do nothing (dialog was cancelled)
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showViewItemDialog(Map<String, dynamic> item) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(item['name'] ?? ''),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (item['emoji'] != null) Text('Emoji: ${item['emoji']}'),
+            if (item['qty'] != null) Text('Quantity: ${item['qty']}'),
+            if (item['category'] != null) Text('Category: ${item['category']}'),
+            if (item['description'] != null) Text('Description: ${item['description']}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _toggleItemChecked(Map<String, dynamic> item) async {
+    final newChecked = !(item['checked'] == true);
+    setState(() {
+      item['checked'] = newChecked;
+    });
+    try {
+      final api = ApiService();
+      await api.updateListItem(
+        widget.list.id,
+        item['id'],
+        {
+          'checked': newChecked,
+          if (item['emoji'] != null) 'emoji': item['emoji'],
+        },
+      );
+      if (widget.onItemsChanged != null) widget.onItemsChanged!();
+    } catch (e) {
+      debugPrint('Failed to update item checked state: $e');
+    }
+  }
+
+
+  Future<void> _deleteItem(Map<String, dynamic> item) async {
+    try {
+      final api = ApiService();
+      String? listId;
+      if (widget.list is Map) {
+        listId = widget.list['id'] as String?;
+      } else if (widget.list != null && widget.list.id != null) {
+        listId = widget.list.id as String?;
+      }
+      if (listId == null) {
+        debugPrint('Delete failed: listId is null');
+        return;
+      }
+      await api.deleteListItem(listId, item['id']);
+      setState(() {
+        if (widget.list is Map) {
+          final items = widget.list['listItems'];
+          if (items is List) {
+            items.removeWhere((it) => it != null && it['id'] == item['id']);
+          }
+        } else if (widget.list != null) {
+          final items = widget.list.listItems;
+          if (items is List) {
+            items.removeWhere((it) => it != null && it['id'] == item['id']);
+          }
+        }
+      });
+      if (widget.onItemsChanged != null) {
+        widget.onItemsChanged!();
+      }
+    } catch (e) {
+      debugPrint('Failed to delete item: $e');
+    }
+  }
   late stt.SpeechToText _speech;
   bool _isListening = false;
   String _voiceInput = '';
@@ -245,17 +389,34 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
           ],
         );
         if (confirm == true) {
-          final itemToAdd = {
-            'name': name,
-            'qty': qty,
-            'emoji': '🛒',
-          };
-          await api.addListItem(widget.list.id, itemToAdd);
-          await _refreshListItems();
-          if (widget.onItemsChanged != null) widget.onItemsChanged!();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Added "$name" (Qty: $qty) as a custom item.')),
+          // Show add item details sheet for qty and photo
+          final details = await showAddItemDetailsSheet(
+            context,
+            itemName: name,
+            categoryLabel: '',
+            accent: widget.accent,
           );
+          if (details != null) {
+            final itemToAdd = {
+              'name': details['name'],
+              'qty': details['qty'],
+              'emoji': '🛒',
+              if (details['photoPath'] != null) 'photoPath': details['photoPath'],
+              'priority': details['priority'] ?? 0,
+              'checked': false,
+            };
+            await api.addListItem(widget.list.id, itemToAdd);
+            await _refreshListItems();
+            if (widget.onItemsChanged != null) widget.onItemsChanged!();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Added "${details['name']}" (Qty: ${details['qty']}) as a custom item.')),
+            );
+          } else {
+            debugPrint('[VOICE] User cancelled add item details sheet.');
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No item added.')),
+            );
+          }
         } else {
           debugPrint('[VOICE] User cancelled adding custom item.');
           ScaffoldMessenger.of(context).showSnackBar(
@@ -329,38 +490,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                   ),
               ],
             ),
-            onTap: () async {
-              final newChecked = !(item['checked'] == true);
-              bool mounted = true;
-              try {
-                setState(() {
-                  item['checked'] = newChecked;
-                });
-              } catch (e) {
-                debugPrint('setState error: $e');
-                mounted = false;
-              }
-              try {
-                final api = ApiService();
-                await api.updateListItem(
-                  listId,
-                  item['id'],
-                  {
-                    'checked': newChecked,
-                    if (item['emoji'] != null) 'emoji': item['emoji'],
-                  },
-                );
-              } catch (e) {
-                debugPrint('Failed to update item checked state: $e');
-              }
-              if (mounted && widget.onItemsChanged != null) {
-                try {
-                  widget.onItemsChanged!();
-                } catch (e) {
-                  debugPrint('onItemsChanged error: $e');
-                }
-              }
-            },
+            // onTap removed: handled by GestureDetector in _buildItemCard
           ),
         );
       }
@@ -383,6 +513,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
   bool _loadingSuggestions = false;
 
   List<Map<String, dynamic>> get untickedItems {
+    // Get items that are not checked
     final items = widget.list.listItems;
     if (items == null) return [];
     return List<Map<String, dynamic>>.from(items.where((item) => item is Map && (item['checked'] != true)));
@@ -449,6 +580,56 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       debugPrint('Failed to fetch suggestions: $e');
     }
   }
+
+  Future<void> _onSearchSubmitted(String value) async {
+    if (value.length < 3) return;
+    if (_suggestions.isNotEmpty) return;
+    final confirm = await showAppDialog<bool>(
+      context: context,
+      title: const Text('Item not found'),
+      content: Text('"$value" is not in the list. Would you like to add it as a custom item?'),
+      actions: [
+        appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: 'No'),
+        appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Yes'),
+      ],
+    );
+    if (confirm == true) {
+      final details = await showAddItemDetailsSheet(
+        context,
+        itemName: value,
+        categoryLabel: '',
+        accent: widget.accent,
+      );
+      if (details != null) {
+        final api = ApiService();
+        final itemToAdd = {
+          'name': details['name'],
+          'qty': details['qty'],
+          'emoji': '🛒',
+          if (details['photoPath'] != null) 'photoPath': details['photoPath'],
+          if (details['description'] != null) 'description': details['description'],
+        };
+        try {
+          await api.addListItem(widget.list.id, itemToAdd);
+          await _refreshListItems();
+          if (widget.onItemsChanged != null) widget.onItemsChanged!();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Added "${details['name']}" (Qty: ${details['qty']}) to your list.')),
+          );
+        } catch (e) {
+          debugPrint('Failed to add custom item: $e');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to add item.')),
+          );
+        }
+        setState(() {
+          _showSuggestions = false;
+          _searchController.clear();
+        });
+      }
+    }
+  }
+// ...existing code...
 
   void _onTapSuggestion(Map<String, dynamic> suggestion) async {
     final api = ApiService();
@@ -568,44 +749,10 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
     final tile = _buildListTile(item, theme, emoji);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: (item['checked'] == true)
-          ? tile
-          : Dismissible(
-              key: ValueKey(item['id']),
-              direction: DismissDirection.startToEnd,
-              background: Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.only(left: 24),
-                color: Colors.redAccent,
-                child: const Icon(Icons.delete, color: Colors.white, size: 28),
-              ),
-              confirmDismiss: (direction) async {
-                return await showAppDialog<bool>(
-                  context: context,
-                  title: const Text('Delete Item'),
-                  content: Text('Are you sure you want to delete "${item['name']}"?'),
-                  actions: [
-                    appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false)),
-                    appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Delete', color: Colors.redAccent),
-                  ],
-                ) ?? false;
-              },
-              onDismissed: (direction) async {
-                try {
-                  final api = ApiService();
-                  await api.deleteListItem(widget.list.id, item['id']);
-                  setState(() {
-                    widget.list.listItems.removeWhere((it) => it['id'] == item['id']);
-                  });
-                  if (widget.onItemsChanged != null) {
-                    widget.onItemsChanged!();
-                  }
-                } catch (e) {
-                  debugPrint('Failed to delete item: $e');
-                }
-              },
-              child: tile,
-            ),
+      child: GestureDetector(
+        onTap: () => _showItemOptionsModal(item),
+        child: tile,
+      ),
     );
   }
 
@@ -657,6 +804,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                     TextField(
                       controller: _searchController,
                       onChanged: _onSearchChanged,
+                      onSubmitted: _onSearchSubmitted,
                       decoration: InputDecoration(
                         hintText: 'Search...',
                         prefixIcon: const Icon(Icons.search),
