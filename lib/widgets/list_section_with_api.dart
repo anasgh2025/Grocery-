@@ -240,14 +240,25 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
                 onShare: (ctx) {
                   final listName = list.name;
                   final items = (list.listItems is List) ? list.listItems as List : [];
-                  final itemsText = items.isNotEmpty
-                    ? items.map((item) {
-                        final name = item['name'] ?? '';
-                        final qty = item['qty'] != null ? ' (Qty: ${item['qty']})' : '';
-                        return '• $name$qty';
-                      }).join('\n')
-                    : 'No items in the list.';
-                  final shareText = 'Here is the list of $listName\n$itemsText\n\nThank you for using the app';
+                  final checkedItems = items.where((item) => item['checked'] == true).toList();
+                  final uncheckedItems = items.where((item) => item['checked'] != true).toList();
+
+                  String formatItems(List items) => items.isNotEmpty
+                      ? items.map((item) {
+                          final name = item['name'] ?? '';
+                          final qty = item['qty'] != null ? ' (Qty: \\${item['qty']})' : '';
+                          return '• $name$qty';
+                        }).join('\n')
+                      : 'None';
+
+                  final checkedText = formatItems(checkedItems);
+                  final uncheckedText = formatItems(uncheckedItems);
+
+                  final shareText = 'Here is the list of $listName\n\n'
+                      '✅ Checked items:\n$checkedText\n\n'
+                      '⬜️ Unchecked items:\n$uncheckedText\n\n'
+                      'Thank you for using the app';
+
                   final box = ctx.findRenderObject() as RenderBox?;
                   if (box != null) {
                     Share.share(
