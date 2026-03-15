@@ -58,11 +58,16 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredItems = _searchQuery.isEmpty
-        ? _listItems
+    final allFiltered = _searchQuery.isEmpty
+        ? List<dynamic>.from(_listItems)
         : _listItems.where((item) =>
             (item['name']?.toString().toLowerCase() ?? '').contains(_searchQuery.toLowerCase())
           ).toList();
+    // Unchecked items first, checked at the bottom
+    final filteredItems = [
+      ...allFiltered.where((item) => item['checked'] != true),
+      ...allFiltered.where((item) => item['checked'] == true),
+    ];
 
     return Scaffold(
       appBar: AppBar(
@@ -117,66 +122,12 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
               onRefresh: _refreshListItems,
               child: filteredItems.isEmpty
                   ? ListView(
-                      children: [Center(child: Padding(
+                      children: const [Center(child: Padding(
                         padding: EdgeInsets.only(top: 100),
                         child: Text('No items in this list.'),
                       ))],
                     )
-                  : ListView.builder(
-                      itemCount: filteredItems.length,
-                      itemBuilder: (context, index) {
-                        final item = filteredItems[index] as Map<String, dynamic>;
-                        return Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () => _showItemOptionsModal(item),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                              child: Row(
-                                children: [
-                                  if (item['emoji'] != null && item['emoji'].toString().isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 12),
-                                      child: Text(item['emoji'], style: const TextStyle(fontSize: 26)),
-                                    ),
-                                  Expanded(
-                                    child: Text(
-                                      item['name']?.toString() ?? '',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                        decoration: item['checked'] == true
-                                            ? TextDecoration.lineThrough
-                                            : TextDecoration.none,
-                                        color: item['checked'] == true ? Colors.grey : null,
-                                      ),
-                                    ),
-                                  ),
-                                  if (item['qty'] != null)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: widget.accent.withAlpha(30),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Text(
-                                        'x${item['qty']}',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold,
-                                          color: widget.accent,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                  : _buildSectionedList(filteredItems),
             ),
           ),
         ],
@@ -191,7 +142,6 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
             child: FloatingActionButton(
               heroTag: 'addItem',
               backgroundColor: widget.accent,
-              child: const Icon(Icons.add, size: 28),
               onPressed: () async {
                 // Navigate to categories page and refresh if item was added
                 await Navigator.of(context).push(
@@ -206,6 +156,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                 if (widget.onItemsChanged != null) widget.onItemsChanged!();
               },
               tooltip: 'Create New Item',
+              child: const Icon(Icons.add, size: 28),
             ),
           ),
           const SizedBox(height: 16),
@@ -215,9 +166,9 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
             child: FloatingActionButton(
               heroTag: 'voice',
               backgroundColor: widget.accent,
-              child: const Icon(Icons.mic),
               onPressed: _startListening,
               tooltip: 'Voice Search/Add',
+              child: const Icon(Icons.mic),
             ),
           ),
         ],
@@ -252,7 +203,114 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       }
     }
   }
-  // Helper methods for item card actions (must be at the top for Dart forward reference)
+  // ── Sectioned list ────────────────────────────────────────────────────────
+  Widget _buildSectionedList(List<dynamic> filteredItems) {
+    final active  = filteredItems.where((i) => i['checked'] != true).toList();
+    final checked = filteredItems.where((i) => i['checked'] == true).toList();
+
+    // Build a flat list of widgets: header + cards for each section
+    final widgets = <Widget>[];
+
+    if (active.isNotEmpty) {
+      widgets.add(_buildSectionHeader('Active', widget.accent));
+      for (final item in active) {
+        widgets.add(_buildItemCard(item as Map<String, dynamic>));
+      }
+    }
+
+    if (checked.isNotEmpty) {
+      widgets.add(_buildSectionHeader('Checked', Colors.grey));
+      for (final item in checked) {
+        widgets.add(_buildItemCard(item as Map<String, dynamic>));
+      }
+    }
+
+    return ListView(children: widgets);
+  }
+
+  Widget _buildSectionHeader(String label, Color color) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 16,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: color,
+              letterSpacing: 0.8,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildItemCard(Map<String, dynamic> item) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _showItemOptionsModal(item),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Row(
+            children: [
+              if (item['emoji'] != null && item['emoji'].toString().isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: Text(item['emoji'], style: const TextStyle(fontSize: 26)),
+                ),
+              Expanded(
+                child: Text(
+                  item['name']?.toString() ?? '',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    decoration: item['checked'] == true
+                        ? TextDecoration.lineThrough
+                        : TextDecoration.none,
+                    color: item['checked'] == true ? Colors.grey : null,
+                  ),
+                ),
+              ),
+              if (item['qty'] != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: item['checked'] == true
+                        ? Colors.grey.withAlpha(30)
+                        : widget.accent.withAlpha(30),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'x${item['qty']}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: item['checked'] == true ? Colors.grey : widget.accent,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Item options modal ─────────────────────────────────────────────────────
   void _showItemOptionsModal(Map<String, dynamic> item) async {
     final isChecked = item['checked'] == true;
     showModalBottomSheet(
@@ -289,27 +347,197 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
   }
 
   void _showViewItemDialog(Map<String, dynamic> item) {
-    showDialog(
+    final initialQty = (item['qty'] is int)
+        ? item['qty'] as int
+        : int.tryParse(item['qty']?.toString() ?? '') ?? 1;
+    final emoji = item['emoji']?.toString() ?? '';
+    final name = item['name']?.toString() ?? '';
+    final isChecked = item['checked'] == true;
+
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(item['name'] ?? ''),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (item['emoji'] != null) Text('Emoji: ${item['emoji']}'),
-            if (item['qty'] != null) Text('Quantity: ${item['qty']}'),
-            if (item['category'] != null) Text('Category: ${item['category']}'),
-            if (item['description'] != null) Text('Description: ${item['description']}'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder: (context) {
+        int qty = initialQty;
+        bool isDirty = false;
+        bool isSaving = false;
+
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 32,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Drag handle
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  // Emoji
+                  if (emoji.isNotEmpty)
+                    Text(emoji, style: const TextStyle(fontSize: 52)),
+                  const SizedBox(height: 12),
+                  // Title
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  // Quantity picker — disabled for checked items
+                  Opacity(
+                    opacity: isChecked ? 0.38 : 1.0,
+                    child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Quantity',
+                        style: TextStyle(fontSize: 15, color: Colors.black54),
+                      ),
+                      const Spacer(),
+                      // Decrease button
+                      Material(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(10),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(10),
+                          onTap: (!isChecked && qty > 1)
+                              ? () {
+                                  setSheetState(() {
+                                    qty--;
+                                    isDirty = qty != initialQty;
+                                  });
+                                }
+                              : null,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Icon(Icons.remove,
+                                size: 22,
+                                color: (!isChecked && qty > 1) ? widget.accent : Colors.grey.shade400),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          '$qty',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: widget.accent,
+                          ),
+                        ),
+                      ),
+                      // Increase button
+                      Material(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(10),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(10),
+                          onTap: !isChecked
+                              ? () {
+                                  setSheetState(() {
+                                    qty++;
+                                    isDirty = qty != initialQty;
+                                  });
+                                }
+                              : null,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Icon(Icons.add, size: 22, color: widget.accent),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  ),
+                  const SizedBox(height: 28),
+                  // Done CTA — only visible when qty changed (unchecked items only)
+                  if (!isChecked)
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    child: isDirty
+                        ? SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: widget.accent,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed: isSaving
+                                  ? null
+                                  : () async {
+                                      setSheetState(() => isSaving = true);
+                                      try {
+                                        final api = ApiService();
+                                        await api.updateListItem(
+                                          _resolvedListId,
+                                          item['id'],
+                                          {'qty': qty},
+                                        );
+                                        // Update local state immediately
+                                        setState(() {
+                                          item['qty'] = qty;
+                                        });
+                                        if (widget.onItemsChanged != null) {
+                                          widget.onItemsChanged!();
+                                        }
+                                        if (mounted) Navigator.of(context).pop();
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Updated "$name" quantity to $qty.'),
+                                          ),
+                                        );
+                                      } catch (e) {
+                                        setSheetState(() => isSaving = false);
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Failed to update quantity: $e')),
+                                        );
+                                      }
+                                    },
+                              child: isSaving
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2, color: Colors.white),
+                                    )
+                                  : const Text(
+                                      'Done',
+                                      style: TextStyle(
+                                          fontSize: 16, fontWeight: FontWeight.bold),
+                                    ),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -421,10 +649,10 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       debugPrint('[VOICE] Suggestions: $suggestions');
       // Check if item already exists in the list
       final currentItems = _listItems; // use local state, always up to date
-      final _existingIdx = currentItems.indexWhere(
+      final existingIdx = currentItems.indexWhere(
         (it) => (it['name']?.toString().trim().toLowerCase() ?? '') == name.trim().toLowerCase(),
       );
-      final existingItem = _existingIdx != -1 ? currentItems[_existingIdx] : null;
+      final existingItem = existingIdx != -1 ? currentItems[existingIdx] : null;
       if (existingItem != null) {
         // Ask user to confirm increasing quantity only
         final confirm = await showAppDialog<bool>(
