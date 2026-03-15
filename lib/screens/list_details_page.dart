@@ -32,6 +32,12 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
   List<dynamic> _listItems = [];
   bool _isLoading = false;
 
+  // ── Global search / suggestions ──────────────────────────────────────────
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  List<Map<String, dynamic>> _suggestions = [];
+  bool _isSearching = false;   // true while the HTTP call is in flight
+
   String get _resolvedListId {
     if (widget.list is Map) {
       return (widget.list['id'] ?? '').toString();
@@ -79,42 +85,158 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: SizedBox(
-              height: 48,
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search items...',
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(
-                      color: Colors.grey.shade400,
-                      width: 1.2,
-                      style: BorderStyle.solid,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  height: 48,
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    textInputAction: TextInputAction.done,
+                    decoration: InputDecoration(
+                      hintText: 'Search or add items...',
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide(
+                          color: Colors.grey.shade400,
+                          width: 1.2,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide(color: widget.accent, width: 2),
+                      ),
+                      prefixIcon: const Icon(Icons.search, color: Color(0xFF9CA3AF)),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, color: Color(0xFF9CA3AF)),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                  _suggestions = [];
+                                });
+                              },
+                            )
+                          : null,
                     ),
+                    style: const TextStyle(fontFamily: 'Nunito', fontSize: 14),
+                    onChanged: (value) async {
+                      setState(() {
+                        _searchQuery = value;
+                        if (value.length < 3) _suggestions = [];
+                      });
+                      if (value.length >= 3) {
+                        setState(() => _isSearching = true);
+                        try {
+                          final api = ApiService();
+                          final results = await api.searchItemSuggestions(value);
+                          if (mounted && _searchController.text == value) {
+                            setState(() {
+                              _suggestions = results;
+                              _isSearching = false;
+                            });
+                          }
+                        } catch (_) {
+                          if (mounted) setState(() => _isSearching = false);
+                        }
+                      }
+                    },
+                    onSubmitted: (value) async {
+                      // Keyboard "Done" pressed
+                      final trimmed = value.trim();
+                      if (trimmed.isEmpty) return;
+                      if (_suggestions.isNotEmpty) return; // user should pick from list
+                      // No suggestions — ask to add as custom
+                      final confirm = await showAppDialog<bool>(
+                        context: context,
+                        title: const Text('Item not found'),
+                        content: Text('"$trimmed" was not found. Would you like to add it to your list?'),
+                        actions: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: 'No'),
+                              const SizedBox(width: 12),
+                              appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Add'),
+                            ],
+                          ),
+                        ],
+                      );
+                      if (confirm == true) {
+                        await _addItemByName(trimmed);
+                      }
+                    },
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(
-                      color: widget.accent,
-                      width: 2,
-                    ),
-                  ),
-                  prefixIcon: const Icon(Icons.search, color: Color(0xFF9CA3AF)),
                 ),
-                style: const TextStyle(fontFamily: 'Nunito', fontSize: 14),
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
-              ),
+                // ── Suggestions dropdown ──────────────────────────────────
+                if (_isSearching)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: LinearProgressIndicator(
+                      color: widget.accent,
+                      backgroundColor: widget.accent.withAlpha(30),
+                    ),
+                  ),
+                if (_suggestions.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.only(top: 4),
+                    constraints: const BoxConstraints(maxHeight: 220),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(18),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        padding: EdgeInsets.zero,
+                        itemCount: _suggestions.length,
+                        separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.shade100),
+                        itemBuilder: (context, i) {
+                          final s = _suggestions[i];
+                          final emoji = s['emoji']?.toString() ?? '';
+                          final sName = s['name']?.toString() ?? '';
+                          return InkWell(
+                            onTap: () => _addSuggestionItem(s),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              child: Row(
+                                children: [
+                                  if (emoji.isNotEmpty)
+                                    Text(emoji, style: const TextStyle(fontSize: 22)),
+                                  if (emoji.isNotEmpty) const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      sName,
+                                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                                    ),
+                                  ),
+                                  Icon(Icons.add_circle_outline, color: widget.accent, size: 20),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           if (_isLoading)
             const LinearProgressIndicator(),
           Expanded(
@@ -174,6 +296,183 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  // ── Search helpers ────────────────────────────────────────────────────────
+
+  /// Called when user taps a suggestion from the dropdown.
+  Future<void> _addSuggestionItem(Map<String, dynamic> suggestion) async {
+    _searchFocusNode.unfocus();
+    _searchController.clear();
+    setState(() { _searchQuery = ''; _suggestions = []; });
+
+    final suggestedName = suggestion['name']?.toString() ?? '';
+
+    // ── Duplicate check ──────────────────────────────────────────────────
+    final dupIdx = _listItems.indexWhere(
+      (it) => (it['name']?.toString().trim().toLowerCase() ?? '') ==
+               suggestedName.trim().toLowerCase(),
+    );
+    if (dupIdx != -1) {
+      final existing = _listItems[dupIdx] as Map<String, dynamic>;
+      final currentQty = existing['qty'] is int
+          ? existing['qty'] as int
+          : int.tryParse(existing['qty']?.toString() ?? '') ?? 1;
+      final confirm = await showAppDialog<bool>(
+        context: context,
+        title: const Text('Item already in list'),
+        content: Text('"$suggestedName" is already in your list (qty: $currentQty). Would you like to increase the quantity?'),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: 'No'),
+              const SizedBox(width: 12),
+              appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Increase'),
+            ],
+          ),
+        ],
+      );
+      if (confirm == true) {
+        final resolvedId = (existing['id'] ?? existing['_id'])?.toString() ?? '';
+        if (resolvedId.isNotEmpty) {
+          try {
+            final api = ApiService();
+            await api.updateListItem(_resolvedListId, resolvedId, {'qty': currentQty + 1});
+            await _refreshListItems();
+            if (widget.onItemsChanged != null) widget.onItemsChanged!();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Increased "$suggestedName" quantity to ${currentQty + 1}.')),
+            );
+          } catch (e) {
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update qty: $e')));
+          }
+        }
+      }
+      return;
+    }
+
+    final details = await showAddItemDetailsSheet(
+      context,
+      itemName: suggestedName,
+      categoryLabel: suggestion['category']?.toString() ?? '',
+      accent: widget.accent,
+    );
+    if (details == null || !mounted) return;
+
+    final itemToAdd = {
+      'name': details['name'],
+      'qty': details['qty'],
+      'emoji': suggestion['emoji']?.toString().isNotEmpty == true
+          ? suggestion['emoji']
+          : '🛒',
+      'priority': details['priority'] ?? 0,
+      'checked': false,
+    };
+    try {
+      final api = ApiService();
+      await api.addListItem(_resolvedListId, itemToAdd);
+      await _refreshListItems();
+      if (widget.onItemsChanged != null) widget.onItemsChanged!();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Added "${details['name']}" to the list.')),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add item: $e')),
+        );
+      }
+    }
+  }
+
+  /// Called when user pressed Done on keyboard and no suggestions found.
+  Future<void> _addItemByName(String name) async {
+    _searchFocusNode.unfocus();
+    _searchController.clear();
+    setState(() { _searchQuery = ''; _suggestions = []; });
+
+    // ── Duplicate check ──────────────────────────────────────────────────
+    final dupIdx = _listItems.indexWhere(
+      (it) => (it['name']?.toString().trim().toLowerCase() ?? '') ==
+               name.trim().toLowerCase(),
+    );
+    if (dupIdx != -1) {
+      final existing = _listItems[dupIdx] as Map<String, dynamic>;
+      final currentQty = existing['qty'] is int
+          ? existing['qty'] as int
+          : int.tryParse(existing['qty']?.toString() ?? '') ?? 1;
+      final confirm = await showAppDialog<bool>(
+        context: context,
+        title: const Text('Item already in list'),
+        content: Text('"$name" is already in your list (qty: $currentQty). Would you like to increase the quantity?'),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: 'No'),
+              const SizedBox(width: 12),
+              appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Increase'),
+            ],
+          ),
+        ],
+      );
+      if (confirm == true) {
+        final resolvedId = (existing['id'] ?? existing['_id'])?.toString() ?? '';
+        if (resolvedId.isNotEmpty) {
+          try {
+            final api = ApiService();
+            await api.updateListItem(_resolvedListId, resolvedId, {'qty': currentQty + 1});
+            await _refreshListItems();
+            if (widget.onItemsChanged != null) widget.onItemsChanged!();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Increased "$name" quantity to ${currentQty + 1}.')),
+            );
+          } catch (e) {
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update qty: $e')));
+          }
+        }
+      }
+      return;
+    }
+
+    final details = await showAddItemDetailsSheet(
+      context,
+      itemName: name,
+      categoryLabel: '',
+      accent: widget.accent,
+    );
+    if (details == null || !mounted) return;
+
+    final itemToAdd = {
+      'name': details['name'],
+      'qty': details['qty'],
+      'emoji': '🛒',
+      'priority': details['priority'] ?? 0,
+      'checked': false,
+    };
+    try {
+      final api = ApiService();
+      await api.addListItem(_resolvedListId, itemToAdd);
+      await _refreshListItems();
+      if (widget.onItemsChanged != null) widget.onItemsChanged!();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Added "${details['name']}" to the list.')),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add item: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _refreshListItems() async {
