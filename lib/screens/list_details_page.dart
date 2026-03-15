@@ -1,57 +1,17 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
-import '../widgets/footer_menu.dart';
-import 'categories_page.dart';
+// import '../l10n/app_localizations.dart'; // Removed unused import
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../services/openai_service.dart';
+// import 'categories_page.dart'; // Removed unused import
 import '../services/api_service.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../widgets/app_dialog.dart';
+
 import '../widgets/add_item_details_sheet.dart';
+import 'categories_page.dart';
 
-// Dashed border painter for the 'Create New Item' card
-class _DashedRRectPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-  final double radius;
-  final double dashWidth;
-  final double dashSpace;
-
-  _DashedRRectPainter({
-    required this.color,
-    required this.strokeWidth,
-    required this.radius,
-    required this.dashWidth,
-    required this.dashSpace,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-    final rrect = RRect.fromRectAndRadius(
-      Offset.zero & size,
-      Radius.circular(radius),
-    );
-    final path = Path()..addRRect(rrect);
-    for (final metric in path.computeMetrics()) {
-      double distance = 0.0;
-      while (distance < metric.length) {
-        final double next = (distance + dashWidth).clamp(0.0, metric.length);
-        final extract = metric.extractPath(distance, next);
-        canvas.drawPath(extract, paint);
-        distance += dashWidth + dashSpace;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-
-
-  }
 
 
 class ListDetailsPage extends StatefulWidget {
@@ -66,28 +26,230 @@ class ListDetailsPage extends StatefulWidget {
 
 }
 
+
 class _ListDetailsPageState extends State<ListDetailsPage> {
+  String _searchQuery = '';
+  List<dynamic> _listItems = [];
+  bool _isLoading = false;
+
+  String get _resolvedListId {
+    if (widget.list is Map) {
+      return (widget.list['id'] ?? '').toString();
+    }
+    return (widget.list?.id ?? '').toString();
+  }
+
+
+  @override
+  void initState() {
+    super.initState();
+    // Optionally show cached items immediately
+    if (widget.list is Map) {
+      _listItems = List<dynamic>.from(widget.list['listItems'] as List<dynamic>? ?? []);
+    } else {
+      _listItems = List<dynamic>.from(widget.list.listItems as List<dynamic>? ?? []);
+    }
+    // Initialize speech
+    _speech = stt.SpeechToText();
+    _initSpeech();
+    // Always fetch latest from backend
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshListItems());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredItems = _searchQuery.isEmpty
+        ? _listItems
+        : _listItems.where((item) =>
+            (item['name']?.toString().toLowerCase() ?? '').contains(_searchQuery.toLowerCase())
+          ).toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.list is Map
+            ? (widget.list['name']?.toString() ?? 'List')
+            : (widget.list.name?.toString() ?? 'List')),
+        backgroundColor: widget.accent,
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: SizedBox(
+              height: 48,
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search items...',
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide(
+                      color: Colors.grey.shade400,
+                      width: 1.2,
+                      style: BorderStyle.solid,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide(
+                      color: widget.accent,
+                      width: 2,
+                    ),
+                  ),
+                  prefixIcon: const Icon(Icons.search, color: Color(0xFF9CA3AF)),
+                ),
+                style: const TextStyle(fontFamily: 'Nunito', fontSize: 14),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (_isLoading)
+            const LinearProgressIndicator(),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _refreshListItems,
+              child: filteredItems.isEmpty
+                  ? ListView(
+                      children: [Center(child: Padding(
+                        padding: EdgeInsets.only(top: 100),
+                        child: Text('No items in this list.'),
+                      ))],
+                    )
+                  : ListView.builder(
+                      itemCount: filteredItems.length,
+                      itemBuilder: (context, index) {
+                        final item = filteredItems[index] as Map<String, dynamic>;
+                        return Card(
+                          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => _showItemOptionsModal(item),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              child: Row(
+                                children: [
+                                  if (item['emoji'] != null && item['emoji'].toString().isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 12),
+                                      child: Text(item['emoji'], style: const TextStyle(fontSize: 26)),
+                                    ),
+                                  Expanded(
+                                    child: Text(
+                                      item['name']?.toString() ?? '',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        decoration: item['checked'] == true
+                                            ? TextDecoration.lineThrough
+                                            : TextDecoration.none,
+                                        color: item['checked'] == true ? Colors.grey : null,
+                                      ),
+                                    ),
+                                  ),
+                                  if (item['qty'] != null)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: widget.accent.withAlpha(30),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        'x${item['qty']}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: widget.accent,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: Colors.grey[100],
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 56,
+            height: 56,
+            child: FloatingActionButton(
+              heroTag: 'addItem',
+              backgroundColor: widget.accent,
+              child: const Icon(Icons.add, size: 28),
+              onPressed: () async {
+                // Navigate to categories page and refresh if item was added
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => CategoriesPage(
+                      accent: widget.accent,
+                      listId: _resolvedListId,
+                    ),
+                  ),
+                );
+                await _refreshListItems();
+                if (widget.onItemsChanged != null) widget.onItemsChanged!();
+              },
+              tooltip: 'Create New Item',
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: 56,
+            height: 56,
+            child: FloatingActionButton(
+              heroTag: 'voice',
+              backgroundColor: widget.accent,
+              child: const Icon(Icons.mic),
+              onPressed: _startListening,
+              tooltip: 'Voice Search/Add',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _refreshListItems() async {
+    final listId = _resolvedListId;
+    debugPrint('[ListDetailsPage] _refreshListItems called, listId=$listId');
+    if (listId.isEmpty) {
+      debugPrint('[ListDetailsPage] listId is empty, cannot refresh');
+      return;
+    }
+    setState(() => _isLoading = true);
     try {
       final api = ApiService();
-      String? listId;
-      if (widget.list is Map) {
-        listId = widget.list['id'] as String?;
-      } else if (widget.list != null && widget.list.id != null) {
-        listId = widget.list.id as String?;
-      }
-      if (listId == null) return;
       final items = await api.fetchListItems(listId);
+      debugPrint('[ListDetailsPage] Refreshed items count: ${items.length}');
+      if (!mounted) return;
       setState(() {
-        if (widget.list is Map) {
-          widget.list['listItems'] = items;
-        } else if (widget.list != null) {
-          widget.list.listItems = items;
-        }
+        _listItems = items;
+        _isLoading = false;
       });
     } catch (e) {
-      debugPrint('Failed to refresh list items: $e');
+      debugPrint('[ListDetailsPage] Failed to refresh list items: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load items: $e')),
+        );
+      }
     }
   }
   // Helper methods for item card actions (must be at the top for Dart forward reference)
@@ -140,6 +302,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                     ],
                   );
                   if (confirm == true) {
+                    debugPrint('[Delete] Confirmed. item=$item');
                     await _deleteItem(item);
                   }
                   // If confirm is null or false, do nothing (dialog was cancelled)
@@ -185,7 +348,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
     try {
       final api = ApiService();
       await api.updateListItem(
-        widget.list.id,
+        _resolvedListId,
         item['id'],
         {
           'checked': newChecked,
@@ -200,47 +363,55 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
 
 
   Future<void> _deleteItem(Map<String, dynamic> item) async {
+    final listId = _resolvedListId;
+    // Backend may return 'id' or '_id' for items
+    final itemId = (item['id'] ?? item['_id'])?.toString();
+    debugPrint('[Delete] listId=$listId, itemId=$itemId, item=$item');
+    if (listId.isEmpty) {
+      debugPrint('[Delete] failed: listId is empty');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to delete: list ID is missing.')),
+        );
+      }
+      return;
+    }
+    if (itemId == null || itemId.isEmpty) {
+      debugPrint('[Delete] failed: itemId is empty');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to delete: item ID is missing.')),
+        );
+      }
+      return;
+    }
     try {
       final api = ApiService();
-      String? listId;
-      if (widget.list is Map) {
-        listId = widget.list['id'] as String?;
-      } else if (widget.list != null && widget.list.id != null) {
-        listId = widget.list.id as String?;
-      }
-      if (listId == null) {
-        debugPrint('Delete failed: listId is null');
-        return;
-      }
-      await api.deleteListItem(listId, item['id']);
+      await api.deleteListItem(listId, itemId);
+      debugPrint('[Delete] success, refreshing...');
       await _refreshListItems();
-      if (widget.onItemsChanged != null) {
-        widget.onItemsChanged!();
-      }
+      if (widget.onItemsChanged != null) widget.onItemsChanged!();
     } catch (e) {
-      debugPrint('Failed to delete item: $e');
+      debugPrint('[Delete] error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete item: $e')),
+        );
+      }
     }
   }
   late stt.SpeechToText _speech;
-  bool _isListening = false;
+  // bool _isListening = false; // Removed unused field
   String _voiceInput = '';
   bool _speechAvailable = false;
-  @override
-  void initState() {
-    super.initState();
-    _speech = stt.SpeechToText();
-    _initSpeech();
-  }
 
   Future<void> _initSpeech() async {
     _speechAvailable = await _speech.initialize(
       onStatus: (status) {
-        if (status == 'done' || status == 'notListening') {
-          setState(() => _isListening = false);
-        }
+        // No-op: _isListening removed
       },
       onError: (error) {
-        setState(() => _isListening = false);
+        // No-op: _isListening removed
       },
     );
     setState(() {});
@@ -252,7 +423,6 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
     }
     if (_speechAvailable) {
       setState(() {
-        _isListening = true;
         _voiceInput = '';
       });
       await _speech.listen(
@@ -263,7 +433,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
           if (result.finalResult) {
             _processVoiceInput(_voiceInput);
             _speech.stop();
-            setState(() => _isListening = false);
+            // _isListening removed
           }
         },
         listenFor: const Duration(seconds: 6),
@@ -275,10 +445,6 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
     }
   }
 
-  void _stopListening() async {
-    await _speech.stop();
-    setState(() => _isListening = false);
-  }
 
   Future<void> _processVoiceInput(String input) async {
   // Use OpenAI to extract product and qty
@@ -319,8 +485,9 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       final suggestions = await api.searchItemSuggestions(name);
       debugPrint('[VOICE] Suggestions: $suggestions');
       // Check if item already exists in the list
-      final existingItem = widget.list.listItems.firstWhere(
-        (item) => (item['name']?.toString().trim().toLowerCase() ?? '') == name.trim().toLowerCase(),
+      final currentItems = _listItems; // use local state, always up to date
+      final existingItem = currentItems.firstWhere(
+        (it) => (it['name']?.toString().trim().toLowerCase() ?? '') == name.trim().toLowerCase(),
         orElse: () => null,
       );
       if (existingItem != null) {
@@ -336,7 +503,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
         );
         if (confirm == true) {
           final newQty = (existingItem['qty'] ?? 1) + qty;
-          await api.updateListItem(widget.list.id, existingItem['id'], {'qty': newQty});
+          await api.updateListItem(_resolvedListId, existingItem['id'], {'qty': newQty});
           await _refreshListItems();
           if (widget.onItemsChanged != null) widget.onItemsChanged!();
           ScaffoldMessenger.of(context).showSnackBar(
@@ -374,7 +541,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
           if (itemToAdd['emoji'] == null || (itemToAdd['emoji'] as String).isEmpty) {
             itemToAdd['emoji'] = '🛒';
           }
-          await api.addListItem(widget.list.id, itemToAdd);
+          await api.addListItem(_resolvedListId, itemToAdd);
           await _refreshListItems();
           if (widget.onItemsChanged != null) widget.onItemsChanged!();
           ScaffoldMessenger.of(context).showSnackBar(
@@ -414,7 +581,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
               'priority': details['priority'] ?? 0,
               'checked': false,
             };
-            await api.addListItem(widget.list.id, itemToAdd);
+            await api.addListItem(_resolvedListId, itemToAdd);
             await _refreshListItems();
             if (widget.onItemsChanged != null) widget.onItemsChanged!();
             ScaffoldMessenger.of(context).showSnackBar(
@@ -440,67 +607,6 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       );
     }
   }
-      Widget _buildListTile(Map<String, dynamic> item, ThemeData theme, String? emoji) {
-        // Debug prints for crash diagnosis
-        debugPrint('Building ListTile for item: $item');
-        debugPrint('widget.list: [33m${widget.list}[0m');
-        debugPrint('widget.list.id: [33m${widget.list != null && widget.list is Map && widget.list["id"] != null ? widget.list["id"] : widget.list?.id}[0m');
-        debugPrint('item["id"]: [33m${item['id']}[0m');
-        if (widget.list == null) {
-          debugPrint('ERROR: widget.list is null');
-          return const ListTile(title: Text('Error: List is null'));
-        }
-        final listId = widget.list is Map ? widget.list['id'] : widget.list.id;
-        if (listId == null) {
-          debugPrint('ERROR: widget.list.id is null');
-          return const ListTile(title: Text('Error: List ID is null'));
-        }
-        if (item['id'] == null) {
-          debugPrint('ERROR: item["id"] is null');
-          return const ListTile(title: Text('Error: Item ID is null'));
-        }
-        return Material(
-          color: Colors.white,
-          elevation: 0.5,
-          borderRadius: BorderRadius.circular(14),
-          child: ListTile(
-            leading: (emoji != null && emoji.isNotEmpty)
-                ? Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: Text(emoji, style: const TextStyle(fontSize: 24)),
-                  )
-                : null,
-            title: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    item['name']?.toString() ?? '',
-                    style: (item['checked'] == true)
-                        ? const TextStyle(decoration: TextDecoration.lineThrough, color: Colors.grey)
-                        : theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (item['qty'] != null)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
-                    child: GestureDetector(
-                      onTap: (item['checked'] == true) ? null : () => _onQuantityTap(item),
-                      child: Text(
-                        'Qty: ${item['qty']}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: (item['checked'] == true)
-                              ? Colors.grey
-                              : theme.primaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            // onTap removed: handled by GestureDetector in _buildItemCard
-          ),
-        );
-      }
 
+
+}

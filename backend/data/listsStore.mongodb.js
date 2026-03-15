@@ -50,6 +50,10 @@ const toPlain = (doc) => {
   delete obj.__v;
   delete obj.createdAt;
   delete obj.updatedAt;
+  // Also strip _id from each listItem subdocument
+  if (Array.isArray(obj.listItems)) {
+    obj.listItems = obj.listItems.map(({ _id, ...rest }) => rest);
+  }
   return obj;
 };
 

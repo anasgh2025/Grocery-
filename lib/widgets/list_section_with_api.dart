@@ -623,11 +623,11 @@ class _ListCard extends StatelessWidget {
 // Helper to generate invite link (calls backend)
                     },
                     itemBuilder: (ctx) => [
-                      PopupMenuItem(
+                      const PopupMenuItem(
                         value: 'invite',
                         child: ListTile(
-                          leading: const Icon(Icons.person_add_alt_1),
-                          title: const Text('Invite'),
+                          leading: Icon(Icons.person_add_alt_1),
+                          title: Text('Invite'),
                         ),
                       ),
                       PopupMenuItem(
