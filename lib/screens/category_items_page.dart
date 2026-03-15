@@ -127,10 +127,10 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
         final resultName = result['name'] as String?;
         final resultQty = result['qty'] ?? 1;
         if (resultName == null) return;
-        final existing = currentItems.firstWhere(
+        final _existingIdx = currentItems.indexWhere(
           (it) => (it['name'] as String).trim().toLowerCase() == resultName.trim().toLowerCase(),
-          orElse: () => null,
         );
+        final existing = _existingIdx != -1 ? currentItems[_existingIdx] : null;
         if (existing != null) {
           // Show dialog to ask user if they want to add to quantity
           final shouldAddQty = await showAppDialog<bool>(

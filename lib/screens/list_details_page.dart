@@ -281,33 +281,6 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
                   await _toggleItemChecked(item);
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Delete', style: TextStyle(color: Colors.red)),
-                onTap: () async {
-                  Navigator.of(context).pop();
-                  final confirm = await showAppDialog<bool>(
-                    context: context,
-                    title: const Text('Delete Item'),
-                    content: Text('Are you sure you want to delete "${item['name']}"?'),
-                    actions: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false)),
-                          const SizedBox(width: 12),
-                          appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Delete', color: Colors.redAccent),
-                        ],
-                      ),
-                    ],
-                  );
-                  if (confirm == true) {
-                    debugPrint('[Delete] Confirmed. item=$item');
-                    await _deleteItem(item);
-                  }
-                  // If confirm is null or false, do nothing (dialog was cancelled)
-                },
-              ),
             ],
           ),
         );
@@ -362,44 +335,6 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
   }
 
 
-  Future<void> _deleteItem(Map<String, dynamic> item) async {
-    final listId = _resolvedListId;
-    // Backend may return 'id' or '_id' for items
-    final itemId = (item['id'] ?? item['_id'])?.toString();
-    debugPrint('[Delete] listId=$listId, itemId=$itemId, item=$item');
-    if (listId.isEmpty) {
-      debugPrint('[Delete] failed: listId is empty');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to delete: list ID is missing.')),
-        );
-      }
-      return;
-    }
-    if (itemId == null || itemId.isEmpty) {
-      debugPrint('[Delete] failed: itemId is empty');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to delete: item ID is missing.')),
-        );
-      }
-      return;
-    }
-    try {
-      final api = ApiService();
-      await api.deleteListItem(listId, itemId);
-      debugPrint('[Delete] success, refreshing...');
-      await _refreshListItems();
-      if (widget.onItemsChanged != null) widget.onItemsChanged!();
-    } catch (e) {
-      debugPrint('[Delete] error: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete item: $e')),
-        );
-      }
-    }
-  }
   late stt.SpeechToText _speech;
   // bool _isListening = false; // Removed unused field
   String _voiceInput = '';
@@ -486,10 +421,10 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       debugPrint('[VOICE] Suggestions: $suggestions');
       // Check if item already exists in the list
       final currentItems = _listItems; // use local state, always up to date
-      final existingItem = currentItems.firstWhere(
+      final _existingIdx = currentItems.indexWhere(
         (it) => (it['name']?.toString().trim().toLowerCase() ?? '') == name.trim().toLowerCase(),
-        orElse: () => null,
       );
+      final existingItem = _existingIdx != -1 ? currentItems[_existingIdx] : null;
       if (existingItem != null) {
         // Ask user to confirm increasing quantity only
         final confirm = await showAppDialog<bool>(

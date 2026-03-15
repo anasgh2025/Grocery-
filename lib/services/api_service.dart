@@ -155,8 +155,19 @@ class ApiService {
           .timeout(timeout);
 
       if (response.statusCode == 200) {
-        final List<dynamic> jsonData = json.decode(response.body);
-        return jsonData;
+        final List<dynamic> raw = json.decode(response.body);
+        // Normalize: ensure every item has 'id' field (backend may return '_id')
+        final items = raw.map((item) {
+          final m = Map<String, dynamic>.from(item as Map);
+          // If 'id' is missing or empty, fall back to '_id'
+          if ((m['id'] == null || m['id'].toString().isEmpty) && m['_id'] != null) {
+            m['id'] = m['_id'].toString();
+          }
+          debugPrint('[API] item id=${m['id']}, name=${m['name']}');
+          return m;
+        }).toList();
+        debugPrint('[API] fetchListItems($listId): ${items.length} items');
+        return items;
       }
       throw Exception('Failed to load list items: ${response.statusCode}');
     } catch (e) {
@@ -176,7 +187,15 @@ class ApiService {
           .timeout(timeout);
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        return json.decode(response.body) as List<dynamic>;
+        final List<dynamic> raw = json.decode(response.body) as List<dynamic>;
+        // Normalize: ensure every item has 'id' field
+        return raw.map((it) {
+          final m = Map<String, dynamic>.from(it as Map);
+          if ((m['id'] == null || m['id'].toString().isEmpty) && m['_id'] != null) {
+            m['id'] = m['_id'].toString();
+          }
+          return m;
+        }).toList();
       }
       throw Exception('Failed to create item: ${response.statusCode}');
     } catch (e) {
@@ -206,15 +225,19 @@ class ApiService {
 
   /// Delete an item
   Future<void> deleteListItem(String listId, String itemId) async {
+    final url = '$baseUrl/lists/$listId/items/$itemId';
+    debugPrint('[API] deleteListItem: DELETE $url');
     try {
       final response = await http
-          .delete(Uri.parse('$baseUrl/lists/$listId/items/$itemId'))
+          .delete(Uri.parse(url))
           .timeout(timeout);
 
+      debugPrint('[API] deleteListItem response: ${response.statusCode} ${response.body}');
       if (response.statusCode != 200 && response.statusCode != 204) {
-        throw Exception('Failed to delete item: ${response.statusCode}');
+        throw Exception('Failed to delete item: ${response.statusCode} ${response.body}');
       }
     } catch (e) {
+      debugPrint('[API] deleteListItem error: $e');
       throw Exception('Error deleting item: $e');
     }
   }
