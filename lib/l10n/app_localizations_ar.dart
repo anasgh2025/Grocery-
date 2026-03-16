@@ -42,7 +42,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get welcomeBack => 'مرحبًا بعودتك';
 
   @override
-  String get signInToContinue => 'سجّل الدخول للمتابعة إلى شوب سمارت';
+  String get signInToContinue => 'سجّل الدخول للمتابعة إلى Listfy';
 
   @override
   String get signIn => 'تسجيل الدخول';
@@ -150,7 +150,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addToList => 'أضف إلى القائمة';
 
   @override
-  String get appTitle => 'شوب سمارت';
+  String get appTitle => 'Listfy';
 
   @override
   String get settings => 'الإعدادات';
@@ -168,7 +168,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get aboutUs => 'معلومات عنا';
 
   @override
-  String get aboutUsContent => 'شوب سمارت تساعدك على تحسين تجربة التسوق الخاصة بك.';
+  String get aboutUsContent => 'Listfy تساعدك على تحسين تجربة التسوق الخاصة بك.';
 
   @override
   String get shareApp => 'شارك التطبيق مع صديق';

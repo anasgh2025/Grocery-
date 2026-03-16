@@ -29,6 +29,7 @@ class _SettingsPageState extends State<SettingsPage> {
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 16),
         children: [
+          // 1. Change Language
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             child: Material(
@@ -73,49 +74,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            child: Material(
-              color: Colors.white,
-              elevation: 0.5,
-              borderRadius: BorderRadius.circular(14),
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                leading: const Icon(Icons.info_outline, color: Colors.redAccent, size: 28),
-                title: Text(loc.aboutUs, style: const TextStyle(fontWeight: FontWeight.bold)),
-                onTap: () {
-                  showAboutDialog(
-                    context: context,
-                    applicationName: loc.appTitle,
-                    applicationVersion: '1.0.0',
-                    applicationLegalese: '© 2026 ShopSmart',
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16.0),
-                        child: Text(loc.aboutUsContent),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            child: Material(
-              color: Colors.white,
-              elevation: 0.5,
-              borderRadius: BorderRadius.circular(14),
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                leading: const Icon(Icons.share, color: Colors.redAccent, size: 28),
-                title: Text(loc.shareApp, style: const TextStyle(fontWeight: FontWeight.bold)),
-                onTap: () {
-                  Share.share('Check out ShopSmart Grocery App! Download now: https://shopsmart.app');
-                },
-              ),
-            ),
-          ),
+          // 2. Dark Mode
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             child: Material(
@@ -134,6 +93,74 @@ class _SettingsPageState extends State<SettingsPage> {
                       onChanged: (val) {
                         themeModeNotifier.value = val ? ThemeMode.dark : ThemeMode.light;
                       },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          // 3. Share with Friends
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: Material(
+              color: Colors.white,
+              elevation: 0.5,
+              borderRadius: BorderRadius.circular(14),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                leading: const Icon(Icons.share, color: Colors.redAccent, size: 28),
+                title: Text(loc.shareApp, style: const TextStyle(fontWeight: FontWeight.bold)),
+                onTap: () {
+                  Share.share('Check out ShopSmart Grocery App! Download now: https://shopsmart.app');
+                },
+              ),
+            ),
+          ),
+          // 4. About Us
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: Material(
+              color: Colors.white,
+              elevation: 0.5,
+              borderRadius: BorderRadius.circular(14),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                leading: const Icon(Icons.info_outline, color: Colors.redAccent, size: 28),
+                title: Text(loc.aboutUs, style: const TextStyle(fontWeight: FontWeight.bold)),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      title: const Row(
+                        children: [
+                          Icon(Icons.info_outline, color: Colors.redAccent, size: 24),
+                          SizedBox(width: 8),
+                          Text('Listfy', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(loc.aboutUsContent),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Version 1.0.0',
+                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                          ),
+                          const Text(
+                            '© 2026 Listfy',
+                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          child: const Text('Close', style: TextStyle(color: Colors.redAccent)),
+                        ),
+                      ],
                     ),
                   );
                 },

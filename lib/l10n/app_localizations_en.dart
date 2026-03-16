@@ -42,7 +42,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcomeBack => 'Welcome back';
 
   @override
-  String get signInToContinue => 'Sign in to continue to ShopSmart';
+  String get signInToContinue => 'Sign in to continue to Listfy';
 
   @override
   String get signIn => 'Sign In';
@@ -150,7 +150,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addToList => 'Add to list';
 
   @override
-  String get appTitle => 'ShopSmart';
+  String get appTitle => 'Listfy';
 
   @override
   String get settings => 'Settings';
@@ -168,7 +168,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutUs => 'About Us';
 
   @override
-  String get aboutUsContent => 'ShopSmart helps you elevate your grocery experience.';
+  String get aboutUsContent => 'Listfy helps you elevate your grocery experience.';
 
   @override
   String get shareApp => 'Share the app with a friend';
