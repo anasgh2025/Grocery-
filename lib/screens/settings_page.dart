@@ -21,10 +21,11 @@ class _SettingsPageState extends State<SettingsPage> {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(loc.settings),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 0.5,
+        title: Text(loc.settings, style: const TextStyle(color: Colors.white)),
+        backgroundColor: Colors.redAccent,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 16),

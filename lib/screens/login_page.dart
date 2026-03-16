@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../main.dart';
-import 'profile_landing_page.dart';
+import '../landing_page.dart';
 import '../l10n/app_localizations.dart';
 
 class LoginPage extends StatefulWidget {
@@ -28,99 +28,131 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-  final primary = Theme.of(context).colorScheme.primary;
   final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(loc.logIn),
+        title: Text(loc.logIn, style: const TextStyle(color: Colors.white)),
+        backgroundColor: Colors.redAccent,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 12),
-              Text(loc.welcomeBack, style: Theme.of(context).textTheme.headlineSmall),
-              const SizedBox(height: 8),
-              Text(loc.signInToContinue, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54)),
-              const SizedBox(height: 24),
-              Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextFormField(
-                      controller: _emailCtrl,
-                      decoration: InputDecoration(hintText: loc.emailAddress, filled: true, fillColor: Colors.grey.shade100, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none)),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (v) {
-                        final s = (v ?? '').trim();
-                        if (s.isEmpty) return loc.enterEmail;
-                        final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}");
-                        if (!emailRegex.hasMatch(s)) return loc.enterValidEmail;
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _passwordCtrl,
-                      decoration: InputDecoration(hintText: loc.password, filled: true, fillColor: Colors.grey.shade100, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none)),
-                      obscureText: true,
-                      validator: (v) => (v ?? '').length < 6 ? loc.password6chars : null,
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _loading
-                          ? null
-                          : () async {
-                              if (!(_formKey.currentState?.validate() ?? true)) return;
-                              setState(() => _loading = true);
-                              final ctx = context; // capture context before awaiting
-                              final api = ApiService();
-                              try {
-                                final res = await api.login(email: _emailCtrl.text.trim(), password: _passwordCtrl.text);
-                                if (!mounted) return;
-                                ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(loc.signedIn)));
-                                // Persist token and navigate to the profile landing page.
-                                final token = res['token'] as String?;
-                                if (token != null) {
-                                  await api.saveToken(token);
-                                }
-                                final user = res['user'] as Map<String, dynamic>?;
-                                final displayName = user != null && user['name'] != null && (user['name'] as String).isNotEmpty
-                                    ? user['name'] as String
-                                    : (user != null ? (user['email'] as String?) ?? loc.profile : loc.profile);
-                                if (!mounted) return;
-                                // Persist display name and update header avatar
-                                await api.saveUserName(displayName);
-                                userNameNotifier.value = displayName;
-                                Navigator.of(ctx).pushReplacement(MaterialPageRoute(builder: (context) => ProfileLandingPage(name: displayName)));
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(e.toString())));
-                                }
-                              } finally {
-                                if (mounted) setState(() => _loading = false);
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: _loading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white))) : Text(loc.signIn),
-                    ),
-                  ],
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Icon
+                const Icon(Icons.lock_outline_rounded, size: 56, color: Colors.redAccent),
+                const SizedBox(height: 20),
+                Text(
+                  loc.welcomeBack,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  loc.signInToContinue,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextFormField(
+                        controller: _emailCtrl,
+                        decoration: InputDecoration(
+                          hintText: loc.emailAddress,
+                          prefixIcon: const Icon(Icons.email_outlined, color: Colors.redAccent),
+                          filled: true,
+                          fillColor: Colors.grey.shade100,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (v) {
+                          final s = (v ?? '').trim();
+                          if (s.isEmpty) return loc.enterEmail;
+                          final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}");
+                          if (!emailRegex.hasMatch(s)) return loc.enterValidEmail;
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        controller: _passwordCtrl,
+                        decoration: InputDecoration(
+                          hintText: loc.password,
+                          prefixIcon: const Icon(Icons.lock_outline, color: Colors.redAccent),
+                          filled: true,
+                          fillColor: Colors.grey.shade100,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        ),
+                        obscureText: true,
+                        validator: (v) => (v ?? '').length < 6 ? loc.password6chars : null,
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: _loading
+                            ? null
+                            : () async {
+                                if (!(_formKey.currentState?.validate() ?? true)) return;
+                                setState(() => _loading = true);
+                                final ctx = context;
+                                final api = ApiService();
+                                try {
+                                  final res = await api.login(email: _emailCtrl.text.trim(), password: _passwordCtrl.text);
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(loc.signedIn)));
+                                  final token = res['token'] as String?;
+                                  if (token != null) {
+                                    await api.saveToken(token);
+                                  }
+                                  final user = res['user'] as Map<String, dynamic>?;
+                                  final displayName = user != null && user['name'] != null && (user['name'] as String).isNotEmpty
+                                      ? user['name'] as String
+                                      : (user != null ? (user['email'] as String?) ?? loc.profile : loc.profile);
+                                  if (!mounted) return;
+                                  await api.saveUserName(displayName);
+                                  userNameNotifier.value = displayName;
+                                  // Navigate back to landing page, clearing the stack
+                                  Navigator.of(ctx).pushAndRemoveUntil(
+                                    MaterialPageRoute(builder: (_) => const LandingPage()),
+                                    (route) => false,
+                                  );
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(e.toString())));
+                                  }
+                                } finally {
+                                  if (mounted) setState(() => _loading = false);
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size.fromHeight(52),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: _loading
+                            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
+                            : Text(loc.signIn, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

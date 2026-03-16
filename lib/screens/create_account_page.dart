@@ -30,148 +30,170 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     super.dispose();
   }
 
-  InputDecoration _fieldDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.grey, width: 1.2),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.grey, width: 1.2),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
-    final primary = Theme.of(context).primaryColor;
     final api = widget.api ?? ApiService();
     return Scaffold(
       appBar: AppBar(
         title: const Text(
           'Listfy',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 28,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24),
         ),
         centerTitle: true,
+        backgroundColor: Colors.redAccent,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TextFormField(
-                  controller: _nameCtrl,
-                  decoration: _fieldDecoration('Full Name'),
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your full name';
-                    }
-                    return null;
-                  },
+                // Icon
+                const Icon(Icons.person_add_alt_1_rounded, size: 56, color: Colors.redAccent),
+                const SizedBox(height: 20),
+                Text(
+                  loc?.createAccount ?? 'Create Account',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailCtrl,
-                  decoration: _fieldDecoration('Email Address'),
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email address';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email address';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordCtrl,
-                  obscureText: _obscure,
-                  decoration: _fieldDecoration('Password').copyWith(
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () {
-                        setState(() {
-                          _obscure = !_obscure;
-                        });
-                      },
-                    ),
-                  ),
-                  textInputAction: TextInputAction.done,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _loading
-                        ? null
-                        : () async {
-                            if (!_formKey.currentState!.validate()) return;
-                            setState(() => _loading = true);
-                            final ctx = context;
-                            final name = _nameCtrl.text.trim();
-                            final email = _emailCtrl.text.trim();
-                            final password = _passwordCtrl.text;
-                            try {
-                              await api.createUser(name: name, email: email, password: password);
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(loc?.accountCreated ?? 'Account created')));
-                              Navigator.of(ctx).pop();
-                            } catch (e) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(e.toString())));
-                              }
-                            } finally {
-                              if (mounted) setState(() => _loading = false);
-                            }
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primary,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      elevation: 4,
-                    ),
-                    child: _loading
-                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
-                        : Text(loc?.signUp ?? 'Sign Up', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Text(loc?.alreadyHaveAccount ?? 'Already have an account?', style: const TextStyle(color: Colors.black54)),
-                  TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(loc?.logIn ?? 'Log In')),
-                ]),
                 const SizedBox(height: 8),
-                Text(loc?.terms ?? 'By signing up, you agree to our terms.', textAlign: TextAlign.center, style: const TextStyle(color: Colors.black38, fontSize: 12)),
+                Text(
+                  loc?.terms ?? 'By signing up, you agree to our terms.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Full Name
+                      TextFormField(
+                        controller: _nameCtrl,
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          hintText: loc?.fullName ?? 'Full Name',
+                          prefixIcon: const Icon(Icons.person_outline_rounded, color: Colors.redAccent),
+                          filled: true,
+                          fillColor: Colors.grey.shade100,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return 'Please enter your full name';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 14),
+                      // Email
+                      TextFormField(
+                        controller: _emailCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          hintText: loc?.emailAddress ?? 'Email Address',
+                          prefixIcon: const Icon(Icons.email_outlined, color: Colors.redAccent),
+                          filled: true,
+                          fillColor: Colors.grey.shade100,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return 'Please enter your email address';
+                          if (!v.contains('@')) return 'Please enter a valid email address';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 14),
+                      // Password
+                      TextFormField(
+                        controller: _passwordCtrl,
+                        obscureText: _obscure,
+                        textInputAction: TextInputAction.done,
+                        decoration: InputDecoration(
+                          hintText: loc?.password ?? 'Password',
+                          prefixIcon: const Icon(Icons.lock_outline, color: Colors.redAccent),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscure ? Icons.visibility_off : Icons.visibility,
+                              color: Colors.grey,
+                            ),
+                            onPressed: () => setState(() => _obscure = !_obscure),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade100,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Please enter your password';
+                          if (v.length < 6) return 'Password must be at least 6 characters';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      // Sign Up button
+                      ElevatedButton(
+                        onPressed: _loading
+                            ? null
+                            : () async {
+                                if (!_formKey.currentState!.validate()) return;
+                                setState(() => _loading = true);
+                                final ctx = context;
+                                try {
+                                  await api.createUser(
+                                    name: _nameCtrl.text.trim(),
+                                    email: _emailCtrl.text.trim(),
+                                    password: _passwordCtrl.text,
+                                  );
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(ctx).showSnackBar(
+                                    SnackBar(content: Text(loc?.accountCreated ?? 'Account created')),
+                                  );
+                                  Navigator.of(ctx).pop();
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(e.toString())));
+                                  }
+                                } finally {
+                                  if (mounted) setState(() => _loading = false);
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size.fromHeight(52),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: _loading
+                            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
+                            : Text(loc?.signUp ?? 'Sign Up', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                      ),
+                      const SizedBox(height: 16),
+                      // Already have account
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            loc?.alreadyHaveAccount ?? 'Already have an account?',
+                            style: const TextStyle(color: Colors.black54),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: Text(
+                              loc?.logIn ?? 'Log In',
+                              style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
