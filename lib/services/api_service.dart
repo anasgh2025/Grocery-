@@ -57,8 +57,8 @@ class ApiService {
 
   // Secure storage for auth token
   static const _tokenKey = 'auth_token';
+  static const _userNameKey = 'user_display_name';
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-
 
   // Timeout duration for API calls
   static const Duration timeout = Duration(seconds: 30);
@@ -79,11 +79,22 @@ class ApiService {
   /// Clear auth token from secure storage
   Future<void> clearToken() async {
     await _secureStorage.delete(key: _tokenKey);
+    await _secureStorage.delete(key: _userNameKey);
   }
 
   /// Read auth token from secure storage
   Future<String?> readToken() async {
     return await _secureStorage.read(key: _tokenKey);
+  }
+
+  /// Persist the user's display name so it survives app restarts
+  Future<void> saveUserName(String name) async {
+    await _secureStorage.write(key: _userNameKey, value: name);
+  }
+
+  /// Read the persisted user display name (null if not logged in)
+  Future<String?> readUserName() async {
+    return await _secureStorage.read(key: _userNameKey);
   }
 
   /// Fetch all grocery lists from the backend

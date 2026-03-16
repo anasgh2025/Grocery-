@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/footer_menu.dart';
 import '../landing_page.dart';
+import '../main.dart';
 import '../services/api_service.dart';
 import 'login_page.dart';
 import 'create_account_page.dart';
@@ -42,6 +43,8 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
     try {
       await _api.clearToken();
     } catch (_) {}
+    // Clear the global user name so the header avatar disappears
+    userNameNotifier.value = null;
     if (!mounted) return;
     // Navigate to a fresh LandingPage, clearing all routes so data refreshes.
     Navigator.of(context).pushAndRemoveUntil(

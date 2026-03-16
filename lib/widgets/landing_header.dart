@@ -1,10 +1,31 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
-// Using bundled Nunito font from assets (configured in pubspec.yaml)
+import '../services/api_service.dart';
+import '../screens/profile_landing_page.dart';
 
-/// Header: logo, avatar and search field
-class LandingHeader extends StatelessWidget {
+/// Header: profile avatar (left), notification + language toggle (right)
+class LandingHeader extends StatefulWidget {
   const LandingHeader({super.key});
+
+  @override
+  State<LandingHeader> createState() => _LandingHeaderState();
+}
+
+class _LandingHeaderState extends State<LandingHeader> {
+  @override
+  void initState() {
+    super.initState();
+    // Restore persisted user name on cold start so avatar shows immediately
+    _restoreUserName();
+  }
+
+  Future<void> _restoreUserName() async {
+    if (userNameNotifier.value != null) return; // already set (e.g. just logged in)
+    final name = await ApiService().readUserName();
+    if (mounted && name != null && name.isNotEmpty) {
+      userNameNotifier.value = name;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,10 +34,51 @@ class LandingHeader extends StatelessWidget {
       color: const Color(0xFFF9FAFB),
       child: Row(
         children: [
-          // Left: (Logo removed)
-          // Right: Notification and Language icons (70%)
+          // ── Left: profile avatar ─────────────────────────────────
+          ValueListenableBuilder<String?>(
+            valueListenable: userNameNotifier,
+            builder: (context, userName, _) {
+              final isLoggedIn = userName != null && userName.isNotEmpty;
+              final initial = isLoggedIn ? userName.trim()[0].toUpperCase() : null;
+              return GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ProfileLandingPage(name: userName),
+                    ),
+                  );
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(right: 4),
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: isLoggedIn ? Colors.redAccent : Colors.grey.shade200,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: isLoggedIn
+                        ? Text(
+                            initial!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          )
+                        : Icon(
+                            Icons.person_outline_rounded,
+                            size: 20,
+                            color: Colors.grey.shade500,
+                          ),
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // ── Right: notification + language toggle ────────────────
           Expanded(
-            flex: 7,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [

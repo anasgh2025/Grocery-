@@ -11,6 +11,8 @@ import 'l10n/app_localizations.dart';
 
 final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.light);
 final ValueNotifier<Locale?> localeNotifier = ValueNotifier<Locale?>(const Locale('en'));
+/// Holds the logged-in user's display name; null when signed out.
+final ValueNotifier<String?> userNameNotifier = ValueNotifier<String?>(null);
 
 
 

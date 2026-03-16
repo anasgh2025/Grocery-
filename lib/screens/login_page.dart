@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../main.dart';
 import 'profile_landing_page.dart';
 import '../l10n/app_localizations.dart';
 
@@ -96,6 +97,9 @@ class _LoginPageState extends State<LoginPage> {
                                     ? user['name'] as String
                                     : (user != null ? (user['email'] as String?) ?? loc.profile : loc.profile);
                                 if (!mounted) return;
+                                // Persist display name and update header avatar
+                                await api.saveUserName(displayName);
+                                userNameNotifier.value = displayName;
                                 Navigator.of(ctx).pushReplacement(MaterialPageRoute(builder: (context) => ProfileLandingPage(name: displayName)));
                               } catch (e) {
                                 if (mounted) {

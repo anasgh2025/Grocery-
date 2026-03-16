@@ -1,11 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'box_styles.dart';
 import '../l10n/app_localizations.dart';
 
 /// A bottom sheet that collects item details before adding to the list.
-/// Returns a [Map] with keys: name, qty, description, photoPath (nullable).
+/// Returns a [Map] with keys: name, qty, priority, checked.
 ///
 /// Usage:
 ///   final result = await showAddItemDetailsSheet(context, itemName: 'Apple', accent: Colors.green);
@@ -47,64 +45,6 @@ class _AddItemDetailsSheet extends StatefulWidget {
 class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
   String _selectedPriority = 'Normal';
   int _qty = 1;
-  // Removed description controller
-  XFile? _photo;
-  bool _pickingPhoto = false;
-
-  Future<void> _pickPhoto(ImageSource source) async {
-    setState(() => _pickingPhoto = true);
-    try {
-      final picker = ImagePicker();
-      final file = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 800);
-      if (file != null) setState(() => _photo = file);
-    } catch (e) {
-      // Silently ignore (e.g. permission denied)
-    } finally {
-      setState(() => _pickingPhoto = false);
-    }
-  }
-
-  void _showPhotoOptions() {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(Icons.camera_alt_rounded, color: widget.accent),
-              title: const Text('Take a photo'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickPhoto(ImageSource.camera);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.photo_library_rounded, color: widget.accent),
-              title: const Text('Choose from gallery'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickPhoto(ImageSource.gallery);
-              },
-            ),
-            if (_photo != null)
-              ListTile(
-                leading: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                title: const Text('Remove photo'),
-                onTap: () {
-                  Navigator.pop(context);
-                  setState(() => _photo = null);
-                },
-              ),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   void dispose() {
@@ -308,86 +248,6 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
 
             const SizedBox(height: 20),
 
-            // Description field removed
-            const SizedBox(height: 20),
-
-            // ── Photo picker ─────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  Text(
-                    // No 'photo' key in AppLocalizations, fallback to hardcoded or skip
-                    'Photo',
-                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    // No 'optional' key in AppLocalizations, fallback to hardcoded or skip
-                    '(optional)',
-                    style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade500),
-                  ),
-                  const Spacer(),
-                  // Thumbnail or pick button
-                  GestureDetector(
-                    onTap: _pickingPhoto ? null : _showPhotoOptions,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 72,
-                      height: 72,
-                        decoration: appBoxDecoration(
-                          context,
-                          color: widget.accent.withAlpha(18),
-                          radius: 12,
-                          border: Border.all(
-                            color: _photo != null ? widget.accent : Colors.grey.shade300,
-                            width: 1.5,
-                          ),
-                          boxShadow: const [],
-                        ),
-                      child: _pickingPhoto
-                          ? Center(
-                              child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: widget.accent,
-                                ),
-                              ),
-                            )
-                          : _photo != null
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(11),
-                                  child: Image.file(
-                                    File(_photo!.path),
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              : Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.add_photo_alternate_rounded,
-                                        size: 28, color: widget.accent),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      AppLocalizations.of(context)!.add,
-                                      style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: widget.accent),
-                                    ),
-                                  ],
-                                ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-            // Priority removed from details sheet (moved to category selection)
-            // ── Quantity stepper ────────────────────────────────
             // ── Add to list button ───────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -411,7 +271,6 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
                     'name': widget.itemName,
                     'qty': _qty,
                     'priority': _selectedPriority == 'Urgent' ? 1 : 0,
-                    'photoPath': _photo?.path,
                     'checked': false,
                   });
                 },
