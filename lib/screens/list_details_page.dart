@@ -2,11 +2,8 @@
 
 import 'package:flutter/material.dart';
 // import '../l10n/app_localizations.dart'; // Removed unused import
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../services/openai_service.dart';
 // import 'categories_page.dart'; // Removed unused import
 import '../services/api_service.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../widgets/app_dialog.dart';
 
 import '../widgets/add_item_details_sheet.dart';
@@ -31,6 +28,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
   String _searchQuery = '';
   List<dynamic> _listItems = [];
   bool _isLoading = false;
+  bool _showComingSoon = false; // controls the "Coming Soon" label visibility
 
   // ── Global search / suggestions ──────────────────────────────────────────
   final TextEditingController _searchController = TextEditingController();
@@ -55,9 +53,6 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
     } else {
       _listItems = List<dynamic>.from(widget.list.listItems as List<dynamic>? ?? []);
     }
-    // Initialize speech
-    _speech = stt.SpeechToText();
-    _initSpeech();
     // Always fetch latest from backend
     WidgetsBinding.instance.addPostFrameCallback((_) => _refreshListItems());
   }
@@ -81,6 +76,8 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
             ? (widget.list['name']?.toString() ?? 'List')
             : (widget.list.name?.toString() ?? 'List')),
         backgroundColor: widget.accent,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Column(
         children: [
@@ -282,16 +279,47 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            width: 56,
-            height: 56,
-            child: FloatingActionButton(
-              heroTag: 'voice',
-              backgroundColor: widget.accent,
-              onPressed: _startListening,
-              tooltip: 'Voice Search/Add',
-              child: const Icon(Icons.mic),
-            ),
+          Stack(
+            alignment: Alignment.centerRight,
+            clipBehavior: Clip.none,
+            children: [
+              SizedBox(
+                width: 56,
+                height: 56,
+                child: FloatingActionButton(
+                  heroTag: 'voice',
+                  backgroundColor: widget.accent,
+                  onPressed: () {
+                    setState(() => _showComingSoon = true);
+                    Future.delayed(const Duration(seconds: 2), () {
+                      if (mounted) setState(() => _showComingSoon = false);
+                    });
+                  },
+                  tooltip: 'Voice Search/Add',
+                  child: const Icon(Icons.mic),
+                ),
+              ),
+              // "Coming Soon" label that pops up to the left of the FAB
+              if (_showComingSoon)
+                Positioned(
+                  right: 64,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.black87,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Coming Soon',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
@@ -322,37 +350,57 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
     );
     if (dupIdx != -1) {
       final existing = _listItems[dupIdx] as Map<String, dynamic>;
+      final isAlreadyChecked = existing['checked'] == true;
       final currentQty = existing['qty'] is int
           ? existing['qty'] as int
           : int.tryParse(existing['qty']?.toString() ?? '') ?? 1;
-      final confirm = await showAppDialog<bool>(
-        context: context,
-        title: const Text('Item already in list'),
-        content: Text('"$suggestedName" is already in your list (qty: $currentQty). Would you like to increase the quantity?'),
-        actions: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: 'No'),
-              const SizedBox(width: 12),
-              appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Increase'),
-            ],
-          ),
-        ],
-      );
-      if (confirm == true) {
-        final resolvedId = (existing['id'] ?? existing['_id'])?.toString() ?? '';
-        if (resolvedId.isNotEmpty) {
-          try {
-            final api = ApiService();
-            await api.updateListItem(_resolvedListId, resolvedId, {'qty': currentQty + 1});
-            await _refreshListItems();
-            if (widget.onItemsChanged != null) widget.onItemsChanged!();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Increased "$suggestedName" quantity to ${currentQty + 1}.')),
-            );
-          } catch (e) {
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update qty: $e')));
+
+      if (isAlreadyChecked) {
+        // Item is checked — just inform the user, no increase option
+        await showAppDialog<void>(
+          context: context,
+          title: const Text('Item already in list'),
+          content: Text('"$suggestedName" is already in your list and has been checked off.'),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(), text: 'OK'),
+              ],
+            ),
+          ],
+        );
+      } else {
+        // Item is active — offer to increase qty
+        final confirm = await showAppDialog<bool>(
+          context: context,
+          title: const Text('Item already in list'),
+          content: Text('"$suggestedName" is already in your list (qty: $currentQty). Would you like to increase the quantity?'),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: 'No'),
+                const SizedBox(width: 12),
+                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Increase'),
+              ],
+            ),
+          ],
+        );
+        if (confirm == true) {
+          final resolvedId = (existing['id'] ?? existing['_id'])?.toString() ?? '';
+          if (resolvedId.isNotEmpty) {
+            try {
+              final api = ApiService();
+              await api.updateListItem(_resolvedListId, resolvedId, {'qty': currentQty + 1});
+              await _refreshListItems();
+              if (widget.onItemsChanged != null) widget.onItemsChanged!();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Increased "$suggestedName" quantity to ${currentQty + 1}.')),
+              );
+            } catch (e) {
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update qty: $e')));
+            }
           }
         }
       }
@@ -406,37 +454,57 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
     );
     if (dupIdx != -1) {
       final existing = _listItems[dupIdx] as Map<String, dynamic>;
+      final isAlreadyChecked = existing['checked'] == true;
       final currentQty = existing['qty'] is int
           ? existing['qty'] as int
           : int.tryParse(existing['qty']?.toString() ?? '') ?? 1;
-      final confirm = await showAppDialog<bool>(
-        context: context,
-        title: const Text('Item already in list'),
-        content: Text('"$name" is already in your list (qty: $currentQty). Would you like to increase the quantity?'),
-        actions: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: 'No'),
-              const SizedBox(width: 12),
-              appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Increase'),
-            ],
-          ),
-        ],
-      );
-      if (confirm == true) {
-        final resolvedId = (existing['id'] ?? existing['_id'])?.toString() ?? '';
-        if (resolvedId.isNotEmpty) {
-          try {
-            final api = ApiService();
-            await api.updateListItem(_resolvedListId, resolvedId, {'qty': currentQty + 1});
-            await _refreshListItems();
-            if (widget.onItemsChanged != null) widget.onItemsChanged!();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Increased "$name" quantity to ${currentQty + 1}.')),
-            );
-          } catch (e) {
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update qty: $e')));
+
+      if (isAlreadyChecked) {
+        // Item is checked — just inform the user, no increase option
+        await showAppDialog<void>(
+          context: context,
+          title: const Text('Item already in list'),
+          content: Text('"$name" is already in your list and has been checked off.'),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(), text: 'OK'),
+              ],
+            ),
+          ],
+        );
+      } else {
+        // Item is active — offer to increase qty
+        final confirm = await showAppDialog<bool>(
+          context: context,
+          title: const Text('Item already in list'),
+          content: Text('"$name" is already in your list (qty: $currentQty). Would you like to increase the quantity?'),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: 'No'),
+                const SizedBox(width: 12),
+                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Increase'),
+              ],
+            ),
+          ],
+        );
+        if (confirm == true) {
+          final resolvedId = (existing['id'] ?? existing['_id'])?.toString() ?? '';
+          if (resolvedId.isNotEmpty) {
+            try {
+              final api = ApiService();
+              await api.updateListItem(_resolvedListId, resolvedId, {'qty': currentQty + 1});
+              await _refreshListItems();
+              if (widget.onItemsChanged != null) widget.onItemsChanged!();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Increased "$name" quantity to ${currentQty + 1}.')),
+              );
+            } catch (e) {
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update qty: $e')));
+            }
           }
         }
       }
@@ -858,215 +926,6 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
       if (widget.onItemsChanged != null) widget.onItemsChanged!();
     } catch (e) {
       debugPrint('Failed to update item checked state: $e');
-    }
-  }
-
-
-  late stt.SpeechToText _speech;
-  // bool _isListening = false; // Removed unused field
-  String _voiceInput = '';
-  bool _speechAvailable = false;
-
-  Future<void> _initSpeech() async {
-    _speechAvailable = await _speech.initialize(
-      onStatus: (status) {
-        // No-op: _isListening removed
-      },
-      onError: (error) {
-        // No-op: _isListening removed
-      },
-    );
-    setState(() {});
-  }
-
-  void _startListening() async {
-    if (!_speechAvailable) {
-      await _initSpeech();
-    }
-    if (_speechAvailable) {
-      setState(() {
-        _voiceInput = '';
-      });
-      await _speech.listen(
-        onResult: (result) {
-          setState(() {
-            _voiceInput = result.recognizedWords;
-          });
-          if (result.finalResult) {
-            _processVoiceInput(_voiceInput);
-            _speech.stop();
-            // _isListening removed
-          }
-        },
-        listenFor: const Duration(seconds: 6),
-        pauseFor: const Duration(seconds: 2),
-        localeId: 'en_US',
-        cancelOnError: true,
-        partialResults: true,
-      );
-    }
-  }
-
-
-  Future<void> _processVoiceInput(String input) async {
-  // Use OpenAI to extract product and qty
-    final openaiApiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
-    debugPrint('[VOICE] OpenAI API Key loaded: [32m${openaiApiKey.isNotEmpty}[0m');
-    if (openaiApiKey.isEmpty) {
-      debugPrint('[VOICE][ERROR] OpenAI API key not set.');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('OpenAI API key not set.')),
-      );
-      return;
-    }
-    final openai = OpenAIService(openaiApiKey);
-    Map<String, dynamic>? aiResult;
-    try {
-      debugPrint('[VOICE] Sending to OpenAI: "$input"');
-      aiResult = await openai.extractProductAndQty(input);
-      debugPrint('[VOICE] OpenAI result: $aiResult');
-    } catch (e, stack) {
-      debugPrint('[VOICE][ERROR] Exception during OpenAI call: $e\n$stack');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('OpenAI error: $e')),
-      );
-      return;
-    }
-    if (aiResult == null || aiResult['product'] == null || (aiResult['product'] as String).isEmpty) {
-      debugPrint('[VOICE][ERROR] Could not understand item name from voice. aiResult: $aiResult');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not understand item name from voice.')),
-      );
-      return;
-    }
-    final name = aiResult['product'].toString();
-    final qty = aiResult['qty'] is int ? aiResult['qty'] : int.tryParse(aiResult['qty']?.toString() ?? '1') ?? 1;
-    try {
-      final api = ApiService();
-      debugPrint('[VOICE] Searching item suggestions for "$name"');
-      final suggestions = await api.searchItemSuggestions(name);
-      debugPrint('[VOICE] Suggestions: $suggestions');
-      // Check if item already exists in the list
-      final currentItems = _listItems; // use local state, always up to date
-      final existingIdx = currentItems.indexWhere(
-        (it) => (it['name']?.toString().trim().toLowerCase() ?? '') == name.trim().toLowerCase(),
-      );
-      final existingItem = existingIdx != -1 ? currentItems[existingIdx] : null;
-      if (existingItem != null) {
-        // Ask user to confirm increasing quantity only
-        final confirm = await showAppDialog<bool>(
-          context: context,
-          title: const Text('Item already exists'),
-          content: Text('"$name" is already in your list. Add $qty to the existing quantity?'),
-          actions: [
-            appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false)),
-            appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Add Quantity', color: Colors.red),
-          ],
-        );
-        if (confirm == true) {
-          final newQty = (existingItem['qty'] ?? 1) + qty;
-          await api.updateListItem(_resolvedListId, existingItem['id'], {'qty': newQty});
-          await _refreshListItems();
-          if (widget.onItemsChanged != null) widget.onItemsChanged!();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Increased quantity of "$name" by $qty.')),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No item added.')),
-          );
-        }
-      } else if (suggestions.isNotEmpty) {
-        // Show dialog to let user confirm adding the best suggestion
-        final selected = suggestions.first;
-        final confirm = await showAppDialog<bool>(
-          context: context,
-          title: const Text('Did you mean:'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(selected['name'] ?? ''),
-              if (selected['category'] != null) Text(selected['category']),
-              const SizedBox(height: 16),
-              Text('Quantity: $qty'),
-            ],
-          ),
-          actions: [
-            appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false)),
-            appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Confirm'),
-          ],
-        );
-        if (confirm == true) {
-          final itemToAdd = Map<String, dynamic>.from(selected);
-          itemToAdd['qty'] = qty;
-          if (itemToAdd['emoji'] == null || (itemToAdd['emoji'] as String).isEmpty) {
-            itemToAdd['emoji'] = '🛒';
-          }
-          await api.addListItem(_resolvedListId, itemToAdd);
-          await _refreshListItems();
-          if (widget.onItemsChanged != null) widget.onItemsChanged!();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Added "${itemToAdd['name']}" (Qty: $qty) from voice input.')),
-          );
-        } else {
-          debugPrint('[VOICE] User cancelled suggestion dialog.');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No item added.')),
-          );
-        }
-      } else {
-        debugPrint('[VOICE] No suggestions found for "$name". Asking user to confirm adding as custom item.');
-        final confirm = await showAppDialog<bool>(
-          context: context,
-          title: const Text('Item not found'),
-          content: Text('"$name" (Qty: $qty) is not in the list. Would you like to add it as a custom item?'),
-          actions: [
-            appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: 'No'),
-            appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Yes'),
-          ],
-        );
-        if (confirm == true) {
-          // Show add item details sheet for qty and photo
-          final details = await showAddItemDetailsSheet(
-            context,
-            itemName: name,
-            categoryLabel: '',
-            accent: widget.accent,
-          );
-          if (details != null) {
-            final itemToAdd = {
-              'name': details['name'],
-              'qty': details['qty'],
-              'emoji': '🛒',
-              if (details['photoPath'] != null) 'photoPath': details['photoPath'],
-              'priority': details['priority'] ?? 0,
-              'checked': false,
-            };
-            await api.addListItem(_resolvedListId, itemToAdd);
-            await _refreshListItems();
-            if (widget.onItemsChanged != null) widget.onItemsChanged!();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Added "${details['name']}" (Qty: ${details['qty']}) as a custom item.')),
-            );
-          } else {
-            debugPrint('[VOICE] User cancelled add item details sheet.');
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('No item added.')),
-            );
-          }
-        } else {
-          debugPrint('[VOICE] User cancelled adding custom item.');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No item added.')),
-          );
-        }
-      }
-    } catch (e, stack) {
-      debugPrint('[VOICE][ERROR] Exception during item add: $e\n$stack');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add item from voice: $e')),
-      );
     }
   }
 

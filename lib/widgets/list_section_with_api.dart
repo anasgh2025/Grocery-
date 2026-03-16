@@ -182,22 +182,37 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
                 key: ValueKey(list.id),
                 list: list,
                 onTap: () async {
-                  final latestLists = await _apiService.fetchGroceryLists();
-                  final latest = latestLists.firstWhere(
-                    (l) => l.id == list.id,
-                    orElse: () => list,
-                  );
-                  final result = await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => ListDetailsPage(
-                        list: latest,
-                        accent: widget.accent,
-                        onItemsChanged: _fetchLists,
-                      ),
+                  // Show full-screen blocking loader while fetching list details
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    barrierColor: Colors.black38,
+                    builder: (_) => const Center(
+                      child: CircularProgressIndicator(),
                     ),
                   );
-                  if (result == true) {
-                    await _fetchLists();
+                  try {
+                    final latestLists = await _apiService.fetchGroceryLists();
+                    final latest = latestLists.firstWhere(
+                      (l) => l.id == list.id,
+                      orElse: () => list,
+                    );
+                    if (!mounted) return;
+                    Navigator.of(context).pop(); // dismiss loader
+                    final result = await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ListDetailsPage(
+                          list: latest,
+                          accent: widget.accent,
+                          onItemsChanged: _fetchLists,
+                        ),
+                      ),
+                    );
+                    if (result == true) {
+                      await _fetchLists();
+                    }
+                  } catch (_) {
+                    if (mounted) Navigator.of(context).pop(); // dismiss loader on error
                   }
                 },
                 allChecked: allChecked,
@@ -284,6 +299,7 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
     }
     return mainContent;
   }
+
   Widget _buildCreateListCard() {
     return GestureDetector(
       key: const ValueKey('create'),

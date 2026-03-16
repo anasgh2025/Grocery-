@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../main.dart';
 // Using bundled Nunito font from assets (configured in pubspec.yaml)
 
 /// Header: logo, avatar and search field
@@ -24,10 +25,42 @@ class LandingHeader extends StatelessWidget {
                   onPressed: () {},
                   tooltip: 'Notifications',
                 ),
-                IconButton(
-                  icon: const Icon(Icons.language, color: Color(0xFF1A1C1E)),
-                  onPressed: () {},
-                  tooltip: 'Change Language',
+                // Language toggle button
+                ValueListenableBuilder<Locale?>(
+                  valueListenable: localeNotifier,
+                  builder: (context, locale, _) {
+                    final isArabic = locale?.languageCode == 'ar';
+                    return GestureDetector(
+                      onTap: () {
+                        localeNotifier.value =
+                            isArabic ? const Locale('en') : const Locale('ar');
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              isArabic ? 'AR' : 'EN',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.swap_horiz_rounded, color: Colors.white, size: 14),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(width: 8),
               ],

@@ -56,9 +56,11 @@ class _CategoriesPageState extends State<CategoriesPage> {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(loc.categories, style: theme.textTheme.titleLarge),
+        title: Text(loc.categories, style: theme.textTheme.titleLarge?.copyWith(color: Colors.white)),
         centerTitle: true,
         backgroundColor: widget.accent,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())

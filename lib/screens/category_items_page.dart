@@ -119,6 +119,13 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
     );
     if (!mounted) return;
     if (result != null) {
+      // Show full-screen loader while making the API call
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        barrierColor: Colors.black38,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
       try {
         final api = ApiService();
         // Fetch current items in the list
@@ -126,32 +133,64 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
         if (!mounted) return;
         final resultName = result['name'] as String?;
         final resultQty = result['qty'] ?? 1;
-        if (resultName == null) return;
+        if (resultName == null) {
+          Navigator.of(context).pop(); // dismiss loader
+          return;
+        }
         final existingIdx = currentItems.indexWhere(
-          (it) => (it['name'] as String).trim().toLowerCase() == resultName.trim().toLowerCase(),
+          (it) => (it['name']?.toString().trim().toLowerCase() ?? '') == resultName.trim().toLowerCase(),
         );
         final existing = existingIdx != -1 ? currentItems[existingIdx] : null;
         if (existing != null) {
-          // Show dialog to ask user if they want to add to quantity
-          final shouldAddQty = await showAppDialog<bool>(
-            context: context,
-            title: const Text('Item already exists'),
-            content: Text('"$resultName" is already in your list. Add $resultQty to the existing quantity?'),
-            actions: [
-              appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false)),
-              appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Add Quantity', color: Colors.red),
-            ],
-          );
-          if (!mounted) return;
-          if (shouldAddQty == true) {
-            final newQty = (existing['qty'] ?? 1) + (resultQty);
-            await api.updateListItem(widget.listId, existing['id'], {
-              ...existing,
-              'qty': newQty,
-            });
-            if (mounted) Navigator.of(context).pop(true);
+          final isAlreadyChecked = existing['checked'] == true;
+          final currentQty = existing['qty'] is int
+              ? existing['qty'] as int
+              : int.tryParse(existing['qty']?.toString() ?? '') ?? 1;
+
+          Navigator.of(context).pop(); // dismiss loader before showing dialog
+
+          if (isAlreadyChecked) {
+            // Item is checked — just inform the user, no increase option
+            await showAppDialog<void>(
+              context: context,
+              title: const Text('Item already in list'),
+              content: Text('"$resultName" is already in your list and has been checked off.'),
+              actions: [
+                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(), text: 'OK'),
+              ],
+            );
+          } else {
+            // Item is active — offer to increase qty
+            final shouldAddQty = await showAppDialog<bool>(
+              context: context,
+              title: const Text('Item already in list'),
+              content: Text('"$resultName" is already in your list (qty: $currentQty). Would you like to increase the quantity?'),
+              actions: [
+                appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: 'No'),
+                const SizedBox(width: 12),
+                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Increase'),
+              ],
+            );
+            if (!mounted) return;
+            if (shouldAddQty == true) {
+              final resolvedId = (existing['id'] ?? existing['_id'])?.toString() ?? '';
+              if (resolvedId.isNotEmpty) {
+                // Show loader again for the update call
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  barrierColor: Colors.black38,
+                  builder: (_) => const Center(child: CircularProgressIndicator()),
+                );
+                await api.updateListItem(widget.listId, resolvedId, {'qty': currentQty + resultQty});
+                if (mounted) {
+                  Navigator.of(context).pop(); // dismiss loader
+                  Navigator.of(context).pop(true); // go back
+                }
+              }
+            }
           }
-          // If cancelled, do nothing
+          return;
         } else {
           await api.addListItem(widget.listId, {
             'name': resultName,
@@ -169,10 +208,14 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
               return '🛒';
             })(),
           });
-          if (mounted) Navigator.of(context).pop(true);
+          if (mounted) {
+            Navigator.of(context).pop(); // dismiss loader
+            Navigator.of(context).pop(true); // go back to list
+          }
         }
       } catch (e) {
         if (mounted) {
+          Navigator.of(context).pop(); // dismiss loader on error
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Failed to add item: $e')),
           );
@@ -190,8 +233,8 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: widget.accent,
+        foregroundColor: Colors.white,
         elevation: 0.5,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
@@ -202,15 +245,15 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: widget.accent.withAlpha(31),
+                color: Colors.white.withAlpha(50),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(widget.categoryIcon, size: 18, color: widget.accent),
+              child: Icon(widget.categoryIcon, size: 18, color: Colors.white),
             ),
             const SizedBox(width: 10),
             Text(
               widget.category,
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.white),
             ),
           ],
         ),
