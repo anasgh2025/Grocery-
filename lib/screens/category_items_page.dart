@@ -28,10 +28,10 @@ class CategoryItemsPage extends StatefulWidget {
 class _CategoryItemsPageState extends State<CategoryItemsPage> {
   final ApiService _api = ApiService();
   final String _search = '';
-  // Removed unused _selectedPriorities field
 
   List<Map<String, dynamic>> _allItems = [];
-  // ...existing code...
+  // ── Multi-select state ────────────────────────────────────────────────────
+  final Set<String> _selectedNames = {};
 
   @override
   void initState() {
@@ -85,6 +85,83 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
         .where((item) =>
             (item['name'] as String).toLowerCase().contains(_search.toLowerCase()))
         .toList();
+  }
+
+  // ── Batch add all selected items ─────────────────────────────────────────
+  Future<void> _addSelectedItems() async {
+    if (_selectedNames.isEmpty) return;
+    final names = List<String>.from(_selectedNames);
+
+    // Show full-screen loader
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black38,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    int added = 0;
+    int increased = 0;
+
+    try {
+      final api = ApiService();
+      final currentItems = await api.fetchListItems(widget.listId);
+      if (!mounted) return;
+
+      for (final name in names) {
+        final existingIdx = currentItems.indexWhere(
+          (it) => (it['name']?.toString().trim().toLowerCase() ?? '') == name.trim().toLowerCase(),
+        );
+        if (existingIdx != -1) {
+          final existing = currentItems[existingIdx];
+          // Already checked → skip silently
+          if (existing['checked'] == true) continue;
+          // Active duplicate → silently increase qty by 1
+          final resolvedId = (existing['id'] ?? existing['_id'])?.toString() ?? '';
+          final currentQty = existing['qty'] is int
+              ? existing['qty'] as int
+              : int.tryParse(existing['qty']?.toString() ?? '') ?? 1;
+          if (resolvedId.isNotEmpty) {
+            await api.updateListItem(widget.listId, resolvedId, {'qty': currentQty + 1});
+            increased++;
+          }
+        } else {
+          // Find the item data for emoji
+          final dbItem = _allItems.firstWhere(
+            (it) => (it['name'] as String).trim().toLowerCase() == name.trim().toLowerCase(),
+            orElse: () => <String, dynamic>{},
+          );
+          final emoji = (dbItem['emoji'] as String?) ?? '🛒';
+          final priority = (dbItem['priority'] ?? 0) as int;
+          await api.addListItem(widget.listId, {
+            'name': name,
+            'qty': 1,
+            'priority': priority,
+            'emoji': emoji,
+          });
+          added++;
+        }
+      }
+
+      if (!mounted) return;
+      Navigator.of(context).pop(); // dismiss loader
+
+      // Build result message
+      final parts = <String>[];
+      if (added > 0) parts.add('$added item${added > 1 ? 's' : ''} added');
+      if (increased > 0) parts.add('$increased qty increased');
+      final msg = parts.isNotEmpty ? parts.join(', ') : 'No new items added';
+
+      Navigator.of(context).pop(true); // go back to list
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // dismiss loader
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add items: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _onItemTap(Map<String, dynamic> item) async {
@@ -296,47 +373,127 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                       final name = (locale == 'ar' ? (item['name_ar'] ?? item['name']) : (item['name'] ?? '')) as String;
                       final emoji = (item['emoji'] ?? '🛒') as String;
                       final priority = (item['priority'] ?? 0) as int;
+                      final isSelected = _selectedNames.contains(name);
                       return Stack(
                         children: [
-                          Material(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              leading: SizedBox(
-                                width: 48,
-                                height: 48,
-                                child: Center(child: Text(emoji, style: const TextStyle(fontSize: 24))),
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            decoration: BoxDecoration(
+                              color: isSelected ? widget.accent.withAlpha(20) : Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isSelected ? widget.accent : Colors.transparent,
+                                width: 1.5,
                               ),
-                              title: Text(name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
-                              subtitle: Text(widget.category, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade500)),
-                              onTap: () => _onItemTap(item),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(14),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(14),
+                                onTap: () {
+                                  setState(() {
+                                    if (isSelected) {
+                                      _selectedNames.remove(name);
+                                    } else {
+                                      _selectedNames.add(name);
+                                    }
+                                  });
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  child: Row(
+                                    children: [
+                                      // ── Checkbox ──────────────────────
+                                      SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: Checkbox(
+                                          value: isSelected,
+                                          activeColor: widget.accent,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                                          onChanged: (_) {
+                                            setState(() {
+                                              if (isSelected) {
+                                                _selectedNames.remove(name);
+                                              } else {
+                                                _selectedNames.add(name);
+                                              }
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      // ── Emoji ─────────────────────────
+                                      SizedBox(
+                                        width: 40,
+                                        height: 40,
+                                        child: Center(child: Text(emoji, style: const TextStyle(fontSize: 24))),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      // ── Name + category ───────────────
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+                                            Text(widget.category, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade500)),
+                                          ],
+                                        ),
+                                      ),
+                                      // ── Urgent badge ──────────────────
+                                      if (priority == 1)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.redAccent.withAlpha(26),
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(color: Colors.redAccent.withAlpha(80)),
+                                          ),
+                                          child: const Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.priority_high, size: 14, color: Colors.redAccent),
+                                              SizedBox(width: 4),
+                                              Text('Urgent', style: TextStyle(fontSize: 11, color: Colors.redAccent, fontWeight: FontWeight.w600)),
+                                            ],
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                          if (priority == 1)
-                            Positioned(
-                              top: 8,
-                              right: 16,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.redAccent.withAlpha(26),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.redAccent.withAlpha(80)),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.priority_high, size: 14, color: Colors.redAccent),
-                                    SizedBox(width: 4),
-                                    Text('Urgent', style: TextStyle(fontSize: 11, color: Colors.redAccent, fontWeight: FontWeight.w600)),
-                                  ],
-                                ),
-                              ),
-                            ),
                         ],
                       );
                     },
+                  ),
+          ),
+          // ── Add to list CTA ─────────────────────────────────────────────
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            child: _selectedNames.isEmpty
+                ? const SizedBox.shrink()
+                : SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: widget.accent,
+                          minimumSize: const Size.fromHeight(52),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        onPressed: _addSelectedItems,
+                        icon: const Icon(Icons.add_shopping_cart_rounded, color: Colors.white),
+                        label: Text(
+                          'Add ${_selectedNames.length} item${_selectedNames.length > 1 ? 's' : ''} to list',
+                          style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ),
                   ),
           ),
         ],
