@@ -1,7 +1,7 @@
-name: grocery_app_landing
-description: A Flutter app scaffold for the Grocery App landing page (Figma-driven)
+name: Grovia
+description: Grovia is a smart grocery list app that helps you organize your shopping and collaborate with family or friends in real time. Create lists, share them instantly, and never forget an item again.
 publish_to: "none"
-version: 0.2.0+3
+version: 0.1.0+4
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
