@@ -100,5 +100,36 @@
   "notSignedIn": "أنت غير مسجّل الدخول",
   "logInOrCreate": "سجّل الدخول أو أنشئ حساباً لإدارة قوائم التسوق.",
   "welcomeToProfile": "مرحباً بك في ملفك الشخصي",
-  "signOut": "تسجيل الخروج"
+  "signOut": "تسجيل الخروج",
+  "inviteToList": "دعوة للقائمة",
+  "shareInviteLink": "مشاركة رابط الدعوة",
+  "generatingLink": "جارٍ إنشاء الرابط…",
+  "inviteLinkCopied": "تم نسخ رابط الدعوة!",
+  "acceptInvite": "قبول الدعوة",
+  "rejectInvite": "رفض",
+  "inviteTitle": "لقد تلقّيت دعوة!",
+  "inviteSubtitle": "دعاك {name} للتعاون في قائمة.",
+  "@inviteSubtitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "inviteListName": "القائمة: {listName}",
+  "@inviteListName": {
+    "placeholders": {
+      "listName": { "type": "String" }
+    }
+  },
+  "inviteItemCount": "{count} عناصر",
+  "@inviteItemCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "inviteAccepted": "تمّ انضمامك إلى القائمة!",
+  "inviteDeclined": "تم رفض الدعوة.",
+  "inviteInvalid": "رابط الدعوة غير صالح أو انتهت صلاحيته.",
+  "mustBeLoggedInToAccept": "يرجى تسجيل الدخول أولاً لقبول هذه الدعوة.",
+  "accepting": "جارٍ القبول…",
+  "declining": "جارٍ الرفض…"
 }

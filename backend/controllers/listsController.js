@@ -1,63 +1,121 @@
-// --- Invite Link Handlers ---
-const crypto = require('crypto');
-const inviteTokens = new Map(); // In-memory for now; use DB for production
+'use strict';
 
-// Generate invite link for a list
+const { v4: uuidv4 } = require('uuid');
+const store = require('../data/listsStore.mongodb');
+const invitesStore = require('../data/invitesStore.mongodb');
+const usersStore = require('../data/usersStore.mongodb');
+
+// ── Invite handlers ────────────────────────────────────────────────────────────
+
+/**
+ * POST /api/lists/:id/invite  (requires auth)
+ * Generates a persistent invite token stored in MongoDB.
+ */
 const generateInviteLink = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user.id;
+
     const list = await store.getById(id);
     if (!list) return res.status(404).json({ error: 'Not Found', message: `List ${id} not found` });
-    // Generate a unique token
-    const token = crypto.randomBytes(16).toString('hex');
-    inviteTokens.set(token, { listId: id, created: Date.now() });
-    // Construct invite URL (assume frontend at /invite/:token)
-    const baseUrl = process.env.FRONTEND_URL || 'https://shopsmart.app';
-    const inviteUrl = `${baseUrl}/invite/${token}`;
-    res.json({ inviteUrl, token });
+
+    // Only the owner (or a member) can invite others
+    if (list.ownerId && list.ownerId !== userId && !list.sharedWith.includes(userId)) {
+      return res.status(403).json({ error: 'Forbidden', message: 'You do not have access to this list' });
+    }
+
+    const inviter = await usersStore.getById(userId);
+    const invite = await invitesStore.createInvite({
+      listId: id,
+      listName: list.name,
+      createdBy: userId,
+      createdByName: inviter ? inviter.name || inviter.email : '',
+    });
+
+    // Deep-link URL the Flutter app will handle
+    const inviteUrl = `https://coral-app-qjq4a.ondigitalocean.app/invite/${invite.token}`;
+    res.json({ inviteUrl, token: invite.token });
   } catch (error) {
     res.status(500).json({ error: 'Failed to generate invite link', message: error.message });
   }
 };
 
-// Accept invite and link user to list
-// POST /lists/accept-invite
-// Body: { token: string, userId: string }
+/**
+ * GET /api/lists/invite/:token  (public — no auth)
+ * Returns list preview so Flutter can show the accept/reject screen.
+ */
+const getInvitePreview = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const invite = await invitesStore.findInvite(token);
+    if (!invite) {
+      return res.status(404).json({ error: 'Invalid or expired invite link' });
+    }
+    const list = await store.getById(invite.listId);
+    res.json({
+      listId: invite.listId,
+      listName: invite.listName,
+      invitedBy: invite.createdByName,
+      itemCount: list ? (list.listItems || []).length : 0,
+      token,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch invite preview', message: error.message });
+  }
+};
+
+/**
+ * POST /api/lists/invite/:token/accept  (requires auth)
+ * Marks token used and adds the authenticated user to sharedWith.
+ */
 const acceptInvite = async (req, res) => {
   try {
-    const { token, userId } = req.body;
-    if (!token || !userId) {
-      return res.status(400).json({ error: 'Bad Request', message: 'Missing token or userId' });
-    }
-    const invite = inviteTokens.get(token);
+    const { token } = req.params;
+    const userId = req.user.id;
+
+    const invite = await invitesStore.findInvite(token);
     if (!invite) {
-      return res.status(404).json({ error: 'Invalid or expired invite token' });
+      return res.status(404).json({ error: 'Invalid or expired invite link' });
     }
-    const { listId } = invite;
-    const list = await store.getById(listId);
-    if (!list) {
-      return res.status(404).json({ error: 'List not found' });
+
+    // Don't let the owner accept their own invite
+    if (invite.createdBy === userId) {
+      return res.status(400).json({ error: 'You cannot accept your own invite' });
     }
-    // Add userId to list.sharedWith (create if missing)
-    if (!Array.isArray(list.sharedWith)) list.sharedWith = [];
-    if (!list.sharedWith.includes(userId)) {
-      list.sharedWith.push(userId);
-      await store.update(listId, list);
-    }
-    // Optionally, delete the token after use
-    inviteTokens.delete(token);
-    res.json({ success: true, listId });
+
+    await store.addSharedUser(invite.listId, userId);
+    await invitesStore.markUsed(token, userId);
+
+    res.json({ success: true, listId: invite.listId });
   } catch (error) {
     res.status(500).json({ error: 'Failed to accept invite', message: error.message });
   }
 };
-const { v4: uuidv4 } = require('uuid');
-const store = require('../data/listsStore.mongodb');
+
+/**
+ * POST /api/lists/invite/:token/reject  (requires auth)
+ * Simply marks the token as used without adding to sharedWith.
+ */
+const rejectInvite = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const invite = await invitesStore.findInvite(token);
+    if (!invite) {
+      return res.status(404).json({ error: 'Invalid or expired invite link' });
+    }
+    await invitesStore.markUsed(token, req.user.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to reject invite', message: error.message });
+  }
+};
 
 // Get all lists
 const getAllLists = async (req, res) => {
   try {
-    const lists = await store.getAll();
+    // If the caller has a JWT (attached by optional auth), filter to their lists.
+    const userId = req.user ? req.user.id : null;
+    const lists = await store.getAllForUser(userId);
     res.json(lists);
   } catch (error) {
     res.status(500).json({
@@ -131,6 +189,7 @@ const createList = async (req, res) => {
       icon,
       category: category !== undefined ? category : null,
       priority: priority !== undefined ? priority : 0,
+      ownerId: req.user ? req.user.id : null,
     };
     
     const createdList = await store.create(newList);
@@ -325,5 +384,7 @@ module.exports = {
   deleteListItem,
   deleteList,
   generateInviteLink,
+  getInvitePreview,
   acceptInvite,
+  rejectInvite,
 };

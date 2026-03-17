@@ -12,15 +12,17 @@ const listItemSchema = new mongoose.Schema({
 }, { _id: false });
 
 const groceryListSchema = new mongoose.Schema({
-  id:        { type: String, required: true, unique: true },
-  name:      { type: String, required: true },
-  items:     { type: String, default: '0/0' },
-  progress:  { type: Number, default: 0 },
-  priority:  { type: Number, default: 0 },          // 0 = Normal, 1 = Urgent
-  time:      { type: String, default: '' },
-  category:  { type: String, default: null },
-  icon:      { type: String, default: 'list' },
-  listItems: { type: [listItemSchema], default: [] },
+  id:         { type: String, required: true, unique: true },
+  name:       { type: String, required: true },
+  items:      { type: String, default: '0/0' },
+  progress:   { type: Number, default: 0 },
+  priority:   { type: Number, default: 0 },          // 0 = Normal, 1 = Urgent
+  time:       { type: String, default: '' },
+  category:   { type: String, default: null },
+  icon:       { type: String, default: 'list' },
+  listItems:  { type: [listItemSchema], default: [] },
+  ownerId:    { type: String, default: null },        // userId of list creator
+  sharedWith: { type: [String], default: [] },        // userIds who accepted invite
 }, { timestamps: true });
 
 const GroceryList = mongoose.model('GroceryList', groceryListSchema);
@@ -61,6 +63,18 @@ const toPlain = (doc) => {
 // ── CRUD ────────────────────────────────────────────────────────────────
 const getAll = async () => {
   const docs = await GroceryList.find().lean();
+  return docs.map(({ _id, __v, createdAt, updatedAt, ...rest }) => rest);
+};
+
+/**
+ * Return lists visible to a user: lists they own OR are shared with.
+ * Falls back to getAll() when userId is null (unauthenticated legacy mode).
+ */
+const getAllForUser = async (userId) => {
+  if (!userId) return getAll();
+  const docs = await GroceryList.find({
+    $or: [{ ownerId: userId }, { sharedWith: userId }],
+  }).lean();
   return docs.map(({ _id, __v, createdAt, updatedAt, ...rest }) => rest);
 };
 
@@ -114,12 +128,24 @@ const reset = async () => {
   await GroceryList.deleteMany({});
 };
 
+/**
+ * Add a userId to the sharedWith array of a list (idempotent).
+ */
+const addSharedUser = async (listId, userId) => {
+  await GroceryList.updateOne(
+    { id: listId },
+    { $addToSet: { sharedWith: userId } }
+  );
+};
+
 module.exports = {
   getAll,
+  getAllForUser,
   getById,
   create,
   update,
   remove,
   reset,
+  addSharedUser,
   GroceryList,
 };

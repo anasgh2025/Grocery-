@@ -8,22 +8,68 @@ import '../models/grocery_list.dart';
 
 /// Service for handling API calls related to grocery lists
 class ApiService {
-  /// Accept an invite and link user to list
-  Future<Map<String, dynamic>> acceptInvite({required String token, required String userId}) async {
-    final url = Uri.parse('${ApiService.baseUrl}/lists/accept-invite');
+  // ── Invite ────────────────────────────────────────────────────────────────
+
+  /// Generate a persistent invite link for [listId]. Requires JWT auth.
+  Future<Map<String, dynamic>> generateInviteLink(String listId) async {
+    final token = await readToken();
     final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({'token': token, 'userId': userId}),
-    ).timeout(ApiService.timeout);
+      Uri.parse('$baseUrl/lists/$listId/invite'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    ).timeout(timeout);
     if (response.statusCode == 200) {
       return json.decode(response.body) as Map<String, dynamic>;
-    } else {
-      throw Exception('Failed to accept invite: ${response.statusCode}');
+    }
+    throw Exception('Failed to generate invite link: ${response.statusCode}');
+  }
+
+  /// Fetch invite preview (list name, owner, item count) without accepting.
+  /// Public endpoint — no auth required.
+  Future<Map<String, dynamic>> fetchInvitePreview(String inviteToken) async {
+    final response = await http
+        .get(Uri.parse('$baseUrl/lists/invite/$inviteToken'))
+        .timeout(timeout);
+    if (response.statusCode == 200) {
+      return json.decode(response.body) as Map<String, dynamic>;
+    }
+    throw Exception('Invalid or expired invite link');
+  }
+
+  /// Accept an invite. Requires JWT auth.
+  Future<Map<String, dynamic>> acceptInvite({required String inviteToken}) async {
+    final token = await readToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/lists/invite/$inviteToken/accept'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    ).timeout(timeout);
+    if (response.statusCode == 200) {
+      return json.decode(response.body) as Map<String, dynamic>;
+    }
+    throw Exception('Failed to accept invite: ${response.statusCode}');
+  }
+
+  /// Reject an invite. Requires JWT auth.
+  Future<void> rejectInvite({required String inviteToken}) async {
+    final token = await readToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/lists/invite/$inviteToken/reject'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    ).timeout(timeout);
+    if (response.statusCode != 200) {
+      throw Exception('Failed to reject invite: ${response.statusCode}');
     }
   }
 
-  /// Raw POST request (for invite link)
+  /// Raw POST request (kept for legacy use)
   Future<http.Response> postRaw(Uri url, {Map<String, String>? headers, Object? body}) async {
     return await http.post(url, headers: headers, body: body).timeout(timeout);
   }
@@ -102,11 +148,13 @@ class ApiService {
   /// Fetch all grocery lists from the backend
   Future<List<GroceryList>> fetchGroceryLists() async {
     try {
+      final token = await readToken();
       final response = await http
           .get(
             Uri.parse('$baseUrl/lists'),
             headers: {
               'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
             },
           )
           .timeout(timeout);
@@ -258,11 +306,13 @@ class ApiService {
   /// Create a new grocery list
   Future<GroceryList> createGroceryList(GroceryList list) async {
     try {
+      final token = await readToken();
       final response = await http
           .post(
             Uri.parse('$baseUrl/lists'),
             headers: {
               'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
             },
             body: json.encode(list.toJson()),
           )

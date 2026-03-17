@@ -3,8 +3,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:app_links/app_links.dart';
 
 import 'screens/splash_screen.dart';
+import 'screens/invite_accept_page.dart';
 import 'theme.dart';
 import 'l10n/app_localizations.dart';
 
@@ -74,8 +76,46 @@ class DebugApp extends StatelessWidget {
 // ...existing code...
 
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final _navigatorKey = GlobalKey<NavigatorState>();
+  late final AppLinks _appLinks;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLinks();
+  }
+
+  void _initDeepLinks() {
+    _appLinks = AppLinks();
+
+    // Handle link that launched the app from cold start
+    _appLinks.getInitialLink().then((uri) {
+      if (uri != null) _handleLink(uri);
+    });
+
+    // Handle links while the app is already running
+    _appLinks.uriLinkStream.listen(_handleLink, onError: (e) {
+      print('Deep link error: $e');
+    });
+  }
+
+  void _handleLink(Uri uri) {
+    // Matches: grovia://invite/<token>
+    if (uri.host == 'invite' && uri.pathSegments.isNotEmpty) {
+      final token = uri.pathSegments.first;
+      _navigatorKey.currentState?.push(
+        MaterialPageRoute(builder: (_) => InviteAcceptPage(token: token)),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +126,7 @@ class MyApp extends StatelessWidget {
           valueListenable: localeNotifier,
           builder: (context, locale, _) {
             return MaterialApp(
+              navigatorKey: _navigatorKey,
               title: 'Grocery App Landing',
               theme: AppTheme.light(),
               darkTheme: ThemeData.dark().copyWith(

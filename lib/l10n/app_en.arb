@@ -100,5 +100,36 @@
   "notSignedIn": "You're not signed in",
   "logInOrCreate": "Log in or create an account to manage your grocery lists.",
   "welcomeToProfile": "Welcome to your profile",
-  "signOut": "Sign Out"
+  "signOut": "Sign Out",
+  "inviteToList": "Invite to list",
+  "shareInviteLink": "Share invite link",
+  "generatingLink": "Generating link…",
+  "inviteLinkCopied": "Invite link copied!",
+  "acceptInvite": "Accept Invite",
+  "rejectInvite": "Decline",
+  "inviteTitle": "You've been invited!",
+  "inviteSubtitle": "{name} invited you to collaborate on a list.",
+  "@inviteSubtitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "inviteListName": "List: {listName}",
+  "@inviteListName": {
+    "placeholders": {
+      "listName": { "type": "String" }
+    }
+  },
+  "inviteItemCount": "{count} items",
+  "@inviteItemCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "inviteAccepted": "You've joined the list!",
+  "inviteDeclined": "Invite declined.",
+  "inviteInvalid": "This invite link is invalid or has expired.",
+  "mustBeLoggedInToAccept": "Please log in first to accept this invite.",
+  "accepting": "Accepting…",
+  "declining": "Declining…"
 }

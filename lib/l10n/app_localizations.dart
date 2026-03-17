@@ -694,6 +694,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign Out'**
   String get signOut;
+
+  /// No description provided for @inviteToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite to list'**
+  String get inviteToList;
+
+  /// No description provided for @shareInviteLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Share invite link'**
+  String get shareInviteLink;
+
+  /// No description provided for @generatingLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating link…'**
+  String get generatingLink;
+
+  /// No description provided for @inviteLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite link copied!'**
+  String get inviteLinkCopied;
+
+  /// No description provided for @acceptInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept Invite'**
+  String get acceptInvite;
+
+  /// No description provided for @rejectInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get rejectInvite;
+
+  /// No description provided for @inviteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve been invited!'**
+  String get inviteTitle;
+
+  /// No description provided for @inviteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} invited you to collaborate on a list.'**
+  String inviteSubtitle(String name);
+
+  /// No description provided for @inviteListName.
+  ///
+  /// In en, this message translates to:
+  /// **'List: {listName}'**
+  String inviteListName(String listName);
+
+  /// No description provided for @inviteItemCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items'**
+  String inviteItemCount(int count);
+
+  /// No description provided for @inviteAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve joined the list!'**
+  String get inviteAccepted;
+
+  /// No description provided for @inviteDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite declined.'**
+  String get inviteDeclined;
+
+  /// No description provided for @inviteInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This invite link is invalid or has expired.'**
+  String get inviteInvalid;
+
+  /// No description provided for @mustBeLoggedInToAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Please log in first to accept this invite.'**
+  String get mustBeLoggedInToAccept;
+
+  /// No description provided for @accepting.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepting…'**
+  String get accepting;
+
+  /// No description provided for @declining.
+  ///
+  /// In en, this message translates to:
+  /// **'Declining…'**
+  String get declining;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

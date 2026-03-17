@@ -30,6 +30,28 @@ app.use("/api/marketing", marketingRoutes);
 const usersRoutes = require("./routes/users");
 app.use("/api/users", usersRoutes);
 
+// ---- Invite deep-link redirect ----
+// When a user taps the invite link on a phone, redirect to the custom scheme
+// so the OS opens the Grovia app (or the app store if not installed).
+app.get("/invite/:token", (req, res) => {
+  const { token } = req.params;
+  // Universal/deep-link: grovia://invite/<token>
+  const deepLink = `grovia://invite/${token}`;
+  res.send(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="refresh" content="0; url=${deepLink}"/>
+  <title>Opening Grovia…</title>
+  <script>window.location.href = "${deepLink}";</script>
+</head>
+<body style="font-family:sans-serif;text-align:center;padding-top:80px;">
+  <p>Opening Grovia…</p>
+  <p><a href="${deepLink}">Tap here if the app does not open</a></p>
+</body>
+</html>`);
+});
+
 // ---- 404 handler (keep AFTER all routes) ----
 app.use((req, res) => {
   res.status(404).json({ error: "Not Found" });

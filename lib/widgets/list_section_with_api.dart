@@ -1,8 +1,5 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'dart:convert';
 import 'package:flutter/scheduler.dart';
 import '../models/grocery_list.dart';
 import '../services/api_service.dart';
@@ -13,19 +10,7 @@ import '../screens/list_details_page.dart';
 import '../l10n/app_localizations.dart';
 
 
-// Helper to generate invite link (calls backend)
-Future<Uri> generateInviteLink(BuildContext context, String listId) async {
-  final api = ApiService();
-  final baseUrl = ApiService.baseUrl;
-  final url = Uri.parse('$baseUrl/lists/$listId/invite');
-  final response = await api.postRaw(url);
-  if (response.statusCode == 200) {
-    final data = json.decode(response.body);
-    return Uri.parse(data['inviteUrl'] as String);
-  } else {
-    throw Exception('Failed to generate invite link: \\${response.statusCode}');
-  }
-}
+// ignore_for_file: deprecated_member_use
 
 /// Example widget showing how to use the API service to fetch lists
 /// This is a stateful version that fetches data from the backend
@@ -433,6 +418,111 @@ class _DashedRRectPainter extends CustomPainter {
   }
 }
 
+/// Shows a bottom sheet to generate and share an invite link for [list].
+void _showInviteSheet(BuildContext context, GroceryList list) {
+  final api = ApiService();
+  final loc = AppLocalizations.of(context)!;
+  showModalBottomSheet(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (ctx) {
+      return _InviteSheet(api: api, list: list, loc: loc);
+    },
+  );
+}
+
+/// Stateful bottom sheet that generates the invite link lazily.
+class _InviteSheet extends StatefulWidget {
+  const _InviteSheet({required this.api, required this.list, required this.loc});
+  final ApiService api;
+  final GroceryList list;
+  final AppLocalizations loc;
+
+  @override
+  State<_InviteSheet> createState() => _InviteSheetState();
+}
+
+class _InviteSheetState extends State<_InviteSheet> {
+  bool _loading = true;
+  String? _inviteUrl;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _generate();
+  }
+
+  Future<void> _generate() async {
+    try {
+      final data = await widget.api.generateInviteLink(widget.list.id);
+      if (mounted) setState(() { _inviteUrl = data['inviteUrl'] as String?; _loading = false; });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final loc = widget.loc;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(loc.shareInviteLink,
+                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 20),
+            if (_loading)
+              Column(children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 12),
+                Text(loc.generatingLink, style: const TextStyle(color: Colors.black54)),
+              ])
+            else if (_error != null)
+              Text(_error!, style: const TextStyle(color: Colors.red))
+            else ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: SelectableText(
+                  _inviteUrl ?? '',
+                  style: const TextStyle(fontSize: 12, color: Colors.black87),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.share_rounded),
+                  label: Text(loc.shareInviteLink),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Share.share(_inviteUrl!, subject: widget.list.name);
+                  },
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Isolated card widget — StatelessWidget so Flutter can skip rebuilding cards
 // that haven't changed. RepaintBoundary in the parent ensures its layer is
@@ -561,67 +651,14 @@ class _ListCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: IconButton(
-                      tooltip: 'Invite',
+                      tooltip: AppLocalizations.of(context)!.inviteToList,
                       iconSize: 16,
                       padding: const EdgeInsets.all(6),
                       constraints: const BoxConstraints(),
                       icon: Icon(Icons.person_add_alt_1_rounded, color: accent),
-                      onPressed: () {
-                      showDialog(
-                        context: context,
-                        barrierDismissible: false,
-                        builder: (ctx) => FutureBuilder<Uri>(
-                          future: generateInviteLink(context, list.id),
-                          builder: (ctx, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const AlertDialog(
-                                title: Text('Generating Invite...'),
-                                content: SizedBox(height: 48, child: Center(child: CircularProgressIndicator())),
-                              );
-                            }
-                            if (snapshot.hasError) {
-                              return AlertDialog(
-                                title: const Text('Error'),
-                                content: Text('Failed to generate invite link: ${snapshot.error}'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.of(ctx).pop(),
-                                    child: const Text('Close'),
-                                  ),
-                                ],
-                              );
-                            }
-                            final inviteUri = snapshot.data;
-                            return AlertDialog(
-                              title: const Text('Invite'),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text('Share this link to invite others to your list:'),
-                                  const SizedBox(height: 12),
-                                  SelectableText(inviteUri.toString()),
-                                ],
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(ctx).pop();
-                                    Share.share(inviteUri.toString(), subject: 'Join my grocery list!');
-                                  },
-                                  child: const Text('Share'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.of(ctx).pop(),
-                                  child: const Text('Close'),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      );
-                    },
+                      onPressed: () => _showInviteSheet(context, list),
+                    ),
                   ),
-                  ), // close Invite Container
                   const SizedBox(width: 6),
                   // Share
                   Container(

@@ -319,4 +319,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signOut => 'Sign Out';
+
+  @override
+  String get inviteToList => 'Invite to list';
+
+  @override
+  String get shareInviteLink => 'Share invite link';
+
+  @override
+  String get generatingLink => 'Generating link…';
+
+  @override
+  String get inviteLinkCopied => 'Invite link copied!';
+
+  @override
+  String get acceptInvite => 'Accept Invite';
+
+  @override
+  String get rejectInvite => 'Decline';
+
+  @override
+  String get inviteTitle => 'You\'ve been invited!';
+
+  @override
+  String inviteSubtitle(String name) {
+    return '$name invited you to collaborate on a list.';
+  }
+
+  @override
+  String inviteListName(String listName) {
+    return 'List: $listName';
+  }
+
+  @override
+  String inviteItemCount(int count) {
+    return '$count items';
+  }
+
+  @override
+  String get inviteAccepted => 'You\'ve joined the list!';
+
+  @override
+  String get inviteDeclined => 'Invite declined.';
+
+  @override
+  String get inviteInvalid => 'This invite link is invalid or has expired.';
+
+  @override
+  String get mustBeLoggedInToAccept => 'Please log in first to accept this invite.';
+
+  @override
+  String get accepting => 'Accepting…';
+
+  @override
+  String get declining => 'Declining…';
 }

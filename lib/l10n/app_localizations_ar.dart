@@ -319,4 +319,58 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get signOut => 'تسجيل الخروج';
+
+  @override
+  String get inviteToList => 'دعوة للقائمة';
+
+  @override
+  String get shareInviteLink => 'مشاركة رابط الدعوة';
+
+  @override
+  String get generatingLink => 'جارٍ إنشاء الرابط…';
+
+  @override
+  String get inviteLinkCopied => 'تم نسخ رابط الدعوة!';
+
+  @override
+  String get acceptInvite => 'قبول الدعوة';
+
+  @override
+  String get rejectInvite => 'رفض';
+
+  @override
+  String get inviteTitle => 'لقد تلقّيت دعوة!';
+
+  @override
+  String inviteSubtitle(String name) {
+    return 'دعاك $name للتعاون في قائمة.';
+  }
+
+  @override
+  String inviteListName(String listName) {
+    return 'القائمة: $listName';
+  }
+
+  @override
+  String inviteItemCount(int count) {
+    return '$count عناصر';
+  }
+
+  @override
+  String get inviteAccepted => 'تمّ انضمامك إلى القائمة!';
+
+  @override
+  String get inviteDeclined => 'تم رفض الدعوة.';
+
+  @override
+  String get inviteInvalid => 'رابط الدعوة غير صالح أو انتهت صلاحيته.';
+
+  @override
+  String get mustBeLoggedInToAccept => 'يرجى تسجيل الدخول أولاً لقبول هذه الدعوة.';
+
+  @override
+  String get accepting => 'جارٍ القبول…';
+
+  @override
+  String get declining => 'جارٍ الرفض…';
 }
