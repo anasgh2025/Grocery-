@@ -2,8 +2,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-// import '../l10n/app_localizations.dart'; // Removed unused import
-// import 'categories_page.dart'; // Removed unused import
+import '../l10n/app_localizations.dart';
 import '../services/api_service.dart';
 import '../widgets/app_dialog.dart';
 
@@ -90,6 +89,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final allFiltered = _searchQuery.isEmpty
         ? List<dynamic>.from(_listItems)
         : _listItems.where((item) =>
@@ -124,7 +124,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
                     focusNode: _searchFocusNode,
                     textInputAction: TextInputAction.done,
                     decoration: InputDecoration(
-                      hintText: 'Search or add items...',
+                      hintText: loc.searchOrAddItems,
                       filled: true,
                       fillColor: Colors.white,
                       contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
@@ -337,19 +337,19 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
                   child: const Icon(Icons.mic),
                 ),
               ),
-              // "Coming Soon" label that pops up to the left of the FAB
+              // "Coming Soon" label that pops up to the right of the FAB
               if (_showComingSoon)
                 Positioned(
-                  right: 64,
+                  left: 64,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.black87,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Text(
-                      'Coming Soon',
-                      style: TextStyle(
+                    child: Text(
+                      loc.comingSoon,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -612,6 +612,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
   }
   // ── Sectioned list ────────────────────────────────────────────────────────
   Widget _buildSectionedList(List<dynamic> filteredItems) {
+    final loc = AppLocalizations.of(context)!;
     final active  = filteredItems.where((i) => i['checked'] != true).toList();
     final checked = filteredItems.where((i) => i['checked'] == true).toList();
 
@@ -619,14 +620,14 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
     final widgets = <Widget>[];
 
     if (active.isNotEmpty) {
-      widgets.add(_buildSectionHeader('Active', widget.accent));
+      widgets.add(_buildSectionHeader(loc.activeSection, widget.accent));
       for (final item in active) {
         widgets.add(_buildItemCard(item as Map<String, dynamic>));
       }
     }
 
     if (checked.isNotEmpty) {
-      widgets.add(_buildSectionHeader('Checked', Colors.grey));
+      widgets.add(_buildSectionHeader(loc.checkedSection, Colors.grey));
       for (final item in checked) {
         widgets.add(_buildItemCard(item as Map<String, dynamic>));
       }

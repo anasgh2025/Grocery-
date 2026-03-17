@@ -150,7 +150,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addToList => 'Add to list';
 
   @override
-  String get appTitle => 'Listfy';
+  String get appTitle => 'Grovia';
 
   @override
   String get settings => 'Settings';
@@ -168,7 +168,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutUs => 'About Us';
 
   @override
-  String get aboutUsContent => 'Listfy helps you elevate your grocery experience.';
+  String get aboutUsContent => 'Grovia is a smart grocery list app that helps you organize your shopping and collaborate with family or friends in real time. Create lists, share them instantly, and never forget an item again.';
 
   @override
   String get shareApp => 'Share the app with a friend';
@@ -253,4 +253,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get completed => 'Completed';
+
+  @override
+  String get selectDueDate => 'Select due date';
+
+  @override
+  String get activeSection => 'Active';
+
+  @override
+  String get checkedSection => 'Checked';
+
+  @override
+  String get searchOrAddItems => 'Search or add items...';
+
+  @override
+  String get comingSoon => 'Coming Soon';
 }

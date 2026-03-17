@@ -574,6 +574,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Completed'**
   String get completed;
+
+  /// No description provided for @selectDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select due date'**
+  String get selectDueDate;
+
+  /// No description provided for @activeSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get activeSection;
+
+  /// No description provided for @checkedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked'**
+  String get checkedSection;
+
+  /// No description provided for @searchOrAddItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Search or add items...'**
+  String get searchOrAddItems;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming Soon'**
+  String get comingSoon;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -45,13 +45,13 @@
   "enterCustomItem": "أدخل عنصر مخصص",
   "itemName": "اسم العنصر",
   "add": "إضافة",
-  "appTitle": "Listfy",
+  "appTitle": "Grovia",
   "settings": "الإعدادات",
   "changeLanguage": "تغيير اللغة",
   "english": "الإنجليزية",
   "arabic": "العربية",
   "aboutUs": "معلومات عنا",
-  "aboutUsContent": "Listfy تساعدك على تحسين تجربة التسوق الخاصة بك.",
+  "aboutUsContent": "Grovia تطبيق قوائم تسوق ذكي يساعدك على تنظيم مشترياتك والتعاون مع العائلة أو الأصدقاء في الوقت الفعلي. أنشئ قوائم، شاركها على الفور، ولا تنسَ أي عنصر.",
   "shareApp": "شارك التطبيق مع صديق",
   "theme": "الوضع الداكن",
   "chooseLanguage": "اختر اللغة",
@@ -80,5 +80,10 @@
   "favorite": "مفضلة",
   "addPhoto": "إضافة صورة",
   "noSuggestions": "لا توجد اقتراحات.",
-  "completed": "مكتمل"
+  "completed": "مكتمل",
+  "selectDueDate": "اختر تاريخ الاستحقاق",
+  "activeSection": "نشط",
+  "checkedSection": "تم التحقق",
+  "searchOrAddItems": "...ابحث أو أضف عناصر",
+  "comingSoon": "قريباً"
 }

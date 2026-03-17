@@ -45,13 +45,13 @@
   "photo": "Photo",
   "optional": "(optional)",
   "addToList": "Add to list",
-  "appTitle": "Listfy",
+  "appTitle": "Grovia",
   "settings": "Settings",
   "changeLanguage": "Change Language",
   "english": "English",
   "arabic": "Arabic",
   "aboutUs": "About Us",
-  "aboutUsContent": "Listfy helps you elevate your grocery experience.",
+  "aboutUsContent": "Grovia is a smart grocery list app that helps you organize your shopping and collaborate with family or friends in real time. Create lists, share them instantly, and never forget an item again.",
   "shareApp": "Share the app with a friend",
   "theme": "Dark Mode",
   "chooseLanguage": "Choose Language",
@@ -80,5 +80,10 @@
   "favorite": "Favorite",
   "addPhoto": "Add Photo",
   "noSuggestions": "No suggestions found.",
-  "completed": "Completed"
+  "completed": "Completed",
+  "selectDueDate": "Select due date",
+  "activeSection": "Active",
+  "checkedSection": "Checked",
+  "searchOrAddItems": "Search or add items...",
+  "comingSoon": "Coming Soon"
 }

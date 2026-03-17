@@ -107,6 +107,8 @@ class _CreateListDialogState extends State<CreateListDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
     return SafeArea(
       child: Center(
         child: LayoutBuilder(
@@ -270,29 +272,26 @@ class _CreateListDialogState extends State<CreateListDialog> {
                           const SizedBox(height: 12),
                           Row(
                             children: [
+                              // In RTL (Arabic) Normal appears first (left), Urgent second
                               Expanded(
                                 child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _selectedPriority = 'Urgent';
-                                    });
-                                  },
+                                  onTap: () => setState(() => _selectedPriority = isRtl ? 'Normal' : 'Urgent'),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(vertical: 12),
                                     decoration: BoxDecoration(
-                                      color: _selectedPriority == 'Urgent'
-                                          ? Colors.red[400]
+                                      color: _selectedPriority == (isRtl ? 'Normal' : 'Urgent')
+                                          ? (isRtl ? Colors.blue[400] : Colors.red[400])
                                           : Colors.grey[200],
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Center(
                                       child: Text(
-                                        AppLocalizations.of(context)!.urgent,
+                                        isRtl ? AppLocalizations.of(context)!.normal : AppLocalizations.of(context)!.urgent,
                                         style: TextStyle(
                                           fontFamily: 'Nunito',
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
-                                          color: _selectedPriority == 'Urgent'
+                                          color: _selectedPriority == (isRtl ? 'Normal' : 'Urgent')
                                               ? Colors.white
                                               : Colors.black54,
                                         ),
@@ -304,27 +303,23 @@ class _CreateListDialogState extends State<CreateListDialog> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _selectedPriority = 'Normal';
-                                    });
-                                  },
+                                  onTap: () => setState(() => _selectedPriority = isRtl ? 'Urgent' : 'Normal'),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(vertical: 12),
                                     decoration: BoxDecoration(
-                                      color: _selectedPriority == 'Normal'
-                                          ? Colors.blue[400]
+                                      color: _selectedPriority == (isRtl ? 'Urgent' : 'Normal')
+                                          ? (isRtl ? Colors.red[400] : Colors.blue[400])
                                           : Colors.grey[200],
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Center(
                                       child: Text(
-                                        AppLocalizations.of(context)!.normal,
+                                        isRtl ? AppLocalizations.of(context)!.urgent : AppLocalizations.of(context)!.normal,
                                         style: TextStyle(
                                           fontFamily: 'Nunito',
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
-                                          color: _selectedPriority == 'Normal'
+                                          color: _selectedPriority == (isRtl ? 'Urgent' : 'Normal')
                                               ? Colors.white
                                               : Colors.black54,
                                         ),
@@ -363,7 +358,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
                                 children: [
                                   Text(
                                     _selectedDate == null
-                                        ? 'Select due date'
+                                        ? loc.selectDueDate
                                         : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
                                     style: TextStyle(
                                       fontFamily: 'Nunito',

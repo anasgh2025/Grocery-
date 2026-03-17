@@ -150,7 +150,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addToList => 'أضف إلى القائمة';
 
   @override
-  String get appTitle => 'Listfy';
+  String get appTitle => 'Grovia';
 
   @override
   String get settings => 'الإعدادات';
@@ -168,7 +168,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get aboutUs => 'معلومات عنا';
 
   @override
-  String get aboutUsContent => 'Listfy تساعدك على تحسين تجربة التسوق الخاصة بك.';
+  String get aboutUsContent => 'Grovia تطبيق قوائم تسوق ذكي يساعدك على تنظيم مشترياتك والتعاون مع العائلة أو الأصدقاء في الوقت الفعلي. أنشئ قوائم، شاركها على الفور، ولا تنسَ أي عنصر.';
 
   @override
   String get shareApp => 'شارك التطبيق مع صديق';
@@ -253,4 +253,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get completed => 'مكتمل';
+
+  @override
+  String get selectDueDate => 'اختر تاريخ الاستحقاق';
+
+  @override
+  String get activeSection => 'نشط';
+
+  @override
+  String get checkedSection => 'تم التحقق';
+
+  @override
+  String get searchOrAddItems => '...ابحث أو أضف عناصر';
+
+  @override
+  String get comingSoon => 'قريباً';
 }

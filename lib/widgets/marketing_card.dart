@@ -97,49 +97,8 @@ class _MarketingCardState extends State<MarketingCard> {
       );
     }
 
-    if (_errorMessage != null) {
-      return SizedBox(
-        height: widget.height,
-        child: Container(
-            decoration: appBoxDecoration(
-              context,
-              color: widget.heroBg,
-              radius: 16,
-            ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, color: widget.accent, size: 32),
-                const SizedBox(height: 8),
-                const Text(
-                  'Failed to load marketing',
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    if (_marketingCards.isEmpty) {
-      return SizedBox(
-        height: widget.height,
-        child: Container(
-            decoration: appBoxDecoration(
-              context,
-              color: widget.heroBg,
-              radius: 16,
-            ),
-          child: const Center(
-            child: Text(
-              'No marketing available',
-              style: TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-          ),
-        ),
-      );
+    if (_errorMessage != null || _marketingCards.isEmpty) {
+      return const SizedBox.shrink();
     }
 
     return SizedBox(

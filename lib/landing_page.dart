@@ -49,10 +49,7 @@ class _LandingPageState extends State<LandingPage> {
             Padding(
               padding: EdgeInsets.fromLTRB(horPad, 10, horPad, 0),
               child: RepaintBoundary(
-                child: SizedBox(
-                  height: 110,
-                  child: MarketingCard(accent: accent, heroBg: heroBg),
-                ),
+                child: MarketingCard(accent: accent, heroBg: heroBg, height: 110),
               ),
             ),
             // ── "Active Lists" row — fixed, never inside scroll ─────

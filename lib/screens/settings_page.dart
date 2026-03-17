@@ -129,39 +129,97 @@ class _SettingsPageState extends State<SettingsPage> {
                 leading: const Icon(Icons.info_outline, color: Colors.redAccent, size: 28),
                 title: Text(loc.aboutUs, style: const TextStyle(fontWeight: FontWeight.bold)),
                 onTap: () {
-                  showDialog(
+                  showModalBottomSheet(
                     context: context,
-                    builder: (ctx) => AlertDialog(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      title: const Row(
-                        children: [
-                          Icon(Icons.info_outline, color: Colors.redAccent, size: 24),
-                          SizedBox(width: 8),
-                          Text('Listfy', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      content: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(loc.aboutUsContent),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Version 1.0.0',
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                          ),
-                          const Text(
-                            '© 2026 Listfy',
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(ctx).pop(),
-                          child: const Text('Close', style: TextStyle(color: Colors.redAccent)),
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (ctx) => SafeArea(
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                         ),
-                      ],
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // ── Drag handle ──
+                            Center(
+                              child: Container(
+                                width: 40,
+                                height: 4,
+                                margin: const EdgeInsets.only(bottom: 20),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade300,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                            ),
+                            // ── Title ──
+                            const Row(
+                              children: [
+                                Icon(Icons.info_outline, color: Colors.redAccent, size: 24),
+                                SizedBox(width: 10),
+                                Text(
+                                  'Grovia',
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // ── Description ──
+                            Text(
+                              loc.aboutUsContent,
+                              style: const TextStyle(fontSize: 14, height: 1.5, color: Colors.black87),
+                            ),
+                            const SizedBox(height: 16),
+                            // ── Contact ──
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: const [
+                                Padding(
+                                  padding: EdgeInsets.only(top: 2),
+                                  child: Icon(Icons.phone_outlined, size: 16, color: Colors.redAccent),
+                                ),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'For any further details you can call us on +971 55 2300 158',
+                                    style: TextStyle(fontSize: 13, color: Colors.black87),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            const Divider(),
+                            const SizedBox(height: 8),
+                            // ── Version + Copyright ──
+                            const Text(
+                              'Version 1.0.0',
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                            const Text(
+                              '© 2026 Grovia',
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                            const SizedBox(height: 16),
+                            // ── Close button ──
+                            SizedBox(
+                              width: double.infinity,
+                              child: TextButton(
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.grey.shade100,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                ),
+                                onPressed: () => Navigator.of(ctx).pop(),
+                                child: const Text('Close', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   );
                 },

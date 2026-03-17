@@ -547,13 +547,12 @@ class _ListCard extends StatelessWidget {
                 ),
               ],
             ),
-            // ── Invite · Share — pinned to bottom-right ─────────
+            // ── Invite · Share — pinned to bottom-left ──────────
             Positioned(
               bottom: 0,
-              right: 0,
-              child: Column(
+              left: 0,
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   // Invite
                   Container(
@@ -623,7 +622,7 @@ class _ListCard extends StatelessWidget {
                     },
                   ),
                   ), // close Invite Container
-                  const SizedBox(height: 6),
+                  const SizedBox(width: 6),
                   // Share
                   Container(
                     decoration: BoxDecoration(
