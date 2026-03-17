@@ -464,209 +464,186 @@ class _ListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = Theme.of(context).colorScheme.primary;
     return GestureDetector(
       onTap: onTap,
-      child: Stack(
-        children: [
-          // Base card decoration
-          Container(
-            padding: const EdgeInsets.all(5),
-            decoration: appBoxDecoration(
-              context,
-              color: Colors.white,
-              radius: 12,
-            ),
-          ),
-          // Card content
-          Container(
-            padding: const EdgeInsets.all(5),
-            decoration: const BoxDecoration(color: Colors.transparent),
-            child: Stack(
+      onLongPress: () => onDelete(context),
+      child: Container(
+        decoration: appBoxDecoration(
+          context,
+          color: Colors.white,
+          radius: 12,
+        ),
+        padding: const EdgeInsets.all(10),
+        child: Stack(
+          children: [
+            // ── Main content (top section) ──────────────────────
+            Column(
+              mainAxisSize: MainAxisSize.max,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  mainAxisSize: MainAxisSize.max,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                // ── Top row: due date · item count ──
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // ── Icon + due-date row ─────────────────────────────
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                // No icon or emoji
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF3F4F6),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    list.time,
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.black54,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (allChecked)
-                              const Icon(Icons.check_circle, size: 20, color: Colors.green),
-                          ],
+                    // Due date badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        list.time,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Colors.black54,
+                          fontWeight: FontWeight.w500,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          list.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                      ],
+                      ),
                     ),
-                    // ── Item count + price + status/urgent icon ─────────────
+                    // Item count badge
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.redAccent,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Colors.black26,
-                                    blurRadius: 6,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                itemLabel,
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                ),
-                              ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF3F4F6),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            itemLabel,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.black54,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
-                        if (total > 0 && checked < total)
-                          const Icon(Icons.error_outline, size: 20, color: Colors.redAccent),
+                        if (allChecked) ...[
+                          const SizedBox(width: 4),
+                          const Icon(Icons.check_circle, size: 14, color: Colors.green),
+                        ],
+                        if (total > 0 && checked < total) ...[
+                          const SizedBox(width: 4),
+                          const Icon(Icons.error_outline, size: 14, color: Colors.redAccent),
+                        ],
                       ],
                     ),
                   ],
                 ),
-                // ── Popup menu for actions ─────────────────────
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'delete') {
-                        onDelete(context);
-                      } else if (value == 'share') {
-                        onShare(context);
-                      } else if (value == 'invite') {
-                        // Generate invite link and show share dialog
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (ctx) {
-                            return FutureBuilder<Uri>(
-                              future: generateInviteLink(context, list.id),
-                              builder: (ctx, snapshot) {
-                                if (snapshot.connectionState == ConnectionState.waiting) {
-                                  return const AlertDialog(
-                                    title: Text('Generating Invite...'),
-                                    content: SizedBox(height: 48, child: Center(child: CircularProgressIndicator())),
-                                  );
-                                }
-                                if (snapshot.hasError) {
-                                  return AlertDialog(
-                                    title: const Text('Error'),
-                                    content: Text('Failed to generate invite link: ${snapshot.error}'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.of(ctx).pop(),
-                                        child: const Text('Close'),
-                                      ),
-                                    ],
-                                  );
-                                }
-                                final inviteUri = snapshot.data;
-                                return AlertDialog(
-                                  title: const Text('Invite'),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Text('Share this link to invite others to your list:'),
-                                      const SizedBox(height: 12),
-                                      SelectableText(inviteUri.toString()),
-                                    ],
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.of(ctx).pop();
-                                        // Share via WhatsApp or other
-                                        Share.share(inviteUri.toString(), subject: 'Join my grocery list!');
-                                      },
-                                      child: const Text('Share'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () => Navigator.of(ctx).pop(),
-                                      child: const Text('Close'),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                        );
-                      }
-// Helper to generate invite link (calls backend)
-                    },
-                    itemBuilder: (ctx) => [
-                      const PopupMenuItem(
-                        value: 'invite',
-                        child: ListTile(
-                          leading: Icon(Icons.person_add_alt_1),
-                          title: Text('Invite'),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'share',
-                        child: ListTile(
-                          leading: const Icon(Icons.share),
-                          title: Text(AppLocalizations.of(context)!.share),
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: ListTile(
-                          leading: Icon(Icons.delete, color: Colors.red),
-                          title: Text('Delete', style: TextStyle(color: Colors.red)),
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 8),
+                // ── Title ──
+                Text(
+                  list.name,
+                  textAlign: TextAlign.left,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
-          ),
-        ],
+            // ── Invite · Share — pinned to bottom-right ─────────
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Invite
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: IconButton(
+                      tooltip: 'Invite',
+                      iconSize: 16,
+                      padding: const EdgeInsets.all(6),
+                      constraints: const BoxConstraints(),
+                      icon: Icon(Icons.person_add_alt_1_rounded, color: accent),
+                      onPressed: () {
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (ctx) => FutureBuilder<Uri>(
+                          future: generateInviteLink(context, list.id),
+                          builder: (ctx, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const AlertDialog(
+                                title: Text('Generating Invite...'),
+                                content: SizedBox(height: 48, child: Center(child: CircularProgressIndicator())),
+                              );
+                            }
+                            if (snapshot.hasError) {
+                              return AlertDialog(
+                                title: const Text('Error'),
+                                content: Text('Failed to generate invite link: ${snapshot.error}'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(ctx).pop(),
+                                    child: const Text('Close'),
+                                  ),
+                                ],
+                              );
+                            }
+                            final inviteUri = snapshot.data;
+                            return AlertDialog(
+                              title: const Text('Invite'),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text('Share this link to invite others to your list:'),
+                                  const SizedBox(height: 12),
+                                  SelectableText(inviteUri.toString()),
+                                ],
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(ctx).pop();
+                                    Share.share(inviteUri.toString(), subject: 'Join my grocery list!');
+                                  },
+                                  child: const Text('Share'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.of(ctx).pop(),
+                                  child: const Text('Close'),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                  ), // close Invite Container
+                  const SizedBox(height: 6),
+                  // Share
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: IconButton(
+                      tooltip: AppLocalizations.of(context)!.share,
+                      iconSize: 16,
+                      padding: const EdgeInsets.all(6),
+                      constraints: const BoxConstraints(),
+                      icon: Icon(Icons.share_rounded, color: accent),
+                      onPressed: () => onShare(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
