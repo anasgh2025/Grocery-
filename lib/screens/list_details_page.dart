@@ -41,6 +41,9 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
   List<Map<String, dynamic>> _suggestions = [];
   bool _isSearching = false;   // true while the HTTP call is in flight
 
+  /// name (lowercase English) → name_ar, built once from the categories catalogue.
+  final Map<String, String> _nameArLookup = {};
+
   String get _resolvedListId {
     if (widget.list is Map) {
       return (widget.list['id'] ?? '').toString();
@@ -58,8 +61,11 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
     } else {
       _listItems = List<dynamic>.from(widget.list.listItems as List<dynamic>? ?? []);
     }
-    // Always fetch latest from backend
-    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshListItems());
+    // Build name→name_ar lookup from categories catalogue, then fetch list items
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _buildNameArLookup();
+      _refreshListItems();
+    });
 
     // ── Shake animation setup ──────────────────────────────────────────────
     _shakeController = AnimationController(
@@ -90,11 +96,17 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final allFiltered = _searchQuery.isEmpty
         ? List<dynamic>.from(_listItems)
-        : _listItems.where((item) =>
-            (item['name']?.toString().toLowerCase() ?? '').contains(_searchQuery.toLowerCase())
-          ).toList();
+        : _listItems.where((item) {
+            final name = isAr
+                ? (item['name_ar']?.toString().isNotEmpty == true
+                    ? item['name_ar']?.toString()
+                    : item['name']?.toString())
+                : item['name']?.toString();
+            return (name?.toLowerCase() ?? '').contains(_searchQuery.toLowerCase());
+          }).toList();
     // Unchecked items first, checked at the bottom
     final filteredItems = [
       ...allFiltered.where((item) => item['checked'] != true),
@@ -123,8 +135,11 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
                     controller: _searchController,
                     focusNode: _searchFocusNode,
                     textInputAction: TextInputAction.done,
+                    textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+                    textAlign: isAr ? TextAlign.right : TextAlign.left,
                     decoration: InputDecoration(
                       hintText: loc.searchOrAddItems,
+                      hintTextDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
                       filled: true,
                       fillColor: Colors.white,
                       contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
@@ -139,31 +154,52 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
                         borderRadius: BorderRadius.circular(24),
                         borderSide: BorderSide(color: widget.accent, width: 2),
                       ),
-                      prefixIcon: const Icon(Icons.search, color: Color(0xFF9CA3AF)),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear, color: Color(0xFF9CA3AF)),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {
-                                  _searchQuery = '';
-                                  _suggestions = [];
-                                });
-                              },
+                      prefixIcon: isAr ? null : const Icon(Icons.search, color: Color(0xFF9CA3AF)),
+                      suffixIcon: isAr
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.search, color: Color(0xFF9CA3AF)),
+                                if (_searchController.text.isNotEmpty)
+                                  IconButton(
+                                    icon: const Icon(Icons.clear, color: Color(0xFF9CA3AF)),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() {
+                                        _searchQuery = '';
+                                        _suggestions = [];
+                                      });
+                                    },
+                                  ),
+                              ],
                             )
-                          : null,
+                          : (_searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear, color: Color(0xFF9CA3AF)),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() {
+                                      _searchQuery = '';
+                                      _suggestions = [];
+                                    });
+                                  },
+                                )
+                              : null),
                     ),
                     style: const TextStyle(fontFamily: 'Nunito', fontSize: 14),
                     onChanged: (value) async {
                       setState(() {
                         _searchQuery = value;
-                        if (value.length < 3) _suggestions = [];
+                        if (value.length < 2) _suggestions = [];
                       });
-                      if (value.length >= 3) {
+                      // Arabic words can be meaningful at 2 chars; English needs 3
+                      final minLen = isAr ? 2 : 3;
+                      if (value.length >= minLen) {
                         setState(() => _isSearching = true);
                         try {
                           final api = ApiService();
-                          final results = await api.searchItemSuggestions(value);
+                          final lang = Localizations.localeOf(context).languageCode;
+                          final results = await api.searchItemSuggestions(value, lang: lang);
                           if (mounted && _searchController.text == value) {
                             setState(() {
                               _suggestions = results;
@@ -236,12 +272,15 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
                         itemBuilder: (context, i) {
                           final s = _suggestions[i];
                           final emoji = s['emoji']?.toString() ?? '';
-                          final sName = s['name']?.toString() ?? '';
+                          final sName = (isAr
+                              ? (s['name_ar']?.toString().isNotEmpty == true ? s['name_ar'] : s['name'])
+                              : s['name'])?.toString() ?? '';
                           return InkWell(
                             onTap: () => _addSuggestionItem(s),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                               child: Row(
+                                textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
                                 children: [
                                   if (emoji.isNotEmpty)
                                     Text(emoji, style: const TextStyle(fontSize: 22)),
@@ -249,6 +288,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
                                   Expanded(
                                     child: Text(
                                       sName,
+                                      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
                                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                                     ),
                                   ),
@@ -381,7 +421,13 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
     _searchController.clear();
     setState(() { _searchQuery = ''; _suggestions = []; });
 
-    final suggestedName = suggestion['name']?.toString() ?? '';
+    // Always use the English name as the canonical stored key so duplicate
+    // detection is locale-independent. Display name shown to user matches locale.
+    final canonicalName = suggestion['name']?.toString() ?? '';
+    final nameAr = suggestion['name_ar']?.toString() ?? '';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final displayName = (isAr && nameAr.isNotEmpty) ? nameAr : canonicalName;
+    final suggestedName = canonicalName;
 
     // ── Duplicate check ──────────────────────────────────────────────────
     final dupIdx = _listItems.indexWhere(
@@ -399,13 +445,13 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
         // Item is checked — just inform the user, no increase option
         await showAppDialog<void>(
           context: context,
-          title: const Text('Item already in list'),
-          content: Text('"$suggestedName" is already in your list and has been checked off.'),
+          title: Text(AppLocalizations.of(context)!.itemAlreadyInList),
+          content: Text(AppLocalizations.of(context)!.itemAlreadyChecked(displayName)),
           actions: [
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(), text: 'OK'),
+                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(), text: AppLocalizations.of(context)!.ok),
               ],
             ),
           ],
@@ -414,15 +460,15 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
         // Item is active — offer to increase qty
         final confirm = await showAppDialog<bool>(
           context: context,
-          title: const Text('Item already in list'),
-          content: Text('"$suggestedName" is already in your list (qty: $currentQty). Would you like to increase the quantity?'),
+          title: Text(AppLocalizations.of(context)!.itemAlreadyInList),
+          content: Text(AppLocalizations.of(context)!.itemAlreadyActiveQty(displayName, currentQty)),
           actions: [
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: 'No'),
+                appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: AppLocalizations.of(context)!.cancel),
                 const SizedBox(width: 12),
-                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Increase'),
+                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: AppLocalizations.of(context)!.increase),
               ],
             ),
           ],
@@ -436,7 +482,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
               await _refreshListItems();
               if (widget.onItemsChanged != null) widget.onItemsChanged!();
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Increased "$suggestedName" quantity to ${currentQty + 1}.')),
+                SnackBar(content: Text(AppLocalizations.of(context)!.increasedQty(displayName, currentQty + 1))),
               );
             } catch (e) {
               if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update qty: $e')));
@@ -449,14 +495,17 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
 
     final details = await showAddItemDetailsSheet(
       context,
-      itemName: suggestedName,
-      categoryLabel: suggestion['category']?.toString() ?? '',
+      itemName: displayName,
+      categoryLabel: suggestion['categoryLabel${isAr ? 'Ar' : ''}']?.toString()
+          ?? suggestion['categoryLabel']?.toString()
+          ?? '',
       accent: widget.accent,
     );
     if (details == null || !mounted) return;
 
     final itemToAdd = {
-      'name': details['name'],
+      'name': canonicalName,            // always store English canonical name
+      if (nameAr.isNotEmpty) 'name_ar': nameAr,
       'qty': details['qty'],
       'emoji': suggestion['emoji']?.toString().isNotEmpty == true
           ? suggestion['emoji']
@@ -470,7 +519,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
       await _refreshListItems();
       if (widget.onItemsChanged != null) widget.onItemsChanged!();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Added "${details['name']}" to the list.')),
+        SnackBar(content: Text('Added "$displayName" to the list.')),
       );
     } catch (e) {
       if (mounted) {
@@ -503,13 +552,13 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
         // Item is checked — just inform the user, no increase option
         await showAppDialog<void>(
           context: context,
-          title: const Text('Item already in list'),
-          content: Text('"$name" is already in your list and has been checked off.'),
+          title: Text(AppLocalizations.of(context)!.itemAlreadyInList),
+          content: Text(AppLocalizations.of(context)!.itemAlreadyChecked(name)),
           actions: [
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(), text: 'OK'),
+                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(), text: AppLocalizations.of(context)!.ok),
               ],
             ),
           ],
@@ -518,15 +567,15 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
         // Item is active — offer to increase qty
         final confirm = await showAppDialog<bool>(
           context: context,
-          title: const Text('Item already in list'),
-          content: Text('"$name" is already in your list (qty: $currentQty). Would you like to increase the quantity?'),
+          title: Text(AppLocalizations.of(context)!.itemAlreadyInList),
+          content: Text(AppLocalizations.of(context)!.itemAlreadyActiveQty(name, currentQty)),
           actions: [
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: 'No'),
+                appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: AppLocalizations.of(context)!.cancel),
                 const SizedBox(width: 12),
-                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Increase'),
+                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: AppLocalizations.of(context)!.increase),
               ],
             ),
           ],
@@ -540,7 +589,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
               await _refreshListItems();
               if (widget.onItemsChanged != null) widget.onItemsChanged!();
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Increased "$name" quantity to ${currentQty + 1}.')),
+                SnackBar(content: Text(AppLocalizations.of(context)!.increasedQty(name, currentQty + 1))),
               );
             } catch (e) {
               if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update qty: $e')));
@@ -596,8 +645,17 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
       final items = await api.fetchListItems(listId);
       debugPrint('[ListDetailsPage] Refreshed items count: ${items.length}');
       if (!mounted) return;
+      // Enrich items that have no name_ar using the catalogue lookup
+      final enriched = items.map((item) {
+        final m = Map<String, dynamic>.from(item as Map);
+        if ((m['name_ar'] == null || m['name_ar'].toString().isEmpty)) {
+          final ar = _nameArLookup[m['name']?.toString().toLowerCase() ?? ''];
+          if (ar != null && ar.isNotEmpty) m['name_ar'] = ar;
+        }
+        return m;
+      }).toList();
       setState(() {
-        _listItems = items;
+        _listItems = enriched;
         _isLoading = false;
       });
     } catch (e) {
@@ -608,6 +666,27 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
           SnackBar(content: Text('Failed to load items: $e')),
         );
       }
+    }
+  }
+
+  /// Fetches all categories (with items) and builds a lowercase English name → name_ar map.
+  Future<void> _buildNameArLookup() async {
+    try {
+      final api = ApiService();
+      final categories = await api.fetchCategories(full: true);
+      for (final cat in categories) {
+        final items = cat['items'] as List<dynamic>? ?? [];
+        for (final item in items) {
+          final name = item['name']?.toString() ?? '';
+          final nameAr = item['name_ar']?.toString() ?? '';
+          if (name.isNotEmpty && nameAr.isNotEmpty) {
+            _nameArLookup[name.toLowerCase()] = nameAr;
+          }
+        }
+      }
+      debugPrint('[ListDetailsPage] Built name_ar lookup: ${_nameArLookup.length} entries');
+    } catch (e) {
+      debugPrint('[ListDetailsPage] Failed to build name_ar lookup: $e');
     }
   }
   // ── Sectioned list ────────────────────────────────────────────────────────
@@ -665,6 +744,10 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
   }
 
   Widget _buildItemCard(Map<String, dynamic> item) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final displayName = (isAr && item['name_ar']?.toString().isNotEmpty == true)
+        ? item['name_ar']!.toString()
+        : item['name']?.toString() ?? '';
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -682,7 +765,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
                 ),
               Expanded(
                 child: Text(
-                  item['name']?.toString() ?? '',
+                  displayName,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -721,33 +804,39 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
   // ── Item options modal ─────────────────────────────────────────────────────
   void _showItemOptionsModal(Map<String, dynamic> item) async {
     final isChecked = item['checked'] == true;
+    // Capture locale from the outer context before the sheet opens its own route
+    final loc = AppLocalizations.of(context)!;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.visibility),
-                title: const Text('View'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _showViewItemDialog(item);
-                },
-              ),
-              ListTile(
-                leading: Icon(isChecked ? Icons.check_box_outline_blank : Icons.check_box),
-                title: Text(isChecked ? 'Uncheck' : 'Check'),
-                onTap: () async {
-                  Navigator.of(context).pop();
-                  await _toggleItemChecked(item);
-                },
-              ),
-            ],
+      builder: (ctx) {
+        return Directionality(
+          textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.visibility),
+                  title: Text(loc.viewItem),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    _showViewItemDialog(item);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(isChecked ? Icons.check_box_outline_blank : Icons.check_box),
+                  title: Text(isChecked ? loc.uncheckItem : loc.checkItem),
+                  onTap: () async {
+                    Navigator.of(ctx).pop();
+                    await _toggleItemChecked(item);
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -759,7 +848,10 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
         ? item['qty'] as int
         : int.tryParse(item['qty']?.toString() ?? '') ?? 1;
     final emoji = item['emoji']?.toString() ?? '';
-    final name = item['name']?.toString() ?? '';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final name = (isAr && item['name_ar']?.toString().isNotEmpty == true)
+        ? item['name_ar']!.toString()
+        : item['name']?.toString() ?? '';
     final isChecked = item['checked'] == true;
 
     showModalBottomSheet(

@@ -268,4 +268,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get comingSoon => 'Coming Soon';
+
+  @override
+  String get cantFindItem => 'Can\'t find your item?';
+
+  @override
+  String get tapToAddManually => 'Tap here to add it manually';
+
+  @override
+  String get itemAlreadyInList => 'Item already in list';
+
+  @override
+  String itemAlreadyChecked(Object name) {
+    return '\"$name\" is already in your list and has been checked off.';
+  }
+
+  @override
+  String itemAlreadyActiveQty(Object name, Object qty) {
+    return '\"$name\" is already in your list (qty: $qty). Would you like to increase the quantity?';
+  }
+
+  @override
+  String get increase => 'Increase';
+
+  @override
+  String increasedQty(Object name, Object qty) {
+    return 'Increased \"$name\" quantity to $qty.';
+  }
+
+  @override
+  String get viewItem => 'View';
+
+  @override
+  String get checkItem => 'Check';
+
+  @override
+  String get uncheckItem => 'Uncheck';
+
+  @override
+  String get enterPassword => 'Please enter your password';
+
+  @override
+  String get notSignedIn => 'You\'re not signed in';
+
+  @override
+  String get logInOrCreate => 'Log in or create an account to manage your grocery lists.';
+
+  @override
+  String get welcomeToProfile => 'Welcome to your profile';
+
+  @override
+  String get signOut => 'Sign Out';
 }

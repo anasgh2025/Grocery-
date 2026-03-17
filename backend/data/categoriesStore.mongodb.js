@@ -1,6 +1,7 @@
 // Search for items by name (across all categories, case-insensitive, supports Arabic)
 const searchItems = async (query, lang = 'en') => {
-  if (!query || query.length < 3) return [];
+  const minLen = lang === 'ar' ? 2 : 3;
+  if (!query || query.length < minLen) return [];
   const regex = new RegExp(query, 'i');
   const docs = await Category.find().lean();
   let results = [];

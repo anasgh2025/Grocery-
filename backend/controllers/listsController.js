@@ -228,7 +228,7 @@ const deleteList = async (req, res) => {
   const addListItem = async (req, res) => {
     try {
       const { id } = req.params;
-      const { name, qty, priority, emoji } = req.body;
+      const { name, name_ar, qty, priority, emoji } = req.body;
       if (!name) return res.status(400).json({ error: 'Bad Request', message: 'Missing item name' });
 
       const list = await store.getById(id);
@@ -240,6 +240,7 @@ const deleteList = async (req, res) => {
         qty: qty || 1,
         checked: false,
       };
+      if (name_ar !== undefined && name_ar !== '') newItem.name_ar = name_ar;
       if (priority !== undefined) newItem.priority = priority;
       if (emoji !== undefined) newItem.emoji = emoji;
 
@@ -264,7 +265,7 @@ const deleteList = async (req, res) => {
   const updateListItem = async (req, res) => {
     try {
       const { id, itemId } = req.params;
-  const { name, qty, checked, priority } = req.body;
+  const { name, name_ar, qty, checked, priority } = req.body;
       const list = await store.getById(id);
       if (!list) return res.status(404).json({ error: 'Not Found', message: `List ${id} not found` });
 
@@ -276,6 +277,7 @@ const deleteList = async (req, res) => {
         const updatedItem = {
           id: item.id,
           name: name !== undefined ? name : item.name,
+          name_ar: name_ar !== undefined ? name_ar : (item.name_ar || ''),
           qty: qty !== undefined ? qty : item.qty,
           checked: checked !== undefined ? checked : item.checked,
           emoji: item.emoji !== undefined ? item.emoji : undefined,

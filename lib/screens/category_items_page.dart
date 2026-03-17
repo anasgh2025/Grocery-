@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../widgets/add_item_details_sheet.dart';
 import '../widgets/app_dialog.dart';
+import '../l10n/app_localizations.dart';
 
 /// Full-screen page showing all items for a given grocery category.
 /// Items are loaded from the backend API (MongoDB).
@@ -345,22 +346,22 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
             // Item is checked — just inform the user, no increase option
             await showAppDialog<void>(
               context: context,
-              title: const Text('Item already in list'),
-              content: Text('"$resultName" is already in your list and has been checked off.'),
+              title: Text(AppLocalizations.of(context)!.itemAlreadyInList),
+              content: Text(AppLocalizations.of(context)!.itemAlreadyChecked(resultName)),
               actions: [
-                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(), text: 'OK'),
+                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(), text: AppLocalizations.of(context)!.ok),
               ],
             );
           } else {
             // Item is active — offer to increase qty
             final shouldAddQty = await showAppDialog<bool>(
               context: context,
-              title: const Text('Item already in list'),
-              content: Text('"$resultName" is already in your list (qty: $currentQty). Would you like to increase the quantity?'),
+              title: Text(AppLocalizations.of(context)!.itemAlreadyInList),
+              content: Text(AppLocalizations.of(context)!.itemAlreadyActiveQty(resultName, currentQty)),
               actions: [
-                appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: 'No'),
+                appDialogCancelButton(onPressed: () => Navigator.of(context).pop(false), text: AppLocalizations.of(context)!.cancel),
                 const SizedBox(width: 12),
-                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: 'Increase'),
+                appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(true), text: AppLocalizations.of(context)!.increase),
               ],
             );
             if (!mounted) return;
@@ -610,9 +611,12 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                             ),
                           ],
                         ),
-                        child: Row(
-                          children: [
-                            Container(
+                        child: Builder(
+                          builder: (context) {
+                            final loc = AppLocalizations.of(context)!;
+                            final isRtl = Directionality.of(context) == TextDirection.rtl;
+
+                            final addCircle = Container(
                               width: 34,
                               height: 34,
                               decoration: BoxDecoration(
@@ -620,15 +624,18 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(Icons.add_rounded, color: widget.accent, size: 20),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
+                            );
+
+                            final textBlock = Expanded(
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: isRtl
+                                    ? CrossAxisAlignment.end
+                                    : CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    "Can't find your item?",
+                                    loc.cantFindItem,
+                                    textAlign: isRtl ? TextAlign.right : TextAlign.left,
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w700,
@@ -636,7 +643,8 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                                     ),
                                   ),
                                   Text(
-                                    'Tap here to add it manually',
+                                    loc.tapToAddManually,
+                                    textAlign: isRtl ? TextAlign.right : TextAlign.left,
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: widget.accent.withAlpha(180),
@@ -644,9 +652,24 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                                   ),
                                 ],
                               ),
-                            ),
-                            Icon(Icons.chevron_right_rounded, color: widget.accent.withAlpha(160)),
-                          ],
+                            );
+
+                            final chevron = Icon(
+                              isRtl
+                                  ? Icons.chevron_left_rounded
+                                  : Icons.chevron_right_rounded,
+                              color: widget.accent.withAlpha(160),
+                            );
+
+                            // In RTL: chevron on left edge, text in middle, + on right edge
+                            // In LTR: + on left edge, text in middle, chevron on right edge
+                            return Row(
+                              textDirection: TextDirection.ltr,
+                              children: isRtl
+                                  ? [chevron, const SizedBox(width: 12), textBlock, const SizedBox(width: 12), addCircle]
+                                  : [addCircle, const SizedBox(width: 12), textBlock, chevron],
+                            );
+                          },
                         ),
                       ),
                     ),

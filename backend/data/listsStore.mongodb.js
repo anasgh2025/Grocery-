@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const listItemSchema = new mongoose.Schema({
   id:       { type: String, required: true },
   name:     { type: String, required: true },
+  name_ar:  { type: String, default: '' },
   qty:      { type: Number, default: 1 },
   checked:  { type: Boolean, default: false },
   priority: { type: Number, default: 0 },

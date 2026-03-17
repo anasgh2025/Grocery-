@@ -3,7 +3,8 @@ const searchItems = async (req, res) => {
   try {
     const q = req.query.q || '';
     const lang = req.query.lang === 'ar' ? 'ar' : 'en';
-    if (q.length < 3) return res.json([]);
+    const minLen = lang === 'ar' ? 2 : 3;
+    if (q.length < minLen) return res.json([]);
     const results = await store.searchItems(q, lang);
     res.json(results);
   } catch (error) {

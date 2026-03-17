@@ -30,7 +30,9 @@ class ApiService {
 
   /// Search for item suggestions (across all categories)
   Future<List<Map<String, dynamic>>> searchItemSuggestions(String query, {String? lang}) async {
-    if (query.length < 3) return [];
+    // Arabic words can be meaningful at 2 chars; English needs 3
+    final minLen = lang == 'ar' ? 2 : 3;
+    if (query.length < minLen) return [];
     try {
       final params = <String>[];
       params.add('q=${Uri.encodeComponent(query)}');

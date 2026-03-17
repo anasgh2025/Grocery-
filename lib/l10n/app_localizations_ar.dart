@@ -268,4 +268,55 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get comingSoon => 'قريباً';
+
+  @override
+  String get cantFindItem => 'لم تجد ما تبحث عنه؟';
+
+  @override
+  String get tapToAddManually => 'اضغط هنا لإضافته يدوياً';
+
+  @override
+  String get itemAlreadyInList => 'العنصر موجود في القائمة';
+
+  @override
+  String itemAlreadyChecked(Object name) {
+    return '«$name» موجود بالفعل في قائمتك وتم تحديده.';
+  }
+
+  @override
+  String itemAlreadyActiveQty(Object name, Object qty) {
+    return '«$name» موجود بالفعل في قائمتك (الكمية: $qty). هل تريد زيادة الكمية؟';
+  }
+
+  @override
+  String get increase => 'زيادة';
+
+  @override
+  String increasedQty(Object name, Object qty) {
+    return 'تمت زيادة كمية «$name» إلى $qty.';
+  }
+
+  @override
+  String get viewItem => 'عرض';
+
+  @override
+  String get checkItem => 'تحديد';
+
+  @override
+  String get uncheckItem => 'إلغاء التحديد';
+
+  @override
+  String get enterPassword => 'يرجى إدخال كلمة المرور';
+
+  @override
+  String get notSignedIn => 'أنت غير مسجّل الدخول';
+
+  @override
+  String get logInOrCreate => 'سجّل الدخول أو أنشئ حساباً لإدارة قوائم التسوق.';
+
+  @override
+  String get welcomeToProfile => 'مرحباً بك في ملفك الشخصي';
+
+  @override
+  String get signOut => 'تسجيل الخروج';
 }

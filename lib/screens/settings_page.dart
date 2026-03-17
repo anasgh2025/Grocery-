@@ -175,9 +175,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             const SizedBox(height: 16),
                             // ── Contact ──
-                            Row(
+                            const Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
+                              children: [
                                 Padding(
                                   padding: EdgeInsets.only(top: 2),
                                   child: Icon(Icons.phone_outlined, size: 16, color: Colors.redAccent),

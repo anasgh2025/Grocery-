@@ -29,7 +29,11 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
   final loc = AppLocalizations.of(context)!;
-    return Scaffold(
+  final isAr = Localizations.localeOf(context).languageCode == 'ar';
+  final textDir = isAr ? TextDirection.rtl : TextDirection.ltr;
+    return Directionality(
+      textDirection: textDir,
+      child: Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -71,8 +75,10 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       TextFormField(
                         controller: _emailCtrl,
+                        textDirection: TextDirection.ltr,
                         decoration: InputDecoration(
                           hintText: loc.emailAddress,
+                          hintTextDirection: TextDirection.ltr,
                           prefixIcon: const Icon(Icons.email_outlined, color: Colors.redAccent),
                           filled: true,
                           fillColor: Colors.grey.shade100,
@@ -90,8 +96,10 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 14),
                       TextFormField(
                         controller: _passwordCtrl,
+                        textDirection: TextDirection.ltr,
                         decoration: InputDecoration(
                           hintText: loc.password,
+                          hintTextDirection: textDir,
                           prefixIcon: const Icon(Icons.lock_outline, color: Colors.redAccent),
                           filled: true,
                           fillColor: Colors.grey.shade100,
@@ -156,6 +164,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
+    ),
     );
   }
 }

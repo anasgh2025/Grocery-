@@ -85,5 +85,20 @@
   "activeSection": "نشط",
   "checkedSection": "تم التحقق",
   "searchOrAddItems": "...ابحث أو أضف عناصر",
-  "comingSoon": "قريباً"
+  "comingSoon": "قريباً",
+  "cantFindItem": "لم تجد ما تبحث عنه؟",
+  "tapToAddManually": "اضغط هنا لإضافته يدوياً",
+  "itemAlreadyInList": "العنصر موجود في القائمة",
+  "itemAlreadyChecked": "«{name}» موجود بالفعل في قائمتك وتم تحديده.",
+  "itemAlreadyActiveQty": "«{name}» موجود بالفعل في قائمتك (الكمية: {qty}). هل تريد زيادة الكمية؟",
+  "increase": "زيادة",
+  "increasedQty": "تمت زيادة كمية «{name}» إلى {qty}.",
+  "viewItem": "عرض",
+  "checkItem": "تحديد",
+  "uncheckItem": "إلغاء التحديد",
+  "enterPassword": "يرجى إدخال كلمة المرور",
+  "notSignedIn": "أنت غير مسجّل الدخول",
+  "logInOrCreate": "سجّل الدخول أو أنشئ حساباً لإدارة قوائم التسوق.",
+  "welcomeToProfile": "مرحباً بك في ملفك الشخصي",
+  "signOut": "تسجيل الخروج"
 }

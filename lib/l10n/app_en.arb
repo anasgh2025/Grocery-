@@ -85,5 +85,20 @@
   "activeSection": "Active",
   "checkedSection": "Checked",
   "searchOrAddItems": "Search or add items...",
-  "comingSoon": "Coming Soon"
+  "comingSoon": "Coming Soon",
+  "cantFindItem": "Can't find your item?",
+  "tapToAddManually": "Tap here to add it manually",
+  "itemAlreadyInList": "Item already in list",
+  "itemAlreadyChecked": "\"{name}\" is already in your list and has been checked off.",
+  "itemAlreadyActiveQty": "\"{name}\" is already in your list (qty: {qty}). Would you like to increase the quantity?",
+  "increase": "Increase",
+  "increasedQty": "Increased \"{name}\" quantity to {qty}.",
+  "viewItem": "View",
+  "checkItem": "Check",
+  "uncheckItem": "Uncheck",
+  "enterPassword": "Please enter your password",
+  "notSignedIn": "You're not signed in",
+  "logInOrCreate": "Log in or create an account to manage your grocery lists.",
+  "welcomeToProfile": "Welcome to your profile",
+  "signOut": "Sign Out"
 }

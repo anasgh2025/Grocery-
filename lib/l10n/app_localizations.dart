@@ -164,7 +164,7 @@ abstract class AppLocalizations {
   /// No description provided for @signInToContinue.
   ///
   /// In en, this message translates to:
-  /// **'Sign in to continue to ShopSmart'**
+  /// **'Sign in to continue to Listfy'**
   String get signInToContinue;
 
   /// No description provided for @signIn.
@@ -368,7 +368,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'ShopSmart'**
+  /// **'Grovia'**
   String get appTitle;
 
   /// No description provided for @settings.
@@ -404,7 +404,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutUsContent.
   ///
   /// In en, this message translates to:
-  /// **'ShopSmart helps you elevate your grocery experience.'**
+  /// **'Grovia is a smart grocery list app that helps you organize your shopping and collaborate with family or friends in real time. Create lists, share them instantly, and never forget an item again.'**
   String get aboutUsContent;
 
   /// No description provided for @shareApp.
@@ -604,6 +604,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Coming Soon'**
   String get comingSoon;
+
+  /// No description provided for @cantFindItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t find your item?'**
+  String get cantFindItem;
+
+  /// No description provided for @tapToAddManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap here to add it manually'**
+  String get tapToAddManually;
+
+  /// No description provided for @itemAlreadyInList.
+  ///
+  /// In en, this message translates to:
+  /// **'Item already in list'**
+  String get itemAlreadyInList;
+
+  /// No description provided for @itemAlreadyChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" is already in your list and has been checked off.'**
+  String itemAlreadyChecked(Object name);
+
+  /// No description provided for @itemAlreadyActiveQty.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" is already in your list (qty: {qty}). Would you like to increase the quantity?'**
+  String itemAlreadyActiveQty(Object name, Object qty);
+
+  /// No description provided for @increase.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase'**
+  String get increase;
+
+  /// No description provided for @increasedQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Increased \"{name}\" quantity to {qty}.'**
+  String increasedQty(Object name, Object qty);
+
+  /// No description provided for @viewItem.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get viewItem;
+
+  /// No description provided for @checkItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Check'**
+  String get checkItem;
+
+  /// No description provided for @uncheckItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncheck'**
+  String get uncheckItem;
+
+  /// No description provided for @enterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your password'**
+  String get enterPassword;
+
+  /// No description provided for @notSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re not signed in'**
+  String get notSignedIn;
+
+  /// No description provided for @logInOrCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in or create an account to manage your grocery lists.'**
+  String get logInOrCreate;
+
+  /// No description provided for @welcomeToProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to your profile'**
+  String get welcomeToProfile;
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get signOut;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

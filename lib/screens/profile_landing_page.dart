@@ -3,6 +3,7 @@ import '../widgets/footer_menu.dart';
 import '../landing_page.dart';
 import '../main.dart';
 import '../services/api_service.dart';
+import '../l10n/app_localizations.dart';
 import 'login_page.dart';
 import 'create_account_page.dart';
 
@@ -55,9 +56,13 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final primary = Theme.of(context).colorScheme.primary;
 
-    return Scaffold(
+    return Directionality(
+      textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -75,30 +80,31 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: _isLoggedIn
-                      ? _buildLoggedInView(primary)
-                      : _buildLoggedOutView(primary),
+                      ? _buildLoggedInView(context, loc, primary)
+                      : _buildLoggedOutView(context, loc, primary),
                 ),
               ),
       ),
       bottomNavigationBar: FooterMenu(accent: primary),
+    ),
     );
   }
 
   /// Shown when the user has a valid auth token.
-  Widget _buildLoggedInView(Color primary) {
+  Widget _buildLoggedInView(BuildContext context, AppLocalizations loc, Color primary) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(Icons.account_circle, size: 72, color: primary),
         const SizedBox(height: 16),
         Text(
-          widget.name != null && widget.name!.isNotEmpty ? widget.name! : 'Profile',
+          widget.name != null && widget.name!.isNotEmpty ? widget.name! : loc.profile,
           style: TextStyle(color: primary, fontSize: 28, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Welcome to your profile',
-          style: TextStyle(color: Colors.black54, fontSize: 14),
+        Text(
+          loc.welcomeToProfile,
+          style: const TextStyle(color: Colors.black54, fontSize: 14),
         ),
         const SizedBox(height: 32),
         SizedBox(
@@ -111,7 +117,7 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Sign Out'),
+            child: Text(loc.signOut),
           ),
         ),
       ],
@@ -119,21 +125,22 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
   }
 
   /// Shown when no auth token is present.
-  Widget _buildLoggedOutView(Color primary) {
+  Widget _buildLoggedOutView(BuildContext context, AppLocalizations loc, Color primary) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(Icons.person_outline, size: 72, color: Colors.grey.shade400),
         const SizedBox(height: 16),
         Text(
-          'You\'re not signed in',
+          loc.notSignedIn,
           style: TextStyle(color: primary, fontSize: 22, fontWeight: FontWeight.w700),
+          textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Log in or create an account to manage your grocery lists.',
+        Text(
+          loc.logInOrCreate,
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.black54, fontSize: 14),
+          style: const TextStyle(color: Colors.black54, fontSize: 14),
         ),
         const SizedBox(height: 32),
         SizedBox(
@@ -150,7 +157,7 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Log In'),
+            child: Text(loc.logIn),
           ),
         ),
         const SizedBox(height: 12),
@@ -168,7 +175,7 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Create Account'),
+            child: Text(loc.createAccount),
           ),
         ),
       ],
