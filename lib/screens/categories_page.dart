@@ -91,28 +91,135 @@ class _CategoriesPageState extends State<CategoriesPage> {
                           onTap: () async {
                             final categoryLabel = cat['label'] ?? '';
                             if (categoryLabel.trim().toLowerCase() == 'other') {
-                              // Show dialog for free text entry
+                              // Show bottom sheet for free text entry
                               final controller = TextEditingController();
-                              final customName = await showDialog<String>(
+                              final customName = await showModalBottomSheet<String>(
                                 context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: Text(loc.enterCustomItem),
-                                  content: TextField(
-                                    controller: controller,
-                                    autofocus: true,
-                                    decoration: InputDecoration(hintText: loc.itemName),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.of(ctx).pop(),
-                                      child: Text(loc.cancel),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-                                      child: Text(loc.add),
-                                    ),
-                                  ],
-                                ),
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (ctx) {
+                                  return StatefulBuilder(
+                                    builder: (ctx, setSheetState) {
+                                      String? errorText;
+                                      void trySubmit() {
+                                        if (controller.text.trim().isEmpty) {
+                                          setSheetState(() => errorText = loc.itemName + ' is required');
+                                        } else {
+                                          Navigator.of(ctx).pop(controller.text.trim());
+                                        }
+                                      }
+                                      return Padding(
+                                        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+                                        child: Container(
+                                          decoration: const BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                                          ),
+                                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                                            children: [
+                                              // ── Drag handle ──
+                                              Center(
+                                                child: Container(
+                                                  width: 40,
+                                                  height: 4,
+                                                  margin: const EdgeInsets.only(bottom: 20),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.grey.shade300,
+                                                    borderRadius: BorderRadius.circular(2),
+                                                  ),
+                                                ),
+                                              ),
+                                              // ── Title ──
+                                              Row(
+                                                children: [
+                                                  Container(
+                                                    padding: const EdgeInsets.all(8),
+                                                    decoration: BoxDecoration(
+                                                      color: widget.accent.withAlpha(30),
+                                                      borderRadius: BorderRadius.circular(10),
+                                                    ),
+                                                    child: Icon(Icons.edit_rounded, color: widget.accent, size: 20),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Text(
+                                                    loc.enterCustomItem,
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight: FontWeight.w700,
+                                                      color: Colors.grey.shade800,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 20),
+                                              // ── Text field ──
+                                              TextField(
+                                                controller: controller,
+                                                autofocus: true,
+                                                textCapitalization: TextCapitalization.sentences,
+                                                onChanged: (_) {
+                                                  if (errorText != null) setSheetState(() => errorText = null);
+                                                },
+                                                decoration: InputDecoration(
+                                                  hintText: loc.itemName,
+                                                  errorText: errorText,
+                                                  filled: true,
+                                                  fillColor: Colors.grey.shade50,
+                                                  border: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    borderSide: BorderSide(color: Colors.grey.shade200),
+                                                  ),
+                                                  enabledBorder: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    borderSide: BorderSide(color: errorText != null ? Colors.red : Colors.grey.shade200),
+                                                  ),
+                                                  focusedBorder: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    borderSide: BorderSide(color: errorText != null ? Colors.red : widget.accent, width: 1.5),
+                                                  ),
+                                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                                                ),
+                                                onSubmitted: (_) => trySubmit(),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              // ── Buttons ──
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: OutlinedButton(
+                                                      style: OutlinedButton.styleFrom(
+                                                        minimumSize: const Size.fromHeight(48),
+                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                        side: BorderSide(color: Colors.grey.shade300),
+                                                      ),
+                                                      onPressed: () => Navigator.of(ctx).pop(),
+                                                      child: Text(loc.cancel),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    child: FilledButton(
+                                                      style: FilledButton.styleFrom(
+                                                        backgroundColor: widget.accent,
+                                                        minimumSize: const Size.fromHeight(48),
+                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                      ),
+                                                      onPressed: trySubmit,
+                                                      child: Text(loc.add),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
                               );
                               if (customName == null || customName.isEmpty) return;
                               // Call _onItemTap in CategoryItemsPage logic for duplicate/quantity dialog

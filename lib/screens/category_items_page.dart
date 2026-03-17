@@ -169,20 +169,135 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
   String name = (locale == 'ar' ? (item['name_ar'] ?? item['name']) : (item['name'] ?? '')) as String;
     Map<String, dynamic>? result;
     if (name.trim().toLowerCase() == 'other') {
-      // Show dialog for free text entry
+      // Show bottom sheet for free text entry
       final controller = TextEditingController();
-      final customName = await showAppDialog<String>(
+      final customName = await showModalBottomSheet<String>(
         context: context,
-        title: const Text('Enter custom item'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: 'Item name'),
-        ),
-        actions: [
-          appDialogCancelButton(onPressed: () => Navigator.of(context).pop()),
-          appDialogConfirmButton(onPressed: () => Navigator.of(context).pop(controller.text.trim()), text: 'Add'),
-        ],
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (ctx) {
+          return StatefulBuilder(
+            builder: (ctx, setSheetState) {
+              String? errorText;
+              void trySubmit() {
+                if (controller.text.trim().isEmpty) {
+                  setSheetState(() => errorText = 'Item name is required');
+                } else {
+                  Navigator.of(ctx).pop(controller.text.trim());
+                }
+              }
+              return Padding(
+                padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                  ),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // ── Drag handle ──
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      // ── Title ──
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: widget.accent.withAlpha(30),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(Icons.edit_rounded, color: widget.accent, size: 20),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Enter custom item',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.grey.shade800,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      // ── Text field ──
+                      TextField(
+                        controller: controller,
+                        autofocus: true,
+                        textCapitalization: TextCapitalization.sentences,
+                        onChanged: (_) {
+                          if (errorText != null) setSheetState(() => errorText = null);
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Item name',
+                          errorText: errorText,
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: errorText != null ? Colors.red : Colors.grey.shade200),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: errorText != null ? Colors.red : widget.accent, width: 1.5),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                        ),
+                        onSubmitted: (_) => trySubmit(),
+                      ),
+                      const SizedBox(height: 16),
+                      // ── Buttons ──
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(48),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                side: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              onPressed: () => Navigator.of(ctx).pop(),
+                              child: const Text('Cancel'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: widget.accent,
+                                minimumSize: const Size.fromHeight(48),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: trySubmit,
+                              child: const Text('Add'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
       );
       if (customName == null || customName.isEmpty) return;
       name = customName;
@@ -337,19 +452,11 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                '${items.length} item${items.length == 1 ? '' : 's'}',
-                style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade500),
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
           Expanded(
-            child: items.isEmpty
+            child: Stack(
+              children: [
+                // ── Scrollable item list ──────────────────────────────
+                items.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -364,11 +471,22 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                     ),
                   )
                 : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                    itemCount: items.length,
+                    // Top padding clears only the floating card
+                    padding: const EdgeInsets.fromLTRB(16, 78, 16, 24),
+                    itemCount: items.length + 1,
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (_, i) {
-                      final item = items[i];
+                      // ── Index 0: count label (scrolls with the list) ──
+                      if (i == 0) {
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 4, bottom: 4),
+                          child: Text(
+                            '${items.length} item${items.length == 1 ? '' : 's'}',
+                            style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade500),
+                          ),
+                        );
+                      }
+                      final item = items[i - 1];
                       final locale = Localizations.localeOf(context).languageCode;
                       final name = (locale == 'ar' ? (item['name_ar'] ?? item['name']) : (item['name'] ?? '')) as String;
                       final emoji = (item['emoji'] ?? '🛒') as String;
@@ -469,6 +587,74 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                       );
                     },
                   ),
+
+                // ── Floating "Can't find item?" card ─────────────────
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  top: 12,
+                  child: GestureDetector(
+                    onTap: () => _onItemTap({'name': 'other'}),
+                    child: CustomPaint(
+                      painter: _DashedBorderPainter(color: widget.accent),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha(240),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: widget.accent.withAlpha(30),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: widget.accent.withAlpha(30),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.add_rounded, color: widget.accent, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    "Can't find your item?",
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: widget.accent,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Tap here to add it manually',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: widget.accent.withAlpha(180),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(Icons.chevron_right_rounded, color: widget.accent.withAlpha(160)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+              ],
+            ),
           ),
           // ── Add to list CTA ─────────────────────────────────────────────
           AnimatedSize(
@@ -500,4 +686,45 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
       ),
     );
   }
+}
+
+// ── Dashed border painter ─────────────────────────────────────────────────────
+class _DashedBorderPainter extends CustomPainter {
+  final Color color;
+
+  const _DashedBorderPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const double radius = 14;
+    const double dashWidth = 6;
+    const double dashGap = 4;
+    const double strokeWidth = 1.5;
+
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      const Radius.circular(radius),
+    );
+
+    final path = Path()..addRRect(rrect);
+    final metrics = path.computeMetrics();
+
+    for (final metric in metrics) {
+      double distance = 0;
+      while (distance < metric.length) {
+        final start = distance;
+        final end = (distance + dashWidth).clamp(0.0, metric.length);
+        canvas.drawPath(metric.extractPath(start, end), paint);
+        distance += dashWidth + dashGap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorderPainter old) => old.color != color;
 }

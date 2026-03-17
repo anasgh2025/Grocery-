@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 // import '../l10n/app_localizations.dart'; // Removed unused import
 // import 'categories_page.dart'; // Removed unused import
@@ -24,11 +25,16 @@ class ListDetailsPage extends StatefulWidget {
 }
 
 
-class _ListDetailsPageState extends State<ListDetailsPage> {
+class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderStateMixin {
   String _searchQuery = '';
   List<dynamic> _listItems = [];
   bool _isLoading = false;
   bool _showComingSoon = false; // controls the "Coming Soon" label visibility
+
+  // ── Shake animation for the "+" FAB ──────────────────────────────────────
+  late final AnimationController _shakeController;
+  late final Animation<double> _shakeAnimation;
+  Timer? _shakeTimer;
 
   // ── Global search / suggestions ──────────────────────────────────────────
   final TextEditingController _searchController = TextEditingController();
@@ -55,6 +61,31 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
     }
     // Always fetch latest from backend
     WidgetsBinding.instance.addPostFrameCallback((_) => _refreshListItems());
+
+    // ── Shake animation setup ──────────────────────────────────────────────
+    _shakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _shakeAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: -6.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -6.0, end: 6.0), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 6.0, end: -6.0), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: -6.0, end: 6.0), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 6.0, end: 0.0), weight: 1),
+    ]).animate(_shakeController);
+    // Shake on load, then repeat every 3 s — stops after 3 total shakes
+    int _shakeCount = 0;
+    _shakeController.forward(from: 0);
+    _shakeCount++;
+    _shakeTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (!mounted || _shakeCount >= 3) {
+        timer.cancel();
+        return;
+      }
+      _shakeController.forward(from: 0);
+      _shakeCount++;
+    });
   }
 
   @override
@@ -258,24 +289,31 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
           SizedBox(
             width: 56,
             height: 56,
-            child: FloatingActionButton(
-              heroTag: 'addItem',
-              backgroundColor: widget.accent,
-              onPressed: () async {
-                // Navigate to categories page and refresh if item was added
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => CategoriesPage(
-                      accent: widget.accent,
-                      listId: _resolvedListId,
+            child: AnimatedBuilder(
+              animation: _shakeAnimation,
+              builder: (context, child) => Transform.translate(
+                offset: Offset(_shakeAnimation.value, 0),
+                child: child,
+              ),
+              child: FloatingActionButton(
+                heroTag: 'addItem',
+                backgroundColor: widget.accent,
+                onPressed: () async {
+                  // Navigate to categories page and refresh if item was added
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CategoriesPage(
+                        accent: widget.accent,
+                        listId: _resolvedListId,
+                      ),
                     ),
-                  ),
-                );
-                await _refreshListItems();
-                if (widget.onItemsChanged != null) widget.onItemsChanged!();
-              },
-              tooltip: 'Create New Item',
-              child: const Icon(Icons.add, size: 28),
+                  );
+                  await _refreshListItems();
+                  if (widget.onItemsChanged != null) widget.onItemsChanged!();
+                },
+                tooltip: 'Create New Item',
+                child: const Icon(Icons.add, size: 28),
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -328,6 +366,8 @@ class _ListDetailsPageState extends State<ListDetailsPage> {
 
   @override
   void dispose() {
+    _shakeTimer?.cancel();
+    _shakeController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
