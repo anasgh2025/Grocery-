@@ -7,6 +7,7 @@ import 'create_list_dialog.dart';
 import 'app_dialog.dart';
 import 'box_styles.dart';
 import '../screens/list_details_page.dart';
+import '../screens/login_page.dart';
 import '../l10n/app_localizations.dart';
 
 
@@ -419,9 +420,38 @@ class _DashedRRectPainter extends CustomPainter {
 }
 
 /// Shows a bottom sheet to generate and share an invite link for [list].
-void _showInviteSheet(BuildContext context, GroceryList list) {
+/// Guards against unauthenticated users — shows a dialog if not logged in.
+Future<void> _showInviteSheet(BuildContext context, GroceryList list) async {
   final api = ApiService();
   final loc = AppLocalizations.of(context)!;
+
+  final loggedIn = await api.isLoggedIn;
+  if (!context.mounted) return;
+
+  if (!loggedIn) {
+    showAppDialog(
+      context: context,
+      title: Text(loc.inviteToList, style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold, fontSize: 20)),
+      content: Text(loc.mustBeLoggedInToAccept),
+      actions: [
+        appDialogCancelButton(
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        appDialogConfirmButton(
+          text: loc.logIn,
+          color: const Color(0xFFE53935),
+          onPressed: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const LoginPage()),
+            );
+          },
+        ),
+      ],
+    );
+    return;
+  }
+
   showModalBottomSheet(
     context: context,
     shape: const RoundedRectangleBorder(
