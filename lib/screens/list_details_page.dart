@@ -75,16 +75,16 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
       TweenSequenceItem(tween: Tween(begin: 6.0, end: 0.0), weight: 1),
     ]).animate(_shakeController);
     // Shake on load, then repeat every 3 s — stops after 3 total shakes
-    int _shakeCount = 0;
+    int shakeCount = 0;
     _shakeController.forward(from: 0);
-    _shakeCount++;
+    shakeCount++;
     _shakeTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (!mounted || _shakeCount >= 3) {
+      if (!mounted || shakeCount >= 3) {
         timer.cancel();
         return;
       }
       _shakeController.forward(from: 0);
-      _shakeCount++;
+      shakeCount++;
     });
   }
 

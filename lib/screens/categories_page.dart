@@ -103,7 +103,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                                       String? errorText;
                                       void trySubmit() {
                                         if (controller.text.trim().isEmpty) {
-                                          setSheetState(() => errorText = loc.itemName + ' is required');
+                                          setSheetState(() => errorText = '${loc.itemName} is required');
                                         } else {
                                           Navigator.of(ctx).pop(controller.text.trim());
                                         }
