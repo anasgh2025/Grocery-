@@ -760,10 +760,14 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           child: Row(
+            textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
             children: [
               if (item['emoji'] != null && item['emoji'].toString().isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.only(right: 12),
+                  padding: EdgeInsets.only(
+                    left: isAr ? 12 : 0,
+                    right: isAr ? 0 : 12,
+                  ),
                   child: Text(item['emoji'], style: const TextStyle(fontSize: 26)),
                 ),
               Expanded(
