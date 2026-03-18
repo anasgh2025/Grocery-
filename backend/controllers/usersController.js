@@ -160,37 +160,55 @@ async function forgotPassword(req, res) {
     const appScheme = process.env.APP_SCHEME || 'grovia';
     const resetLink = `${appScheme}://reset-password?token=${token}`;
 
-    // Send email via nodemailer
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.EMAIL_PORT || '587'),
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    // Always log the reset link so it works even without email configured
+    console.log(`[forgotPassword] Reset link for ${email}: ${resetLink}`);
 
-    await transporter.sendMail({
-      from: `"Grovia App" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: 'Reset your Grovia password',
-      html: `
-        <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px">
-          <h2 style="color:#E53935">Reset your password</h2>
-          <p>Hi ${user.name || 'there'},</p>
-          <p>We received a request to reset the password for your Grovia account.</p>
-          <p>Tap the button below on your phone to choose a new password. This link expires in <strong>1 hour</strong>.</p>
-          <a href="${resetLink}"
-             style="display:inline-block;margin:24px 0;padding:14px 28px;background:#E53935;color:#fff;border-radius:10px;text-decoration:none;font-weight:bold;font-size:16px">
-            Reset Password
-          </a>
-          <p style="color:#888;font-size:13px">If you didn't request this, you can safely ignore this email.</p>
-        </div>
-      `,
-    });
+    // Try to send email — but don't fail the whole request if SMTP isn't configured
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+          port: parseInt(process.env.EMAIL_PORT || '587'),
+          secure: false,
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
 
-    res.json({ message: 'If that email is registered you will receive a reset link.' });
+        await transporter.sendMail({
+          from: `"Grovia App" <${process.env.EMAIL_USER}>`,
+          to: email,
+          subject: 'Reset your Grovia password',
+          html: `
+            <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px">
+              <h2 style="color:#E53935">Reset your password</h2>
+              <p>Hi ${user.name || 'there'},</p>
+              <p>We received a request to reset the password for your Grovia account.</p>
+              <p>Tap the button below on your phone to choose a new password. This link expires in <strong>1 hour</strong>.</p>
+              <a href="${resetLink}"
+                 style="display:inline-block;margin:24px 0;padding:14px 28px;background:#E53935;color:#fff;border-radius:10px;text-decoration:none;font-weight:bold;font-size:16px">
+                Reset Password
+              </a>
+              <p style="color:#888;font-size:13px">If you didn't request this, you can safely ignore this email.</p>
+            </div>
+          `,
+        });
+        console.log(`[forgotPassword] Email sent to ${email}`);
+      } catch (emailErr) {
+        // Email failed — log it but still return success so the token is usable
+        console.error('[forgotPassword] Email send failed:', emailErr.message);
+      }
+    } else {
+      console.warn('[forgotPassword] EMAIL_USER/EMAIL_PASS not set — skipping email send.');
+    }
+
+    // In non-production, include the link in the response so developers can test without email
+    const isDev = process.env.NODE_ENV !== 'production';
+    res.json({
+      message: 'If that email is registered you will receive a reset link.',
+      ...(isDev && { devResetLink: resetLink }),
+    });
   } catch (err) {
     console.error('forgotPassword error:', err);
     res.status(500).json({ error: 'Failed to send reset email', message: err.message });

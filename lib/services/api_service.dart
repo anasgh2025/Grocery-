@@ -399,13 +399,16 @@ class ApiService {
   }
 
   /// Request a password reset email.
-  Future<void> forgotPassword(String email) async {
+  /// Returns the response body map (may include `devResetLink` in non-production).
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
     final response = await http.post(
       Uri.parse('$baseUrl/users/forgot-password'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'email': email.trim().toLowerCase()}),
     ).timeout(timeout);
-    if (response.statusCode == 200) return;
+    if (response.statusCode == 200) {
+      return json.decode(response.body) as Map<String, dynamic>;
+    }
     throw Exception('Failed to send reset email: ${response.statusCode}');
   }
 

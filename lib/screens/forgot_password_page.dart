@@ -1,8 +1,10 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/api_service.dart';
 import '../l10n/app_localizations.dart';
+import 'reset_password_page.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -15,6 +17,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _emailCtrl = TextEditingController();
   bool _loading = false;
   bool _sent = false;
+  String? _devResetLink; // only populated when backend returns it (non-prod)
 
   @override
   void dispose() {
@@ -27,8 +30,15 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     if (email.isEmpty) return;
     setState(() => _loading = true);
     try {
-      await ApiService().forgotPassword(email);
-      if (mounted) setState(() { _loading = false; _sent = true; });
+      final body = await ApiService().forgotPassword(email);
+      final devLink = body['devResetLink'] as String?;
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _sent = true;
+          _devResetLink = devLink;
+        });
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
@@ -138,6 +148,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 
   Widget _buildSentView(AppLocalizations loc) {
+    // Extract token from devResetLink so we can open ResetPasswordPage directly
+    final devToken = _devResetLink != null
+        ? Uri.tryParse(_devResetLink!)?.queryParameters['token']
+        : null;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -155,7 +170,55 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 14, color: Colors.black54),
         ),
-        const SizedBox(height: 32),
+
+        // ── Dev helper: show "Test Reset" button when backend returns devResetLink ──
+        if (devToken != null) ...[
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.amber.shade50,
+              border: Border.all(color: Colors.amber.shade300),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(children: [
+                  Icon(Icons.bug_report, size: 16, color: Colors.orange),
+                  SizedBox(width: 6),
+                  Text('Dev mode — email not sent',
+                      style: TextStyle(fontSize: 12, color: Colors.orange,
+                          fontWeight: FontWeight.w600)),
+                ]),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () => Clipboard.setData(ClipboardData(text: _devResetLink!)),
+                  child: Text(_devResetLink!,
+                      style: const TextStyle(fontSize: 11, color: Colors.blueGrey,
+                          decoration: TextDecoration.underline)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.open_in_new, size: 18),
+            label: const Text('Test: Open Reset Screen'),
+            onPressed: () => Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                  builder: (_) => ResetPasswordPage(token: devToken))),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 16),
         OutlinedButton(
           onPressed: () => Navigator.of(context).pop(),
           style: OutlinedButton.styleFrom(
