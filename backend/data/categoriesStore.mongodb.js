@@ -261,7 +261,7 @@ const defaultCategories = [
   label: 'Food Staples',
   label_ar: 'مواد غذائية أساسية',
   icon: 'grain',
-  order: 11,
+  order: 3,
   items: [
 
     // 🍚 Rice
@@ -342,7 +342,7 @@ const defaultCategories = [
   label: 'Meat, Poultry & Seafood',
   label_ar: 'لحوم ودواجن ومأكولات بحرية',
   icon: 'drumstick',
-  order: 3,
+  order: 4,
   items: [
 
     // 🐔 Chicken
@@ -518,7 +518,7 @@ const defaultCategories = [
   label: 'Beverages',
   label_ar: 'مشروبات',
   icon: 'cup',
-  order: 7,
+  order: 5,
   items: [
 
     // 💧 Water
@@ -594,7 +594,7 @@ const defaultCategories = [
   label: 'Frozen & Chilled Foods',
   label_ar: 'أطعمة مجمدة ومبردة',
   icon: 'snowflake',
-  order: 8,
+  order: 6,
   items: [
 
     // 🥦 Frozen Vegetables
@@ -672,7 +672,7 @@ const defaultCategories = [
   label: 'Bakery',
   label_ar: 'مخبوزات',
   icon: 'bread',
-  order: 5,
+  order: 7,
   items: [
 
     // 🫓 Arabic Bread (UAE essentials)
@@ -754,7 +754,7 @@ const defaultCategories = [
   label: 'Snacks & Confectionery',
   label_ar: 'وجبات خفيفة وحلويات',
   icon: 'cookie',
-  order: 6,
+  order: 8,
   items: [
 
     // 🥔 Chips & Salty Snacks
