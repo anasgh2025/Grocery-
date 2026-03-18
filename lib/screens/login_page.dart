@@ -34,15 +34,11 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _checkBiometrics() async {
     try {
-      // Only show Face ID button if: (1) device supports it AND (2) user has enabled it AND (3) a token exists
+      // Show Face ID button if the device supports any biometric method
       final canCheck = await _localAuth.canCheckBiometrics;
       if (!canCheck) return;
       final types = await _localAuth.getAvailableBiometrics();
       if (types.isEmpty) return;
-      final faceIdEnabled = await _storage.read(key: 'face_id_enabled');
-      if (faceIdEnabled != 'true') return;
-      final token = await ApiService().readToken();
-      if (token == null) return;
       if (mounted) setState(() => _biometricAvailable = true);
     } catch (_) {}
   }
@@ -57,15 +53,26 @@ class _LoginPageState extends State<LoginPage> {
       );
       if (!ok || !mounted) { setState(() => _loading = false); return; }
 
-      // Token already exists — just restore the session
+      // If a token exists, restore the session directly
       final api = ApiService();
-      final name = await api.readUserName();
+      final token = await api.readToken();
       if (!mounted) return;
-      userNameNotifier.value = name;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LandingPage()),
-        (route) => false,
-      );
+      if (token != null) {
+        final name = await api.readUserName();
+        if (!mounted) return;
+        userNameNotifier.value = name;
+        // Save face_id_enabled so the preference is persisted
+        await _storage.write(key: 'face_id_enabled', value: 'true');
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LandingPage()),
+          (route) => false,
+        );
+      } else {
+        // No token yet — biometric passed but user needs to log in with password first
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(loc.signInToContinue)));
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
