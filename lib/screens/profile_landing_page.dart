@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/footer_menu.dart';
 import '../landing_page.dart';
 import '../main.dart';
 import '../services/api_service.dart';
@@ -23,6 +22,7 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
   final ApiService _api = ApiService();
   bool _isLoggedIn = false;
   bool _loading = true;
+  String? _displayName;
 
   @override
   void initState() {
@@ -32,9 +32,14 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
 
   Future<void> _checkAuth() async {
     final loggedIn = await _api.isLoggedIn;
+    // Prefer name from widget prop, then global notifier, then secure storage
+    String? name = widget.name?.isNotEmpty == true ? widget.name : null;
+    name ??= userNameNotifier.value?.isNotEmpty == true ? userNameNotifier.value : null;
+    name ??= await _api.readUserName();
     if (mounted) {
       setState(() {
         _isLoggedIn = loggedIn;
+        _displayName = name;
         _loading = false;
       });
     }
@@ -85,7 +90,6 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
                 ),
               ),
       ),
-      bottomNavigationBar: FooterMenu(accent: primary),
     ),
     );
   }
@@ -98,7 +102,7 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
         Icon(Icons.account_circle, size: 72, color: primary),
         const SizedBox(height: 16),
         Text(
-          widget.name != null && widget.name!.isNotEmpty ? widget.name! : loc.profile,
+          _displayName != null && _displayName!.isNotEmpty ? _displayName! : loc.profile,
           style: TextStyle(color: primary, fontSize: 28, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
