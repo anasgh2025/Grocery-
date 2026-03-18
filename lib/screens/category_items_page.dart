@@ -127,12 +127,17 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
             increased++;
           }
         } else {
-          // Find the item data for emoji
+          // Find the item data for emoji — match by English name OR Arabic name
+          final needle = name.trim().toLowerCase();
           final dbItem = _allItems.firstWhere(
-            (it) => (it['name'] as String).trim().toLowerCase() == name.trim().toLowerCase(),
+            (it) {
+              final enName = (it['name'] as String?)?.trim().toLowerCase() ?? '';
+              final arName = (it['name_ar'] as String?)?.trim().toLowerCase() ?? '';
+              return enName == needle || arName == needle;
+            },
             orElse: () => <String, dynamic>{},
           );
-          final emoji = (dbItem['emoji'] as String?) ?? '🛒';
+          final emoji = (dbItem['emoji'] as String?)?.isNotEmpty == true ? dbItem['emoji'] as String : '🛒';
           final priority = (dbItem['priority'] ?? 0) as int;
           await api.addListItem(widget.listId, {
             'name': name,
@@ -391,11 +396,16 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
             'priority': result['priority'] ?? 0,
             // Use emoji from DB if available for this item name, else fallback
             'emoji': (() {
+              final needle = resultName.trim().toLowerCase();
               final dbItem = _allItems.firstWhere(
-                (it) => (it['name'] as String).trim().toLowerCase() == resultName.trim().toLowerCase(),
+                (it) {
+                  final enName = (it['name'] as String?)?.trim().toLowerCase() ?? '';
+                  final arName = (it['name_ar'] as String?)?.trim().toLowerCase() ?? '';
+                  return enName == needle || arName == needle;
+                },
                 orElse: () => <String, dynamic>{},
               );
-              if (dbItem.containsKey('emoji') && (dbItem['emoji'] as String).isNotEmpty) {
+              if (dbItem.containsKey('emoji') && (dbItem['emoji'] as String?)?.isNotEmpty == true) {
                 return dbItem['emoji'];
               }
               return '🛒';
