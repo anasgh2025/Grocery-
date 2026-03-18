@@ -661,10 +661,9 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                               color: widget.accent.withAlpha(160),
                             );
 
-                            // In RTL: chevron on left edge, text in middle, + on right edge
-                            // In LTR: + on left edge, text in middle, chevron on right edge
+                            // In RTL: + on right edge, text in middle, chevron (‹) on left edge
+                            // In LTR: + on left edge, text in middle, chevron (›) on right edge
                             return Row(
-                              textDirection: TextDirection.ltr,
                               children: isRtl
                                   ? [chevron, const SizedBox(width: 12), textBlock, const SizedBox(width: 12), addCircle]
                                   : [addCircle, const SizedBox(width: 12), textBlock, chevron],
