@@ -398,32 +398,6 @@ class ApiService {
     throw Exception('Failed to delete account: ${response.statusCode}');
   }
 
-  /// Request a password reset email.
-  /// Returns the response body map (may include `devResetLink` in non-production).
-  Future<Map<String, dynamic>> forgotPassword(String email) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/users/forgot-password'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({'email': email.trim().toLowerCase()}),
-    ).timeout(timeout);
-    if (response.statusCode == 200) {
-      return json.decode(response.body) as Map<String, dynamic>;
-    }
-    throw Exception('Failed to send reset email: ${response.statusCode}');
-  }
-
-  /// Submit a password reset using the token from the deep link.
-  Future<void> resetPassword({required String token, required String newPassword}) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/users/reset-password'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({'token': token, 'newPassword': newPassword}),
-    ).timeout(timeout);
-    if (response.statusCode == 200) return;
-    final body = json.decode(response.body);
-    throw Exception(body['message'] ?? 'Failed to reset password');
-  }
-
   /// Update an existing grocery list
   Future<GroceryList> updateGroceryList(String id, GroceryList list) async {
     try {

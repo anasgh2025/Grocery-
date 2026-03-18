@@ -8,8 +8,6 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, index: true },
   password: { type: String, required: true },
   created_at: { type: Date, required: true },
-  resetToken: { type: String, default: null },
-  resetTokenExpiry: { type: Date, default: null },
 });
 
 // Ensure we use the 'users' collection
@@ -49,20 +47,4 @@ const deleteById = async (id) => {
   await User.deleteOne({ id });
 };
 
-const saveResetToken = async (email, token, expiry) => {
-  await User.updateOne(
-    { email: String(email).trim().toLowerCase() },
-    { $set: { resetToken: token, resetTokenExpiry: expiry } }
-  );
-};
-
-const findByResetToken = async (token) => {
-  const row = await User.findOne({ resetToken: token }).lean();
-  return row || null;
-};
-
-const clearResetToken = async (id) => {
-  await User.updateOne({ id }, { $set: { resetToken: null, resetTokenExpiry: null } });
-};
-
-module.exports = { getAll, getById, findByEmail, create, updatePassword, deleteById, saveResetToken, findByResetToken, clearResetToken, User };
+module.exports = { getAll, getById, findByEmail, create, updatePassword, deleteById, User };

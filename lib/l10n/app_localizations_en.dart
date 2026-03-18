@@ -420,28 +420,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountDeleted => 'Account deleted.';
-
-  @override
-  String get forgotPassword => 'Forgot Password?';
-
-  @override
-  String get forgotPasswordTitle => 'Reset Password';
-
-  @override
-  String get forgotPasswordSubtitle => 'Enter your email and we\'ll send you a reset link';
-
-  @override
-  String get sendResetLink => 'Send Reset Link';
-
-  @override
-  String get resetLinkSent => 'Check your email for a reset link';
-
-  @override
-  String get resetPassword => 'Reset Password';
-
-  @override
-  String get resetPasswordSuccess => 'Password reset successfully. Please sign in.';
-
-  @override
-  String get invalidResetLink => 'This reset link is invalid or has expired.';
 }

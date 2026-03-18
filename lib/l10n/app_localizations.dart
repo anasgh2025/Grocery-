@@ -880,54 +880,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account deleted.'**
   String get accountDeleted;
-
-  /// No description provided for @forgotPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Forgot Password?'**
-  String get forgotPassword;
-
-  /// No description provided for @forgotPasswordTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Reset Password'**
-  String get forgotPasswordTitle;
-
-  /// No description provided for @forgotPasswordSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter your email and we\'ll send you a reset link'**
-  String get forgotPasswordSubtitle;
-
-  /// No description provided for @sendResetLink.
-  ///
-  /// In en, this message translates to:
-  /// **'Send Reset Link'**
-  String get sendResetLink;
-
-  /// No description provided for @resetLinkSent.
-  ///
-  /// In en, this message translates to:
-  /// **'Check your email for a reset link'**
-  String get resetLinkSent;
-
-  /// No description provided for @resetPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Reset Password'**
-  String get resetPassword;
-
-  /// No description provided for @resetPasswordSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Password reset successfully. Please sign in.'**
-  String get resetPasswordSuccess;
-
-  /// No description provided for @invalidResetLink.
-  ///
-  /// In en, this message translates to:
-  /// **'This reset link is invalid or has expired.'**
-  String get invalidResetLink;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
