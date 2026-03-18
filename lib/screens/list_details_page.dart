@@ -134,7 +134,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
                   child: TextField(
                     controller: _searchController,
                     focusNode: _searchFocusNode,
-                    textInputAction: TextInputAction.done,
+                    textInputAction: TextInputAction.search,
                     textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
                     textAlign: isAr ? TextAlign.right : TextAlign.left,
                     decoration: InputDecoration(
