@@ -1,6 +1,8 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:local_auth/local_auth.dart';
 import '../services/api_service.dart';
 import '../main.dart';
 import '../landing_page.dart';
@@ -18,6 +20,60 @@ class _LoginPageState extends State<LoginPage> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _loading = false;
+
+  // Biometrics
+  static const _storage = FlutterSecureStorage();
+  final _localAuth = LocalAuthentication();
+  bool _biometricAvailable = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometrics();
+  }
+
+  Future<void> _checkBiometrics() async {
+    try {
+      // Only show Face ID button if: (1) device supports it AND (2) user has enabled it AND (3) a token exists
+      final canCheck = await _localAuth.canCheckBiometrics;
+      if (!canCheck) return;
+      final types = await _localAuth.getAvailableBiometrics();
+      if (types.isEmpty) return;
+      final faceIdEnabled = await _storage.read(key: 'face_id_enabled');
+      if (faceIdEnabled != 'true') return;
+      final token = await ApiService().readToken();
+      if (token == null) return;
+      if (mounted) setState(() => _biometricAvailable = true);
+    } catch (_) {}
+  }
+
+  Future<void> _signInWithBiometrics() async {
+    final loc = AppLocalizations.of(context)!;
+    setState(() => _loading = true);
+    try {
+      final ok = await _localAuth.authenticate(
+        localizedReason: loc.faceIdSubtitle,
+        options: const AuthenticationOptions(biometricOnly: true),
+      );
+      if (!ok || !mounted) { setState(() => _loading = false); return; }
+
+      // Token already exists — just restore the session
+      final api = ApiService();
+      final name = await api.readUserName();
+      if (!mounted) return;
+      userNameNotifier.value = name;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LandingPage()),
+        (route) => false,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())));
+        setState(() => _loading = false);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -156,6 +212,30 @@ class _LoginPageState extends State<LoginPage> {
                             ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
                             : Text(loc.signIn, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                       ),
+
+                      // ── Face ID / Biometric sign-in ──
+                      if (_biometricAvailable) ...[
+                        const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          onPressed: _loading ? null : _signInWithBiometrics,
+                          icon: const Icon(Icons.face_rounded, color: Colors.redAccent),
+                          label: Text(
+                            loc.faceIdSubtitle,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.redAccent,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(52),
+                            side: const BorderSide(color: Colors.redAccent),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

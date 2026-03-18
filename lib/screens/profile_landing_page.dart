@@ -125,9 +125,12 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
                     Center(child: Container(width: 40, height: 4,
                       margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
+                    const Icon(Icons.lock_outline_rounded, size: 48, color: Colors.redAccent),
+                    const SizedBox(height: 12),
                     Text(loc.changePassword,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 20),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 24),
                     _pwField(loc.currentPassword, currentCtrl, showCurrent,
                       () => setSheet(() => showCurrent = !showCurrent)),
                     const SizedBox(height: 12),
@@ -189,10 +192,27 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
     return TextField(
       controller: ctrl, obscureText: !visible, textDirection: TextDirection.ltr,
       decoration: InputDecoration(
-        labelText: label, filled: true, fillColor: Colors.grey.shade50,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        hintText: label,
+        prefixIcon: const Icon(Icons.lock_outline, color: Colors.redAccent),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
         suffixIcon: IconButton(
-          icon: Icon(visible ? Icons.visibility_off : Icons.visibility),
+          icon: Icon(
+            visible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            color: Colors.redAccent,
+          ),
           onPressed: toggleVis,
         ),
       ),
@@ -227,8 +247,10 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const LandingPage()), (route) => false);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed: $e')));
+      }
     }
   }
 
@@ -296,17 +318,15 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
             title: loc.changePassword,
             onTap: _showChangePasswordSheet,
           ),
-          if (_faceIdAvailable) ...[
-            const Divider(height: 1, indent: 56),
-            _SettingsTileSwitch(
-              icon: Icons.face_rounded,
-              iconColor: primary,
-              title: loc.faceId,
-              subtitle: loc.faceIdSubtitle,
-              value: _faceIdEnabled,
-              onChanged: _toggleFaceId,
-            ),
-          ],
+          const Divider(height: 1, indent: 56),
+          _SettingsTileSwitch(
+            icon: Icons.face_rounded,
+            iconColor: _faceIdAvailable ? primary : Colors.grey,
+            title: loc.faceId,
+            subtitle: loc.faceIdSubtitle,
+            value: _faceIdAvailable ? _faceIdEnabled : false,
+            onChanged: _faceIdAvailable ? _toggleFaceId : null,
+          ),
         ]),
         const SizedBox(height: 16),
 
@@ -428,7 +448,7 @@ class _SettingsTileSwitch extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool value;
-  final ValueChanged<bool> onChanged;
+  final ValueChanged<bool>? onChanged;
   @override
   Widget build(BuildContext context) => ListTile(
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -437,8 +457,14 @@ class _SettingsTileSwitch extends StatelessWidget {
       decoration: BoxDecoration(color: iconColor.withAlpha(20), borderRadius: BorderRadius.circular(10)),
       child: Icon(icon, color: iconColor, size: 20),
     ),
-    title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-    subtitle: Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.black45)),
+    title: Text(title, style: TextStyle(
+      fontWeight: FontWeight.w600,
+      color: onChanged == null ? Colors.grey : null,
+    )),
+    subtitle: Text(subtitle, style: TextStyle(
+      fontSize: 12,
+      color: onChanged == null ? Colors.grey.shade400 : Colors.black45,
+    )),
     trailing: Switch(value: value, onChanged: onChanged, activeColor: iconColor),
   );
 }
