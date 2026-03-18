@@ -489,7 +489,8 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                       }
                       final item = items[i - 1];
                       final locale = Localizations.localeOf(context).languageCode;
-                      final name = (locale == 'ar' ? (item['name_ar'] ?? item['name']) : (item['name'] ?? '')) as String;
+                      final isAr = locale == 'ar';
+                      final name = (isAr ? (item['name_ar'] ?? item['name']) : (item['name'] ?? '')) as String;
                       final emoji = (item['emoji'] ?? '🛒') as String;
                       final priority = (item['priority'] ?? 0) as int;
                       final isSelected = _selectedNames.contains(name);
@@ -522,6 +523,7 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                   child: Row(
+                                    textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
                                     children: [
                                       // ── Checkbox ──────────────────────
                                       SizedBox(
@@ -553,10 +555,14 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                                       // ── Name + category ───────────────
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment: isAr ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                                           children: [
-                                            Text(name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
-                                            Text(widget.category, style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade500)),
+                                            Text(name,
+                                              textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+                                              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+                                            Text(widget.category,
+                                              textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+                                              style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade500)),
                                           ],
                                         ),
                                       ),
