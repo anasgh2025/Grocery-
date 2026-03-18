@@ -312,9 +312,12 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
               onRefresh: _refreshListItems,
               child: filteredItems.isEmpty
                   ? ListView(
-                      children: const [Center(child: Padding(
-                        padding: EdgeInsets.only(top: 100),
-                        child: Text('No items in this list.'),
+                      children: [Center(child: Padding(
+                        padding: const EdgeInsets.only(top: 100),
+                        child: Text(
+                          loc.noItemsInList,
+                          textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
+                        ),
                       ))],
                     )
                   : _buildSectionedList(filteredItems),
