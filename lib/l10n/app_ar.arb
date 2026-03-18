@@ -147,5 +147,13 @@
   "faceIdSubtitle": "تسجيل الدخول باستخدام Face ID",
   "deleteAccount": "حذف الحساب",
   "deleteAccountConfirm": "سيؤدي هذا إلى حذف حسابك وجميع بياناتك نهائياً. لا يمكن التراجع عن هذا الإجراء.",
-  "accountDeleted": "تم حذف الحساب."
+  "accountDeleted": "تم حذف الحساب.",
+  "forgotPassword": "نسيت كلمة المرور؟",
+  "forgotPasswordTitle": "إعادة تعيين كلمة المرور",
+  "forgotPasswordSubtitle": "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين",
+  "sendResetLink": "إرسال رابط الإعادة",
+  "resetLinkSent": "تحقق من بريدك الإلكتروني للحصول على رابط الإعادة",
+  "resetPassword": "إعادة تعيين كلمة المرور",
+  "resetPasswordSuccess": "تمت إعادة تعيين كلمة المرور بنجاح. يرجى تسجيل الدخول.",
+  "invalidResetLink": "رابط إعادة التعيين غير صالح أو انتهت صلاحيته."
 }

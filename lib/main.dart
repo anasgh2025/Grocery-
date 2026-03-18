@@ -7,6 +7,7 @@ import 'package:app_links/app_links.dart';
 
 import 'screens/splash_screen.dart';
 import 'screens/invite_accept_page.dart';
+import 'screens/reset_password_page.dart';
 import 'theme.dart';
 import 'l10n/app_localizations.dart';
 
@@ -114,6 +115,15 @@ class _MyAppState extends State<MyApp> {
       _navigatorKey.currentState?.push(
         MaterialPageRoute(builder: (_) => InviteAcceptPage(token: token)),
       );
+    }
+    // Matches: grovia://reset-password?token=<token>
+    if (uri.host == 'reset-password') {
+      final token = uri.queryParameters['token'];
+      if (token != null && token.isNotEmpty) {
+        _navigatorKey.currentState?.push(
+          MaterialPageRoute(builder: (_) => ResetPasswordPage(token: token)),
+        );
+      }
     }
   }
 

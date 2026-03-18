@@ -4,6 +4,8 @@
 const usersStore = require('../data/usersStore.mongodb');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 // JWT secret (use env var in production)
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
@@ -93,7 +95,7 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { createUser, listUsers, loginUser, changePassword, deleteAccount };
+module.exports = { createUser, listUsers, loginUser, changePassword, deleteAccount, forgotPassword, resetPassword };
 
 // Change the authenticated user's password
 async function changePassword(req, res) {
@@ -136,5 +138,91 @@ async function deleteAccount(req, res) {
   } catch (err) {
     console.error('deleteAccount error:', err);
     res.status(500).json({ error: 'Failed to delete account', message: err.message });
+  }
+}
+
+// POST /users/forgot-password  { email }
+async function forgotPassword(req, res) {
+  try {
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    // Always respond 200 so we don't leak whether the email exists
+    if (!email) return res.json({ message: 'If that email is registered you will receive a reset link.' });
+
+    const user = await usersStore.findByEmail(email);
+    if (!user) return res.json({ message: 'If that email is registered you will receive a reset link.' });
+
+    // Generate a secure token valid for 1 hour
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiry = new Date(Date.now() + 60 * 60 * 1000);
+    await usersStore.saveResetToken(email, token, expiry);
+
+    // Build deep link that opens the app
+    const appScheme = process.env.APP_SCHEME || 'grovia';
+    const resetLink = `${appScheme}://reset-password?token=${token}`;
+
+    // Send email via nodemailer
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.EMAIL_PORT || '587'),
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"Grovia App" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Reset your Grovia password',
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px">
+          <h2 style="color:#E53935">Reset your password</h2>
+          <p>Hi ${user.name || 'there'},</p>
+          <p>We received a request to reset the password for your Grovia account.</p>
+          <p>Tap the button below on your phone to choose a new password. This link expires in <strong>1 hour</strong>.</p>
+          <a href="${resetLink}"
+             style="display:inline-block;margin:24px 0;padding:14px 28px;background:#E53935;color:#fff;border-radius:10px;text-decoration:none;font-weight:bold;font-size:16px">
+            Reset Password
+          </a>
+          <p style="color:#888;font-size:13px">If you didn't request this, you can safely ignore this email.</p>
+        </div>
+      `,
+    });
+
+    res.json({ message: 'If that email is registered you will receive a reset link.' });
+  } catch (err) {
+    console.error('forgotPassword error:', err);
+    res.status(500).json({ error: 'Failed to send reset email', message: err.message });
+  }
+}
+
+// POST /users/reset-password  { token, newPassword }
+async function resetPassword(req, res) {
+  try {
+    const { token, newPassword } = req.body || {};
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: 'Bad Request', message: 'token and newPassword are required' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Bad Request', message: 'Password must be at least 6 characters' });
+    }
+
+    const user = await usersStore.findByResetToken(token);
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid', message: 'This reset link is invalid or has expired.' });
+    }
+    if (!user.resetTokenExpiry || new Date() > new Date(user.resetTokenExpiry)) {
+      return res.status(400).json({ error: 'Expired', message: 'This reset link is invalid or has expired.' });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await usersStore.updatePassword(user.id, hashed);
+    await usersStore.clearResetToken(user.id);
+
+    res.json({ message: 'Password reset successfully.' });
+  } catch (err) {
+    console.error('resetPassword error:', err);
+    res.status(500).json({ error: 'Failed to reset password', message: err.message });
   }
 }

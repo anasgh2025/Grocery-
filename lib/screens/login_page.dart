@@ -7,6 +7,7 @@ import '../services/api_service.dart';
 import '../main.dart';
 import '../landing_page.dart';
 import '../l10n/app_localizations.dart';
+import 'forgot_password_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -220,9 +221,26 @@ class _LoginPageState extends State<LoginPage> {
                             : Text(loc.signIn, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                       ),
 
+                      // ── Forgot Password ──
+                      Align(
+                        alignment: isAr ? Alignment.centerLeft : Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                                builder: (_) => const ForgotPasswordPage())),
+                          child: Text(
+                            loc.forgotPassword,
+                            style: const TextStyle(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+
                       // ── Face ID / Biometric sign-in ──
                       if (_biometricAvailable) ...[
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
                         OutlinedButton.icon(
                           onPressed: _loading ? null : _signInWithBiometrics,
                           icon: const Icon(Icons.face_rounded, color: Colors.redAccent),
