@@ -93,6 +93,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get delete => 'حذف';
 
   @override
+  String get deleteItem => 'حذف العنصر';
+
+  @override
+  String deleteItemConfirm(String name) {
+    return 'هل تريد إزالة \"$name\" من القائمة؟';
+  }
+
+  @override
+  String get itemDeleted => 'تم حذف العنصر.';
+
+  @override
   String get listDeleted => 'تم حذف القائمة بنجاح.';
 
   @override

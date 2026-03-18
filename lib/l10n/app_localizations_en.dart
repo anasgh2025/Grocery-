@@ -93,6 +93,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get delete => 'Delete';
 
   @override
+  String get deleteItem => 'Delete Item';
+
+  @override
+  String deleteItemConfirm(String name) {
+    return 'Remove \"$name\" from the list?';
+  }
+
+  @override
+  String get itemDeleted => 'Item deleted.';
+
+  @override
   String get listDeleted => 'List deleted successfully.';
 
   @override

@@ -746,6 +746,59 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
     );
   }
 
+  // ── Delete item ────────────────────────────────────────────────────────────
+  Future<void> _confirmDeleteItem(Map<String, dynamic> item) async {
+    final loc = AppLocalizations.of(context)!;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final displayName = (isAr && item['name_ar']?.toString().isNotEmpty == true)
+        ? item['name_ar']!.toString()
+        : item['name']?.toString() ?? '';
+
+    final confirmed = await showAppDialog<bool>(
+      context: context,
+      title: Text(loc.deleteItem),
+      content: Text(loc.deleteItemConfirm(displayName)),
+      actions: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            appDialogCancelButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              text: loc.cancel,
+            ),
+            const SizedBox(width: 12),
+            appDialogConfirmButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              text: loc.delete,
+              color: Colors.red,
+            ),
+          ],
+        ),
+      ],
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final itemId = (item['id'] ?? item['_id'])?.toString() ?? '';
+    if (itemId.isEmpty) return;
+
+    try {
+      await ApiService().deleteListItem(_resolvedListId, itemId);
+      if (!mounted) return;
+      await _refreshListItems();
+      if (widget.onItemsChanged != null) widget.onItemsChanged!();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(loc.itemDeleted)),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete item: $e')),
+        );
+      }
+    }
+  }
+
   Widget _buildItemCard(Map<String, dynamic> item) {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final displayName = (isAr && item['name_ar']?.toString().isNotEmpty == true)
@@ -757,6 +810,7 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => _showItemOptionsModal(item),
+        onLongPress: () => _confirmDeleteItem(item),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           child: Row(

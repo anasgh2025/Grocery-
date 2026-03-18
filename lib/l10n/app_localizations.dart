@@ -263,6 +263,24 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get delete;
 
+  /// No description provided for @deleteItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Item'**
+  String get deleteItem;
+
+  /// No description provided for @deleteItemConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{name}\" from the list?'**
+  String deleteItemConfirm(String name);
+
+  /// No description provided for @itemDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Item deleted.'**
+  String get itemDeleted;
+
   /// No description provided for @listDeleted.
   ///
   /// In en, this message translates to:
