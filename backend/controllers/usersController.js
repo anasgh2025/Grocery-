@@ -93,4 +93,48 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { createUser, listUsers, loginUser };
+module.exports = { createUser, listUsers, loginUser, changePassword, deleteAccount };
+
+// Change the authenticated user's password
+async function changePassword(req, res) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { currentPassword, newPassword } = req.body || {};
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Bad Request', message: 'currentPassword and newPassword are required' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Bad Request', message: 'New password must be at least 6 characters' });
+    }
+
+    const user = await usersStore.getById(userId);
+    if (!user) return res.status(404).json({ error: 'Not Found' });
+
+    // getById strips the password — fetch the full doc
+    const fullUser = await usersStore.findByEmail(user.email);
+    const match = await bcrypt.compare(currentPassword, fullUser.password);
+    if (!match) return res.status(401).json({ error: 'Unauthorized', message: 'Current password is incorrect' });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await usersStore.updatePassword(userId, hashed);
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('changePassword error:', err);
+    res.status(500).json({ error: 'Failed to change password', message: err.message });
+  }
+}
+
+// Delete the authenticated user's account
+async function deleteAccount(req, res) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    await usersStore.deleteById(userId);
+    res.json({ message: 'Account deleted successfully' });
+  } catch (err) {
+    console.error('deleteAccount error:', err);
+    res.status(500).json({ error: 'Failed to delete account', message: err.message });
+  }
+}

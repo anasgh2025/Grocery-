@@ -135,5 +135,17 @@
   "inviteInvalid": "رابط الدعوة غير صالح أو انتهت صلاحيته.",
   "mustBeLoggedInToAccept": "يرجى تسجيل الدخول أولاً لقبول هذه الدعوة.",
   "accepting": "جارٍ القبول…",
-  "declining": "جارٍ الرفض…"
+  "declining": "جارٍ الرفض…",
+  "changePassword": "تغيير كلمة المرور",
+  "currentPassword": "كلمة المرور الحالية",
+  "newPassword": "كلمة المرور الجديدة",
+  "confirmNewPassword": "تأكيد كلمة المرور الجديدة",
+  "passwordChanged": "تم تغيير كلمة المرور بنجاح.",
+  "passwordsDontMatch": "كلمتا المرور غير متطابقتين.",
+  "wrongCurrentPassword": "كلمة المرور الحالية غير صحيحة.",
+  "faceId": "Face ID",
+  "faceIdSubtitle": "تسجيل الدخول باستخدام Face ID",
+  "deleteAccount": "حذف الحساب",
+  "deleteAccountConfirm": "سيؤدي هذا إلى حذف حسابك وجميع بياناتك نهائياً. لا يمكن التراجع عن هذا الإجراء.",
+  "accountDeleted": "تم حذف الحساب."
 }

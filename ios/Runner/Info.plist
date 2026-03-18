@@ -16,6 +16,8 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>grocery_app_landing</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Use Face ID to sign in quickly and securely.</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

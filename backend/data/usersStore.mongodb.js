@@ -39,4 +39,12 @@ const create = async ({ name, email, password }) => {
   return { id, name: name || '', email: String(email).trim().toLowerCase(), created_at: created_at.toISOString() };
 };
 
-module.exports = { getAll, getById, findByEmail, create, User };
+const updatePassword = async (id, hashedPassword) => {
+  await User.updateOne({ id }, { $set: { password: hashedPassword } });
+};
+
+const deleteById = async (id) => {
+  await User.deleteOne({ id });
+};
+
+module.exports = { getAll, getById, findByEmail, create, updatePassword, deleteById, User };

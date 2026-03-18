@@ -384,4 +384,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get declining => 'Declining…';
+
+  @override
+  String get changePassword => 'Change Password';
+
+  @override
+  String get currentPassword => 'Current Password';
+
+  @override
+  String get newPassword => 'New Password';
+
+  @override
+  String get confirmNewPassword => 'Confirm New Password';
+
+  @override
+  String get passwordChanged => 'Password changed successfully.';
+
+  @override
+  String get passwordsDontMatch => 'Passwords do not match.';
+
+  @override
+  String get wrongCurrentPassword => 'Current password is incorrect.';
+
+  @override
+  String get faceId => 'Face ID';
+
+  @override
+  String get faceIdSubtitle => 'Sign in with Face ID';
+
+  @override
+  String get deleteAccount => 'Delete Account';
+
+  @override
+  String get deleteAccountConfirm => 'This will permanently delete your account and all your data. This cannot be undone.';
+
+  @override
+  String get accountDeleted => 'Account deleted.';
 }

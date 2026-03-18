@@ -368,6 +368,36 @@ class ApiService {
     }
   }
 
+  /// Change the authenticated user's password.
+  Future<void> changePassword({required String currentPassword, required String newPassword}) async {
+    final token = await readToken();
+    final response = await http.put(
+      Uri.parse('$baseUrl/users/me/password'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+      body: json.encode({'currentPassword': currentPassword, 'newPassword': newPassword}),
+    ).timeout(timeout);
+    if (response.statusCode == 200) return;
+    final body = json.decode(response.body) as Map<String, dynamic>;
+    throw Exception(body['message'] ?? 'Failed to change password: ${response.statusCode}');
+  }
+
+  /// Delete the authenticated user's account permanently.
+  Future<void> deleteAccount() async {
+    final token = await readToken();
+    final response = await http.delete(
+      Uri.parse('$baseUrl/users/me'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    ).timeout(timeout);
+    if (response.statusCode == 200) return;
+    throw Exception('Failed to delete account: ${response.statusCode}');
+  }
+
   /// Update an existing grocery list
   Future<GroceryList> updateGroceryList(String id, GroceryList list) async {
     try {

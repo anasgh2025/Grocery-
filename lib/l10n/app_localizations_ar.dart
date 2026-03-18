@@ -384,4 +384,40 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get declining => 'جارٍ الرفض…';
+
+  @override
+  String get changePassword => 'تغيير كلمة المرور';
+
+  @override
+  String get currentPassword => 'كلمة المرور الحالية';
+
+  @override
+  String get newPassword => 'كلمة المرور الجديدة';
+
+  @override
+  String get confirmNewPassword => 'تأكيد كلمة المرور الجديدة';
+
+  @override
+  String get passwordChanged => 'تم تغيير كلمة المرور بنجاح.';
+
+  @override
+  String get passwordsDontMatch => 'كلمتا المرور غير متطابقتين.';
+
+  @override
+  String get wrongCurrentPassword => 'كلمة المرور الحالية غير صحيحة.';
+
+  @override
+  String get faceId => 'Face ID';
+
+  @override
+  String get faceIdSubtitle => 'تسجيل الدخول باستخدام Face ID';
+
+  @override
+  String get deleteAccount => 'حذف الحساب';
+
+  @override
+  String get deleteAccountConfirm => 'سيؤدي هذا إلى حذف حسابك وجميع بياناتك نهائياً. لا يمكن التراجع عن هذا الإجراء.';
+
+  @override
+  String get accountDeleted => 'تم حذف الحساب.';
 }
