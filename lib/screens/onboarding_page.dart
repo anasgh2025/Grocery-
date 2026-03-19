@@ -56,7 +56,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     return Directionality(
       textDirection: isAr ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFFFFF8F8),
+        backgroundColor: Colors.white,
         body: SafeArea(
           child: Stack(
             children: [
