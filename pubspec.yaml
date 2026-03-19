@@ -1,7 +1,7 @@
 name: Grovia
 description: Grovia is a smart grocery list app that helps you organize your shopping and collaborate with family or friends in real time. Create lists, share them instantly, and never forget an item again.
 publish_to: "none"
-version: 0.1.0+7
+version: 1.0.0+8
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -24,7 +24,6 @@ dependencies:
   flutter_dotenv: ^5.0.2
   app_links: ^7.0.0
   local_auth: ^2.3.0
-  shared_preferences: ^2.5.4
   # Directly added to allow newer transitive versions where safe
   # characters is pinned by the Flutter SDK; keep it transitive
   # material_color_utilities is pinned by the Flutter SDK; keep it transitive
