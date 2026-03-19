@@ -95,6 +95,66 @@ abstract class AppLocalizations {
     Locale('en')
   ];
 
+  /// No description provided for @onboardCreateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Shopping Lists Easily'**
+  String get onboardCreateTitle;
+
+  /// No description provided for @onboardCreateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Organize your shopping in seconds with our smart list manager.'**
+  String get onboardCreateSubtitle;
+
+  /// No description provided for @onboardAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Multiple Items Quickly'**
+  String get onboardAddTitle;
+
+  /// No description provided for @onboardAddSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use smart suggestions to add everything you need in one go.'**
+  String get onboardAddSubtitle;
+
+  /// No description provided for @onboardShareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Collaborate in Real-Time'**
+  String get onboardShareTitle;
+
+  /// No description provided for @onboardShareSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite friends and family to contribute to your list whenever you shop.'**
+  String get onboardShareSubtitle;
+
+  /// No description provided for @onboardChooseLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Language'**
+  String get onboardChooseLanguage;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get getStarted;
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
+
   /// No description provided for @createList.
   ///
   /// In en, this message translates to:

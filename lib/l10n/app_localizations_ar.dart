@@ -9,6 +9,36 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get onboardCreateTitle => 'أنشئ قوائم التسوق بسهولة';
+
+  @override
+  String get onboardCreateSubtitle => 'ابدأ بتنظيم مشترياتك في ثوانٍ معدودة مع مدير القوائم الذكي.';
+
+  @override
+  String get onboardAddTitle => 'أضف العديد من الأصناف بسرعة';
+
+  @override
+  String get onboardAddSubtitle => 'استخدم الاقتراحات الذكية لإضافة كل ما تحتاجه دفعة واحدة.';
+
+  @override
+  String get onboardShareTitle => 'ادعُ أصدقاءك للمشاركة';
+
+  @override
+  String get onboardShareSubtitle => 'شارك القائمة مع العائلة والأصدقاء للتسوق معًا في وقت واحد.';
+
+  @override
+  String get onboardChooseLanguage => 'اختر اللغة';
+
+  @override
+  String get next => 'التالي';
+
+  @override
+  String get getStarted => 'ابدأ الآن';
+
+  @override
+  String get skip => 'تخطي';
+
+  @override
   String get createList => 'إنشاء قائمة';
 
   @override

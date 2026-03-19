@@ -318,7 +318,7 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
             title: loc.changePassword,
             onTap: _showChangePasswordSheet,
           ),
-          const Divider(height: 1, indent: 56),
+          // Removed divider between Change Password and Face ID
           _SettingsTileSwitch(
             icon: Icons.face_rounded,
             iconColor: _faceIdAvailable ? primary : Colors.grey,

@@ -9,6 +9,36 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get onboardCreateTitle => 'Create Shopping Lists Easily';
+
+  @override
+  String get onboardCreateSubtitle => 'Organize your shopping in seconds with our smart list manager.';
+
+  @override
+  String get onboardAddTitle => 'Add Multiple Items Quickly';
+
+  @override
+  String get onboardAddSubtitle => 'Use smart suggestions to add everything you need in one go.';
+
+  @override
+  String get onboardShareTitle => 'Collaborate in Real-Time';
+
+  @override
+  String get onboardShareSubtitle => 'Invite friends and family to contribute to your list whenever you shop.';
+
+  @override
+  String get onboardChooseLanguage => 'Choose Language';
+
+  @override
+  String get next => 'Next';
+
+  @override
+  String get getStarted => 'Get Started';
+
+  @override
+  String get skip => 'Skip';
+
+  @override
   String get createList => 'Create List';
 
   @override
