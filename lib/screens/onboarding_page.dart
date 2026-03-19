@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../l10n/app_localizations.dart';
 import '../main.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -24,6 +24,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
   void _setLang(Locale locale) {
     localeNotifier.value = locale;
     setState(() => _langSelected = true);
+    // Advance to next onboarding page after language selection
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) {
+        _controller.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.ease);
+      }
+    });
   }
 
   Future<void> _finishOnboarding() async {
