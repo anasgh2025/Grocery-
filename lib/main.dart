@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:app_links/app_links.dart';
 
-import 'screens/splash_screen.dart';
 import 'launch_gate.dart';
 import 'screens/invite_accept_page.dart';
 import 'theme.dart';
