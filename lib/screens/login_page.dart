@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../main.dart';
 import '../landing_page.dart';
 import '../l10n/app_localizations.dart';
+import 'forgot_password_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -154,6 +155,16 @@ class _LoginPageState extends State<LoginPage> {
                           child: _loading
                               ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
                               : Text(loc.signIn, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
+                          ),
+                          child: Text(
+                            loc.forgotPassword,
+                            style: const TextStyle(color: Colors.redAccent),
+                          ),
                         ),
                       ],
                     ),

@@ -11,6 +11,12 @@ router.post('/', usersController.createUser);
 // POST login
 router.post('/login', usersController.loginUser);
 
+// POST forgot password (public)
+router.post('/forgot-password', usersController.forgotPassword);
+
+// POST reset password (public)
+router.post('/reset-password', usersController.resetPassword);
+
 // PUT change password (requires JWT)
 router.put('/me/password', requireAuth, usersController.changePassword);
 

@@ -8,8 +8,34 @@ import '../models/grocery_list.dart';
 
 /// Service for handling API calls related to grocery lists
 class ApiService {
-  // ── Invite ────────────────────────────────────────────────────────────────
+  // ── Password Reset ────────────────────────────────────────────────────────
 
+  /// Request a password reset email. Always succeeds (no user enumeration).
+  Future<void> forgotPassword(String email) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/users/forgot-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'email': email.trim().toLowerCase()}),
+    ).timeout(timeout);
+    if (response.statusCode != 200) {
+      throw Exception('Failed to send reset email: ${response.statusCode}');
+    }
+  }
+
+  /// Reset the password using the token received via email.
+  Future<void> resetPassword(String token, String newPassword) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/users/reset-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'token': token, 'newPassword': newPassword}),
+    ).timeout(timeout);
+    if (response.statusCode != 200) {
+      final body = json.decode(response.body);
+      throw Exception(body['error'] ?? 'Failed to reset password');
+    }
+  }
+
+  // ── Invite ────────────────────────────────────────────────────────────────
   /// Generate a persistent invite link for [listId]. Requires JWT auth.
   Future<Map<String, dynamic>> generateInviteLink(String listId) async {
     final token = await readToken();

@@ -157,5 +157,15 @@
   "faceIdSubtitle": "Sign in with Face ID",
   "deleteAccount": "Delete Account",
   "deleteAccountConfirm": "This will permanently delete your account and all your data. This cannot be undone.",
-  "accountDeleted": "Account deleted."
+  "accountDeleted": "Account deleted.",
+  "forgotPassword": "Forgot password?",
+  "forgotPasswordTitle": "Reset Password",
+  "forgotPasswordSubtitle": "Enter your email and we'll send you a reset link.",
+  "sendResetLink": "Send Reset Link",
+  "resetLinkSent": "Check your email for the reset link.",
+  "resetPasswordTitle": "Set New Password",
+  "resetPasswordSubtitle": "Enter and confirm your new password.",
+  "resetPassword": "Reset Password",
+  "passwordResetSuccess": "Password reset successfully. Please log in.",
+  "invalidResetToken": "This reset link is invalid or has expired."
 }

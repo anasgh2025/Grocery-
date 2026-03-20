@@ -4,9 +4,22 @@
 const usersStore = require('../data/usersStore.mongodb');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 // JWT secret (use env var in production)
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+
+// ── Zoho SMTP transporter ─────────────────────────────────────────────────────
+const transporter = nodemailer.createTransport({
+  host: 'smtp.zoho.com',
+  port: 465,
+  secure: true, // SSL
+  auth: {
+    user: process.env.ZOHO_EMAIL,    // e.g. noreply@grovia.app
+    pass: process.env.ZOHO_PASSWORD, // App-specific password from Zoho
+  },
+});
 
 // Create a new user/profile (async)
 const createUser = async (req, res) => {
@@ -93,7 +106,7 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { createUser, listUsers, loginUser, changePassword, deleteAccount };
+module.exports = { createUser, listUsers, loginUser, changePassword, deleteAccount, forgotPassword, resetPassword };
 
 // Change the authenticated user's password
 async function changePassword(req, res) {
@@ -136,5 +149,79 @@ async function deleteAccount(req, res) {
   } catch (err) {
     console.error('deleteAccount error:', err);
     res.status(500).json({ error: 'Failed to delete account', message: err.message });
+  }
+}
+
+// POST /api/users/forgot-password  (public)
+async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body || {};
+    const sEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    if (!sEmail) {
+      return res.status(400).json({ error: 'Bad Request', message: 'email is required' });
+    }
+
+    // Always respond with 200 to avoid user enumeration
+    const user = await usersStore.findByEmail(sEmail);
+    if (!user) {
+      return res.status(200).json({ message: 'If that email is registered, a reset link has been sent.' });
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await usersStore.setResetToken(sEmail, token, expires);
+
+    const resetUrl = `https://coral-app-qjq4a.ondigitalocean.app/a/reset-password/${token}`;
+
+    await transporter.sendMail({
+      from: `"Grovia" <${process.env.ZOHO_EMAIL}>`,
+      to: sEmail,
+      subject: 'Reset your Grovia password',
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;">
+          <h2 style="color:#E53935;">Reset your password</h2>
+          <p>We received a request to reset the password for your Grovia account.</p>
+          <p>Click the button below to choose a new password. This link expires in <strong>1 hour</strong>.</p>
+          <a href="${resetUrl}"
+             style="display:inline-block;margin:24px 0;padding:14px 28px;background:#E53935;color:#fff;
+                    border-radius:8px;text-decoration:none;font-weight:600;">
+            Reset Password
+          </a>
+          <p style="color:#888;font-size:13px;">If you did not request this, you can safely ignore this email.</p>
+        </div>
+      `,
+    });
+
+    res.status(200).json({ message: 'If that email is registered, a reset link has been sent.' });
+  } catch (err) {
+    console.error('forgotPassword error:', err);
+    res.status(500).json({ error: 'Failed to send reset email', message: err.message });
+  }
+}
+
+// POST /api/users/reset-password  (public)
+async function resetPassword(req, res) {
+  try {
+    const { token, newPassword } = req.body || {};
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: 'Bad Request', message: 'token and newPassword are required' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Bad Request', message: 'Password must be at least 6 characters' });
+    }
+
+    const user = await usersStore.findByResetToken(token);
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await usersStore.updatePassword(user.id, hashed);
+    await usersStore.clearResetToken(user.id);
+
+    res.status(200).json({ message: 'Password has been reset successfully.' });
+  } catch (err) {
+    console.error('resetPassword error:', err);
+    res.status(500).json({ error: 'Failed to reset password', message: err.message });
   }
 }

@@ -8,6 +8,8 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, index: true },
   password: { type: String, required: true },
   created_at: { type: Date, required: true },
+  passwordResetToken: { type: String, default: null },
+  passwordResetExpires: { type: Date, default: null },
 });
 
 // Ensure we use the 'users' collection
@@ -43,8 +45,27 @@ const updatePassword = async (id, hashedPassword) => {
   await User.updateOne({ id }, { $set: { password: hashedPassword } });
 };
 
+const setResetToken = async (email, token, expires) => {
+  await User.updateOne(
+    { email: String(email).trim().toLowerCase() },
+    { $set: { passwordResetToken: token, passwordResetExpires: expires } }
+  );
+};
+
+const findByResetToken = async (token) => {
+  const row = await User.findOne({
+    passwordResetToken: token,
+    passwordResetExpires: { $gt: new Date() },
+  }).lean();
+  return row || null;
+};
+
+const clearResetToken = async (id) => {
+  await User.updateOne({ id }, { $set: { passwordResetToken: null, passwordResetExpires: null } });
+};
+
 const deleteById = async (id) => {
   await User.deleteOne({ id });
 };
 
-module.exports = { getAll, getById, findByEmail, create, updatePassword, deleteById, User };
+module.exports = { getAll, getById, findByEmail, create, updatePassword, setResetToken, findByResetToken, clearResetToken, deleteById, User };

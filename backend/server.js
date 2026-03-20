@@ -52,6 +52,25 @@ app.get("/a/invite/:token", (req, res) => {
 </html>`);
 });
 
+// ---- Password reset deep-link redirect ----
+app.get("/a/reset-password/:token", (req, res) => {
+  const { token } = req.params;
+  const deepLink = `grovia://reset-password/${token}`;
+  res.send(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="refresh" content="0; url=${deepLink}"/>
+  <title>Opening Grovia…</title>
+  <script>window.location.href = "${deepLink}";</script>
+</head>
+<body style="font-family:sans-serif;text-align:center;padding-top:80px;">
+  <p>Opening Grovia…</p>
+  <p><a href="${deepLink}">Tap here if the app does not open</a></p>
+</body>
+</html>`);
+});
+
 // ---- 404 handler (keep AFTER all routes) ----
 app.use((req, res) => {
   res.status(404).json({ error: "Not Found" });
