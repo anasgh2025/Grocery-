@@ -97,15 +97,27 @@ class _MyAppState extends State<MyApp> {
   void _initDeepLinks() {
     _appLinks = AppLinks();
 
-    // Handle link that launched the app from cold start
+    // Handle link that launched the app from cold start.
+    // Retry until the navigator is mounted (LaunchGate may still be loading).
     _appLinks.getInitialLink().then((uri) {
-      if (uri != null) _handleLink(uri);
+      if (uri != null) _handleLinkWhenReady(uri);
     });
 
     // Handle links while the app is already running
     _appLinks.uriLinkStream.listen(_handleLink, onError: (e) {
       print('Deep link error: $e');
     });
+  }
+
+  /// Retries pushing the link every 100 ms until the navigator is available.
+  void _handleLinkWhenReady(Uri uri, [int attempts = 0]) {
+    if (_navigatorKey.currentState != null) {
+      _handleLink(uri);
+    } else if (attempts < 30) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        _handleLinkWhenReady(uri, attempts + 1);
+      });
+    }
   }
 
   void _handleLink(Uri uri) {
