@@ -33,7 +33,7 @@ const generateInviteLink = async (req, res) => {
     });
 
     // Deep-link URL the Flutter app will handle
-    const inviteUrl = `https://coral-app-qjq4a.ondigitalocean.app/invite/${invite.token}`;
+    const inviteUrl = `https://coral-app-qjq4a.ondigitalocean.app/a/invite/${invite.token}`;
     res.json({ inviteUrl, token: invite.token });
   } catch (error) {
     res.status(500).json({ error: 'Failed to generate invite link', message: error.message });

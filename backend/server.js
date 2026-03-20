@@ -33,7 +33,7 @@ app.use("/api/users", usersRoutes);
 // ---- Invite deep-link redirect ----
 // When a user taps the invite link on a phone, redirect to the custom scheme
 // so the OS opens the Grovia app (or the app store if not installed).
-app.get("/invite/:token", (req, res) => {
+app.get("/a/invite/:token", (req, res) => {
   const { token } = req.params;
   // Universal/deep-link: grovia://invite/<token>
   const deepLink = `grovia://invite/${token}`;
