@@ -32,8 +32,10 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     try {
       await ApiService().resetPassword(widget.token, _passwordCtrl.text);
       if (!mounted) return;
+      final successMsg = AppLocalizations.of(context)?.passwordResetSuccess
+          ?? 'Password reset successfully. Please log in.';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.passwordResetSuccess)),
+        SnackBar(content: Text(successMsg)),
       );
       // Replace stack with login page
       Navigator.of(context).pushAndRemoveUntil(

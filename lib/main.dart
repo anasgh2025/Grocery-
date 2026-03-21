@@ -102,47 +102,73 @@ class _MyAppState extends State<MyApp> {
 
     // Handle link that launched the app from cold start.
     // Retry until the navigator is mounted (LaunchGate may still be loading).
-    _appLinks.getInitialLink().then((uri) {
+    _appLinks.getInitialAppLink().then((uri) {
       if (uri != null) _handleLinkWhenReady(uri);
+    }).catchError((e) {
+      print('getInitialAppLink error: $e');
     });
 
     // Handle links while the app is already running
-    _appLinks.uriLinkStream.listen(_handleLink, onError: (e) {
-      print('Deep link error: $e');
-    });
+    _appLinks.uriLinkStream.listen(
+      (uri) {
+        try {
+          _handleLink(uri);
+        } catch (e, st) {
+          print('Deep link handler error: $e\n$st');
+        }
+      },
+      onError: (e) => print('Deep link stream error: $e'),
+    );
   }
 
   /// Retries pushing the link every 100 ms until the navigator is available.
   void _handleLinkWhenReady(Uri uri, [int attempts = 0]) {
-    if (_navigatorKey.currentState != null) {
-      _handleLink(uri);
-    } else if (attempts < 30) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        _handleLinkWhenReady(uri, attempts + 1);
-      });
+    try {
+      if (_navigatorKey.currentState != null) {
+        _handleLink(uri);
+      } else if (attempts < 30) {
+        Future.delayed(const Duration(milliseconds: 100), () {
+          _handleLinkWhenReady(uri, attempts + 1);
+        });
+      }
+    } catch (e, st) {
+      print('_handleLinkWhenReady error: $e\n$st');
     }
   }
 
   void _handleLink(Uri uri) {
+    print('[DeepLink] received: $uri  host=${uri.host}  path=${uri.path}  segments=${uri.pathSegments}');
+
     // Deduplicate: iOS can re-fire the same deep link when the keyboard opens.
     final uriStr = uri.toString();
-    if (uriStr == _lastHandledUri) return;
+    if (uriStr == _lastHandledUri) {
+      print('[DeepLink] duplicate, ignoring.');
+      return;
+    }
     _lastHandledUri = uriStr;
 
-    // Matches: grovia://invite/<token>
+    final nav = _navigatorKey.currentState;
+    if (nav == null) {
+      print('[DeepLink] navigator not ready, dropping: $uri');
+      return;
+    }
+
+    // grovia://invite/<token>
     if (uri.host == 'invite' && uri.pathSegments.isNotEmpty) {
       final token = uri.pathSegments.first;
-      _navigatorKey.currentState?.push(
-        MaterialPageRoute(builder: (_) => InviteAcceptPage(token: token)),
-      );
+      nav.push(MaterialPageRoute(builder: (_) => InviteAcceptPage(token: token)));
+      return;
     }
-    // Matches: grovia://reset-password/<token>
+
+    // grovia://reset-password/<token>
+    // uri.host == 'reset-password', token is first path segment
     if (uri.host == 'reset-password' && uri.pathSegments.isNotEmpty) {
       final token = uri.pathSegments.first;
-      _navigatorKey.currentState?.push(
-        MaterialPageRoute(builder: (_) => ResetPasswordPage(token: token)),
-      );
+      nav.push(MaterialPageRoute(builder: (_) => ResetPasswordPage(token: token)));
+      return;
     }
+
+    print('[DeepLink] unrecognised URI, ignoring: $uri');
   }
 
   @override
