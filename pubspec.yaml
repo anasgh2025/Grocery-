@@ -22,7 +22,6 @@ dependencies:
   intl: ^0.20.2
   speech_to_text: ^7.3.0
   flutter_dotenv: ^5.0.2
-  app_links: ^3.4.0
   local_auth: ^2.3.0
   # Directly added to allow newer transitive versions where safe
   # characters is pinned by the Flutter SDK; keep it transitive

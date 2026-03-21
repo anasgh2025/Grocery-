@@ -1,6 +1,5 @@
 import Flutter
 import UIKit
-import app_links
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -8,14 +7,7 @@ import app_links
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    super.application(application, didFinishLaunchingWithOptions: launchOptions)
-
-    // Capture the launch URL (custom scheme cold-start via AppDelegate path)
-    if let url = AppLinks.shared.getLink(launchOptions: launchOptions) {
-      AppLinks.shared.handleLink(url: url)
-    }
-
-    return true
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
