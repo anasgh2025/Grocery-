@@ -67,11 +67,17 @@ const getAll = async () => {
 };
 
 /**
- * Return lists visible to a user: lists they own OR are shared with.
- * Falls back to getAll() when userId is null (unauthenticated legacy mode).
+ * Return lists visible to a user:
+ *   - Authenticated: lists they own OR are shared with them.
+ *   - Guest (no userId): ONLY lists with no owner (ownerId === null),
+ *     i.e. lists created by other guests. Private lists are never exposed.
  */
 const getAllForUser = async (userId) => {
-  if (!userId) return getAll();
+  if (!userId) {
+    // Guest session — only show ownerless/guest-created lists
+    const docs = await GroceryList.find({ ownerId: null }).lean();
+    return docs.map(({ _id, __v, createdAt, updatedAt, ...rest }) => rest);
+  }
   const docs = await GroceryList.find({
     $or: [{ ownerId: userId }, { sharedWith: userId }],
   }).lean();

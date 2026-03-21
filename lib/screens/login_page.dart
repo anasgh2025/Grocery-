@@ -8,7 +8,12 @@ import '../l10n/app_localizations.dart';
 import 'forgot_password_page.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  /// Optional callback invoked after a successful login instead of the default
+  /// navigation to LandingPage. Use this when LoginPage is pushed on top of
+  /// another page that should resume after login (e.g. InviteAcceptPage).
+  final VoidCallback? onLoginSuccess;
+
+  const LoginPage({super.key, this.onLoginSuccess});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -132,11 +137,20 @@ class _LoginPageState extends State<LoginPage> {
                                     if (!mounted) return;
                                     await api.saveUserName(displayName);
                                     userNameNotifier.value = displayName;
-                                    // Navigate back to landing page, clearing the stack
-                                    Navigator.of(ctx).pushAndRemoveUntil(
-                                      MaterialPageRoute(builder: (_) => const LandingPage()),
-                                      (route) => false,
-                                    );
+                                    if (!mounted) return;
+                                    // If a callback was provided (e.g. from InviteAcceptPage),
+                                    // pop back and let the caller handle next steps.
+                                    // Otherwise navigate to LandingPage as normal.
+                                    final callback = widget.onLoginSuccess;
+                                    if (callback != null) {
+                                      Navigator.of(ctx).pop();
+                                      callback();
+                                    } else {
+                                      Navigator.of(ctx).pushAndRemoveUntil(
+                                        MaterialPageRoute(builder: (_) => const LandingPage()),
+                                        (route) => false,
+                                      );
+                                    }
                                   } catch (e) {
                                     if (mounted) {
                                       ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(e.toString())));

@@ -57,11 +57,14 @@ class _InviteAcceptPageState extends State<InviteAcceptPage> {
     // Guard: must be logged in
     final loggedIn = await _api.isLoggedIn;
     if (!loggedIn) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.mustBeLoggedInToAccept)),
-      );
+      // Push LoginPage with a callback — on success it pops back here
+      // and we automatically proceed with accepting the invite.
       await Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const LoginPage()),
+        MaterialPageRoute(
+          builder: (_) => LoginPage(
+            onLoginSuccess: () => _onAccept(loc),
+          ),
+        ),
       );
       return;
     }

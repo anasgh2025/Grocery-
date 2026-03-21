@@ -56,6 +56,7 @@ class ListSectionWithApiState extends State<ListSectionWithApi> {
       _isLoading = true;
       _errorMessage = null;
       _attempt = 0;
+      _lists = []; // clear stale data immediately so sign-out doesn't flash private lists
     });
 
     while (_attempt < maxAttempts) {

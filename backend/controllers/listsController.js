@@ -161,8 +161,9 @@ const createList = async (req, res) => {
       });
     }
 
-    // Check for duplicate list name (case-insensitive)
-    const allLists = await store.getAll();
+    // Check for duplicate list name (case-insensitive) within this user's lists only
+    const userId = req.user ? req.user.id : null;
+    const allLists = await store.getAllForUser(userId);
     const duplicate = allLists.find(l => l.name.toLowerCase() === name.trim().toLowerCase());
     if (duplicate) {
       return res.status(409).json({
