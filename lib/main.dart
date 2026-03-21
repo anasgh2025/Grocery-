@@ -87,6 +87,9 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final _navigatorKey = GlobalKey<NavigatorState>();
   late final AppLinks _appLinks;
+  // Track the last handled URI to prevent duplicate pushes (iOS re-fires
+  // the deep link when the keyboard appears after a cold-start open).
+  String? _lastHandledUri;
 
   @override
   void initState() {
@@ -121,6 +124,11 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _handleLink(Uri uri) {
+    // Deduplicate: iOS can re-fire the same deep link when the keyboard opens.
+    final uriStr = uri.toString();
+    if (uriStr == _lastHandledUri) return;
+    _lastHandledUri = uriStr;
+
     // Matches: grovia://invite/<token>
     if (uri.host == 'invite' && uri.pathSegments.isNotEmpty) {
       final token = uri.pathSegments.first;

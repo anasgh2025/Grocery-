@@ -380,10 +380,10 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
                   child: const Icon(Icons.mic),
                 ),
               ),
-              // "Coming Soon" label that pops up to the right of the FAB
+              // "Coming Soon" label that pops up to the left of the FAB
               if (_showComingSoon)
                 Positioned(
-                  left: 64,
+                  right: 64,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:local_auth/local_auth.dart';
 import '../landing_page.dart';
 import '../main.dart';
 import '../services/api_service.dart';
@@ -19,17 +17,11 @@ class ProfileLandingPage extends StatefulWidget {
 }
 
 class _ProfileLandingPageState extends State<ProfileLandingPage> {
-  static const _faceIdKey = 'face_id_enabled';
-
   final ApiService _api = ApiService();
-  final LocalAuthentication _localAuth = LocalAuthentication();
-  static const _storage = FlutterSecureStorage();
 
   bool _isLoggedIn = false;
   bool _loading = true;
   String? _displayName;
-  bool _faceIdEnabled = false;
-  bool _faceIdAvailable = false;
 
   @override
   void initState() {
@@ -43,22 +35,10 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
     name ??= userNameNotifier.value?.isNotEmpty == true ? userNameNotifier.value : null;
     name ??= await _api.readUserName();
 
-    bool canCheck = false;
-    try {
-      canCheck = await _localAuth.canCheckBiometrics;
-      if (canCheck) {
-        final types = await _localAuth.getAvailableBiometrics();
-        canCheck = types.isNotEmpty;
-      }
-    } catch (_) {}
-
-    final savedFaceId = await _storage.read(key: _faceIdKey);
     if (mounted) {
       setState(() {
         _isLoggedIn = loggedIn;
         _displayName = name;
-        _faceIdAvailable = canCheck;
-        _faceIdEnabled = savedFaceId == 'true';
         _loading = false;
       });
     }
@@ -73,23 +53,7 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
       MaterialPageRoute(builder: (_) => const LandingPage()), (route) => false);
   }
 
-  // ── Face ID toggle ────────────────────────────────────────────────────────
-  Future<void> _toggleFaceId(bool value) async {
-    if (value) {
-      try {
-        final loc = AppLocalizations.of(context)!;
-        final ok = await _localAuth.authenticate(
-          localizedReason: loc.faceIdSubtitle,
-          options: const AuthenticationOptions(biometricOnly: true),
-        );
-        if (!ok) return;
-      } catch (_) { return; }
-    }
-    await _storage.write(key: _faceIdKey, value: value.toString());
-    if (mounted) setState(() => _faceIdEnabled = value);
-  }
-
-  // ── Change password ───────────────────────────────────────────────────────
+  // ── Sign out ──────────────────────────────────────────────────────────────
   void _showChangePasswordSheet() {
     final loc = AppLocalizations.of(context)!;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
@@ -318,15 +282,6 @@ class _ProfileLandingPageState extends State<ProfileLandingPage> {
             title: loc.changePassword,
             onTap: _showChangePasswordSheet,
           ),
-          // Removed divider between Change Password and Face ID
-          _SettingsTileSwitch(
-            icon: Icons.face_rounded,
-            iconColor: _faceIdAvailable ? primary : Colors.grey,
-            title: loc.faceId,
-            subtitle: loc.faceIdSubtitle,
-            value: _faceIdAvailable ? _faceIdEnabled : false,
-            onChanged: _faceIdAvailable ? _toggleFaceId : null,
-          ),
         ]),
         const SizedBox(height: 16),
 
@@ -435,36 +390,5 @@ class _SettingsTile extends StatelessWidget {
     title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: titleColor)),
     trailing: Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
     onTap: onTap,
-  );
-}
-
-class _SettingsTileSwitch extends StatelessWidget {
-  const _SettingsTileSwitch({
-    required this.icon, required this.iconColor, required this.title,
-    required this.subtitle, required this.value, required this.onChanged,
-  });
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String subtitle;
-  final bool value;
-  final ValueChanged<bool>? onChanged;
-  @override
-  Widget build(BuildContext context) => ListTile(
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-    leading: Container(
-      width: 36, height: 36,
-      decoration: BoxDecoration(color: iconColor.withAlpha(20), borderRadius: BorderRadius.circular(10)),
-      child: Icon(icon, color: iconColor, size: 20),
-    ),
-    title: Text(title, style: TextStyle(
-      fontWeight: FontWeight.w600,
-      color: onChanged == null ? Colors.grey : null,
-    )),
-    subtitle: Text(subtitle, style: TextStyle(
-      fontSize: 12,
-      color: onChanged == null ? Colors.grey.shade400 : Colors.black45,
-    )),
-    trailing: Switch(value: value, onChanged: onChanged, activeColor: iconColor),
   );
 }
