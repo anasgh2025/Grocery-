@@ -54,7 +54,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
+    final loc = AppLocalizations.of(context);
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final textDir = isAr ? TextDirection.rtl : TextDirection.ltr;
 
@@ -66,7 +66,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: Text(loc.resetPasswordTitle,
+          title: Text(loc?.resetPasswordTitle ?? 'Reset Password',
               style: const TextStyle(color: Colors.white)),
           backgroundColor: Colors.redAccent,
           elevation: 0,
@@ -84,7 +84,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       size: 56, color: Colors.redAccent),
                   const SizedBox(height: 20),
                   Text(
-                    loc.resetPasswordTitle,
+                    loc?.resetPasswordTitle ?? 'Reset Password',
                     style: Theme.of(context)
                         .textTheme
                         .headlineSmall
@@ -93,7 +93,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    loc.resetPasswordSubtitle,
+                    loc?.resetPasswordSubtitle ?? 'Enter your new password below.',
                     style: Theme.of(context)
                         .textTheme
                         .bodyMedium
@@ -111,7 +111,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                           textDirection: TextDirection.ltr,
                           obscureText: true,
                           decoration: InputDecoration(
-                            hintText: loc.newPassword,
+                            hintText: loc?.newPassword ?? 'New password',
                             hintTextDirection: textDir,
                             prefixIcon: const Icon(Icons.lock_outline,
                                 color: Colors.redAccent),
@@ -123,7 +123,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                             ),
                           ),
                           validator: (v) =>
-                              (v ?? '').length < 6 ? loc.password6chars : null,
+                              (v ?? '').length < 6 ? (loc?.password6chars ?? 'Min 6 characters') : null,
                         ),
                         const SizedBox(height: 14),
                         TextFormField(
@@ -131,7 +131,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                           textDirection: TextDirection.ltr,
                           obscureText: true,
                           decoration: InputDecoration(
-                            hintText: loc.confirmNewPassword,
+                            hintText: loc?.confirmNewPassword ?? 'Confirm new password',
                             hintTextDirection: textDir,
                             prefixIcon: const Icon(Icons.lock_outline,
                                 color: Colors.redAccent),
@@ -143,7 +143,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                             ),
                           ),
                           validator: (v) => v != _passwordCtrl.text
-                              ? loc.passwordsDontMatch
+                              ? (loc?.passwordsDontMatch ?? 'Passwords do not match')
                               : null,
                         ),
                         const SizedBox(height: 24),
@@ -166,7 +166,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                       strokeWidth: 2,
                                       valueColor: AlwaysStoppedAnimation<Color>(
                                           Colors.white)))
-                              : Text(loc.resetPassword,
+                              : Text(loc?.resetPassword ?? 'Reset Password',
                                   style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600)),
