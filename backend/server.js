@@ -21,14 +21,18 @@ app.get("/health", (req, res) => {
 // ---- Mount routes ----
 const listsRoutes = require("./routes/lists");
 app.use("/api/lists", listsRoutes);
+app.use("/a/api/lists", listsRoutes);
 
 const categoriesRoutes = require("./routes/categories");
 app.use("/api/categories", categoriesRoutes);
+app.use("/a/api/categories", categoriesRoutes);
 
 const marketingRoutes = require("./routes/marketing");
 app.use("/api/marketing", marketingRoutes);
+app.use("/a/api/marketing", marketingRoutes);
 const usersRoutes = require("./routes/users");
 app.use("/api/users", usersRoutes);
+app.use("/a/api/users", usersRoutes);
 
 // ---- Invite deep-link redirect ----
 app.get("/a/invite/:token", (req, res) => {

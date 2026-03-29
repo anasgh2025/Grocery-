@@ -413,6 +413,12 @@ abstract class AppLocalizations {
   /// **'Item name'**
   String get itemName;
 
+  /// No description provided for @itemNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Item name is required'**
+  String get itemNameRequired;
+
   /// No description provided for @add.
   ///
   /// In en, this message translates to:
@@ -484,6 +490,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Grovia is a smart grocery list app that helps you organize your shopping and collaborate with family or friends in real time. Create lists, share them instantly, and never forget an item again.'**
   String get aboutUsContent;
+
+  /// No description provided for @contactDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'For any further details you can call us on +971 55 2300 158'**
+  String get contactDetails;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
 
   /// No description provided for @shareApp.
   ///

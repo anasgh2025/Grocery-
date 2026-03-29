@@ -175,7 +175,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             const SizedBox(height: 16),
                             // ── Contact ──
-                            const Row(
+                            Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Padding(
@@ -185,7 +185,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'For any further details you can call us on +971 55 2300 158',
+                                    loc.contactDetails,
                                     style: TextStyle(fontSize: 13, color: Colors.black87),
                                   ),
                                 ),
@@ -214,7 +214,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   padding: const EdgeInsets.symmetric(vertical: 14),
                                 ),
                                 onPressed: () => Navigator.of(ctx).pop(),
-                                child: const Text('Close', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600)),
+                                child: Text(loc.close, style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600)),
                               ),
                             ),
                           ],

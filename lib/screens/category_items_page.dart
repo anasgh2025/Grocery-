@@ -187,7 +187,7 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
               String? errorText;
               void trySubmit() {
                 if (controller.text.trim().isEmpty) {
-                  setSheetState(() => errorText = 'Item name is required');
+                  setSheetState(() => errorText = AppLocalizations.of(ctx)!.itemNameRequired);
                 } else {
                   Navigator.of(ctx).pop(controller.text.trim());
                 }
@@ -229,7 +229,7 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            'Enter custom item',
+                            AppLocalizations.of(ctx)!.enterCustomItem,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -248,7 +248,7 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                           if (errorText != null) setSheetState(() => errorText = null);
                         },
                         decoration: InputDecoration(
-                          hintText: 'Item name',
+                          hintText: AppLocalizations.of(ctx)!.itemName,
                           errorText: errorText,
                           filled: true,
                           fillColor: Colors.grey.shade50,
@@ -280,7 +280,7 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                                 side: BorderSide(color: Colors.grey.shade300),
                               ),
                               onPressed: () => Navigator.of(ctx).pop(),
-                              child: const Text('Cancel'),
+                              child: Text(AppLocalizations.of(ctx)!.cancel),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -292,7 +292,7 @@ class _CategoryItemsPageState extends State<CategoryItemsPage> {
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                               onPressed: trySubmit,
-                              child: const Text('Add'),
+                              child: Text(AppLocalizations.of(ctx)!.add),
                             ),
                           ),
                         ],

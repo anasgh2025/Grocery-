@@ -124,7 +124,7 @@ class ApiService {
   // Use --dart-define=API_BASE_URL=... when running on device/emulator.
   static const String _prodBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-  defaultValue: 'https://coral-app-qjq4a.ondigitalocean.app/a/api',
+    defaultValue: 'https://coral-app-qjq4a.ondigitalocean.app/a/api',
   );
 
   static String get baseUrl => _prodBaseUrl;

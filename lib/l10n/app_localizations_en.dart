@@ -176,6 +176,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get itemName => 'Item name';
 
   @override
+  String get itemNameRequired => 'Item name is required';
+
+  @override
   String get add => 'Add';
 
   @override
@@ -210,6 +213,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aboutUsContent => 'Grovia is a smart grocery list app that helps you organize your shopping and collaborate with family or friends in real time. Create lists, share them instantly, and never forget an item again.';
+
+  @override
+  String get contactDetails => 'For any further details you can call us on +971 55 2300 158';
+
+  @override
+  String get close => 'Close';
 
   @override
   String get shareApp => 'Share the app with a friend';

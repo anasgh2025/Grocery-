@@ -176,6 +176,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get itemName => 'اسم العنصر';
 
   @override
+  String get itemNameRequired => 'اسم العنصر مطلوب';
+
+  @override
   String get add => 'إضافة';
 
   @override
@@ -210,6 +213,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get aboutUsContent => 'Grovia تطبيق قوائم تسوق ذكي يساعدك على تنظيم مشترياتك والتعاون مع العائلة أو الأصدقاء في الوقت الفعلي. أنشئ قوائم، شاركها على الفور، ولا تنسَ أي عنصر.';
+
+  @override
+  String get contactDetails => 'للحصول على أي معلومات إضافية يمكنك الاتصال بنا على +971 55 2300 158';
+
+  @override
+  String get close => 'إغلاق';
 
   @override
   String get shareApp => 'شارك التطبيق مع صديق';

@@ -222,7 +222,7 @@ class _AddItemDetailsSheetState extends State<_AddItemDetailsSheet> {
               child: Row(
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.itemName,
+                    AppLocalizations.of(context)!.quantity,
                     style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const Spacer(),
