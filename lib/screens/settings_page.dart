@@ -17,6 +17,15 @@ class _SettingsPageState extends State<SettingsPage> {
   String _selectedLanguage = localeNotifier.value?.languageCode ?? 'en';
 
   @override
+  void initState() {
+    super.initState();
+    // Dark mode is temporarily disabled.
+    if (themeModeNotifier.value != ThemeMode.light) {
+      themeModeNotifier.value = ThemeMode.light;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
@@ -90,10 +99,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     leading: const Icon(Icons.brightness_6_outlined, color: Colors.redAccent, size: 28),
                     title: Text(loc.theme, style: const TextStyle(fontWeight: FontWeight.bold)),
                     trailing: Switch(
-                      value: mode == ThemeMode.dark,
-                      onChanged: (val) {
-                        themeModeNotifier.value = val ? ThemeMode.dark : ThemeMode.light;
-                      },
+                      value: false,
+                      onChanged: null,
                     ),
                   );
                 },
@@ -178,15 +185,15 @@ class _SettingsPageState extends State<SettingsPage> {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Padding(
+                                const Padding(
                                   padding: EdgeInsets.only(top: 2),
                                   child: Icon(Icons.phone_outlined, size: 16, color: Colors.redAccent),
                                 ),
-                                SizedBox(width: 8),
+                                const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     loc.contactDetails,
-                                    style: TextStyle(fontSize: 13, color: Colors.black87),
+                                    style: const TextStyle(fontSize: 13, color: Colors.black87),
                                   ),
                                 ),
                               ],
@@ -214,7 +221,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   padding: const EdgeInsets.symmetric(vertical: 14),
                                 ),
                                 onPressed: () => Navigator.of(ctx).pop(),
-                                child: Text(loc.close, style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600)),
+                                child: Text(loc.close, style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600)),
                               ),
                             ),
                           ],
