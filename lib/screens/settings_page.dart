@@ -98,7 +98,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     leading: const Icon(Icons.brightness_6_outlined, color: Colors.redAccent, size: 28),
                     title: Text(loc.theme, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    trailing: Switch(
+                    trailing: const Switch(
                       value: false,
                       onChanged: null,
                     ),
