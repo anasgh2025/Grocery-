@@ -43,6 +43,9 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
 
   /// name (lowercase English) → name_ar, built once from the categories catalogue.
   final Map<String, String> _nameArLookup = {};
+  final Map<String, String> _itemNameToCategoryEn = {};
+  final Map<String, String> _itemNameToCategoryAr = {};
+  final Map<String, int> _categoryOrderLookup = {};
 
   String get _resolvedListId {
     if (widget.list is Map) {
@@ -677,13 +680,43 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
     try {
       final api = ApiService();
       final categories = await api.fetchCategories(full: true);
+      _nameArLookup.clear();
+      _itemNameToCategoryEn.clear();
+      _itemNameToCategoryAr.clear();
+      _categoryOrderLookup.clear();
+
       for (final cat in categories) {
+        final labelEn = cat['label']?.toString() ?? '';
+        final labelAr = cat['label_ar']?.toString() ?? '';
+        final order = cat['order'] is int
+            ? cat['order'] as int
+            : int.tryParse(cat['order']?.toString() ?? '') ?? 9999;
+
+        if (labelEn.isNotEmpty) {
+          _categoryOrderLookup[labelEn.toLowerCase()] = order;
+        }
+        if (labelAr.isNotEmpty) {
+          _categoryOrderLookup[labelAr.toLowerCase()] = order;
+        }
+
         final items = cat['items'] as List<dynamic>? ?? [];
         for (final item in items) {
           final name = item['name']?.toString() ?? '';
           final nameAr = item['name_ar']?.toString() ?? '';
           if (name.isNotEmpty && nameAr.isNotEmpty) {
             _nameArLookup[name.toLowerCase()] = nameAr;
+          }
+
+          final keyEn = name.toLowerCase();
+          final keyAr = nameAr.toLowerCase();
+
+          if (labelEn.isNotEmpty) {
+            if (keyEn.isNotEmpty) _itemNameToCategoryEn[keyEn] = labelEn;
+            if (keyAr.isNotEmpty) _itemNameToCategoryEn[keyAr] = labelEn;
+          }
+          if (labelAr.isNotEmpty) {
+            if (keyEn.isNotEmpty) _itemNameToCategoryAr[keyEn] = labelAr;
+            if (keyAr.isNotEmpty) _itemNameToCategoryAr[keyAr] = labelAr;
           }
         }
       }
@@ -695,27 +728,114 @@ class _ListDetailsPageState extends State<ListDetailsPage> with TickerProviderSt
   // ── Sectioned list ────────────────────────────────────────────────────────
   Widget _buildSectionedList(List<dynamic> filteredItems) {
     final loc = AppLocalizations.of(context)!;
-    final active  = filteredItems.where((i) => i['checked'] != true).toList();
-    final checked = filteredItems.where((i) => i['checked'] == true).toList();
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final active = _sortItemsByCategoryAndName(
+      filteredItems.where((i) => i['checked'] != true).toList(),
+      isAr: isAr,
+    );
+    final checked = _sortItemsByCategoryAndName(
+      filteredItems.where((i) => i['checked'] == true).toList(),
+      isAr: isAr,
+    );
 
     // Build a flat list of widgets: header + cards for each section
     final widgets = <Widget>[];
 
     if (active.isNotEmpty) {
       widgets.add(_buildSectionHeader(loc.activeSection, widget.accent));
-      for (final item in active) {
-        widgets.add(_buildItemCard(item as Map<String, dynamic>));
-      }
+      _appendCategoryGroups(widgets, active, isAr: isAr);
     }
 
     if (checked.isNotEmpty) {
       widgets.add(_buildSectionHeader(loc.checkedSection, Colors.grey));
-      for (final item in checked) {
-        widgets.add(_buildItemCard(item as Map<String, dynamic>));
-      }
+      _appendCategoryGroups(widgets, checked, isAr: isAr);
     }
 
     return ListView(children: widgets);
+  }
+
+  void _appendCategoryGroups(
+    List<Widget> widgets,
+    List<dynamic> items, {
+    required bool isAr,
+  }) {
+    String? currentCategory;
+    for (final raw in items) {
+      final item = raw as Map<String, dynamic>;
+      final category = _categoryForItem(item, isAr: isAr);
+      if (currentCategory != category) {
+        currentCategory = category;
+        widgets.add(_buildCategoryHeader(category));
+      }
+      widgets.add(_buildItemCard(item));
+    }
+  }
+
+  List<dynamic> _sortItemsByCategoryAndName(
+    List<dynamic> items, {
+    required bool isAr,
+  }) {
+    final sorted = List<dynamic>.from(items);
+    sorted.sort((a, b) {
+      final itemA = a as Map<String, dynamic>;
+      final itemB = b as Map<String, dynamic>;
+
+      final categoryA = _categoryForItem(itemA, isAr: isAr);
+      final categoryB = _categoryForItem(itemB, isAr: isAr);
+      final orderA = _categoryOrderLookup[categoryA.toLowerCase()] ?? 9999;
+      final orderB = _categoryOrderLookup[categoryB.toLowerCase()] ?? 9999;
+
+      final orderCmp = orderA.compareTo(orderB);
+      if (orderCmp != 0) return orderCmp;
+
+      final catCmp = categoryA.toLowerCase().compareTo(categoryB.toLowerCase());
+      if (catCmp != 0) return catCmp;
+
+      final nameA = _displayNameForItem(itemA, isAr: isAr).toLowerCase();
+      final nameB = _displayNameForItem(itemB, isAr: isAr).toLowerCase();
+      return nameA.compareTo(nameB);
+    });
+    return sorted;
+  }
+
+  String _displayNameForItem(Map<String, dynamic> item, {required bool isAr}) {
+    return (isAr && item['name_ar']?.toString().isNotEmpty == true)
+        ? item['name_ar']!.toString()
+        : item['name']?.toString() ?? '';
+  }
+
+  String _categoryForItem(Map<String, dynamic> item, {required bool isAr}) {
+    final name = item['name']?.toString().trim().toLowerCase() ?? '';
+    final nameAr = item['name_ar']?.toString().trim().toLowerCase() ?? '';
+    final fallback = isAr ? 'أخرى' : 'Other';
+
+    if (isAr) {
+      return _itemNameToCategoryAr[name]
+          ?? _itemNameToCategoryAr[nameAr]
+          ?? _itemNameToCategoryEn[name]
+          ?? _itemNameToCategoryEn[nameAr]
+          ?? fallback;
+    }
+
+    return _itemNameToCategoryEn[name]
+        ?? _itemNameToCategoryEn[nameAr]
+        ?? _itemNameToCategoryAr[name]
+        ?? _itemNameToCategoryAr[nameAr]
+        ?? fallback;
+  }
+
+  Widget _buildCategoryHeader(String label) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 16, 2),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: Colors.grey.shade600,
+        ),
+      ),
+    );
   }
 
   Widget _buildSectionHeader(String label, Color color) {

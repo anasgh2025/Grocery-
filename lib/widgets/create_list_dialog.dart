@@ -21,18 +21,35 @@ class CreateListDialog extends StatefulWidget {
 class _CreateListDialogState extends State<CreateListDialog> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
-  String _selectedCategory = 'Home';
+  String _selectedCategory = 'home';
   String _selectedPriority = 'Normal';
   DateTime? _selectedDate;
   bool _isCreating = false;
   final ApiService _apiService = ApiService();
   final Map<String, IconData> _categoryIcons = const {
-    'Home': Icons.home,
-    'Party': Icons.celebration,
-    'Work': Icons.work,
-    'Holiday': Icons.beach_access,
-    'Other': Icons.more_horiz,
+    'home': Icons.home,
+    'party': Icons.celebration,
+    'work': Icons.work,
+    'holiday': Icons.beach_access,
+    'other': Icons.more_horiz,
   };
+
+  String _categoryLabel(String categoryId, AppLocalizations loc) {
+    switch (categoryId) {
+      case 'home':
+        return loc.home;
+      case 'party':
+        return loc.categoryParty;
+      case 'work':
+        return loc.categoryWork;
+      case 'holiday':
+        return loc.categoryHoliday;
+      case 'other':
+        return loc.categoryOther;
+      default:
+        return categoryId;
+    }
+  }
 
   @override
   void dispose() {
@@ -83,7 +100,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
         progress: 0.0,
         priority: _selectedPriority == 'Urgent' ? 1 : 0,
         time: _selectedDate != null ? _formatDueDate(_selectedDate!) : '',
-        category: _selectedCategory.toLowerCase().trim(),
+        category: _selectedCategory,
         icon: _categoryIcons[_selectedCategory]!,
       );
       final created = await _apiService.createGroceryList(newList);
@@ -244,7 +261,7 @@ class _CreateListDialogState extends State<CreateListDialog> {
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        category,
+                                        _categoryLabel(category, loc),
                                         style: TextStyle(
                                           fontFamily: 'Nunito',
                                           fontSize: 13,

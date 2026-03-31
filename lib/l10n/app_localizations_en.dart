@@ -158,6 +158,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home => 'Home';
 
   @override
+  String get categoryParty => 'Party';
+
+  @override
+  String get categoryWork => 'Work';
+
+  @override
+  String get categoryHoliday => 'Holiday';
+
+  @override
+  String get categoryOther => 'Other';
+
+  @override
   String get profile => 'Profile';
 
   @override

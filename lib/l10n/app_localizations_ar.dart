@@ -158,6 +158,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get home => 'الرئيسية';
 
   @override
+  String get categoryParty => 'حفلة';
+
+  @override
+  String get categoryWork => 'عمل';
+
+  @override
+  String get categoryHoliday => 'إجازة';
+
+  @override
+  String get categoryOther => 'أخرى';
+
+  @override
   String get profile => 'الملف الشخصي';
 
   @override

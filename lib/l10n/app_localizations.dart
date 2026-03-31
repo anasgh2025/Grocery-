@@ -377,6 +377,30 @@ abstract class AppLocalizations {
   /// **'Home'**
   String get home;
 
+  /// No description provided for @categoryParty.
+  ///
+  /// In en, this message translates to:
+  /// **'Party'**
+  String get categoryParty;
+
+  /// No description provided for @categoryWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Work'**
+  String get categoryWork;
+
+  /// No description provided for @categoryHoliday.
+  ///
+  /// In en, this message translates to:
+  /// **'Holiday'**
+  String get categoryHoliday;
+
+  /// No description provided for @categoryOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get categoryOther;
+
   /// No description provided for @profile.
   ///
   /// In en, this message translates to:
