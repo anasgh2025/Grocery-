@@ -21,6 +21,42 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+async function sendEmail({ to, subject, html }) {
+  if (!process.env.ZOHO_EMAIL || !process.env.ZOHO_PASSWORD) {
+    console.warn(`Email skipped for ${to}: missing ZOHO_EMAIL or ZOHO_PASSWORD`);
+    return;
+  }
+
+  await transporter.sendMail({
+    from: `"Grovia" <${process.env.ZOHO_EMAIL}>`,
+    to,
+    subject,
+    html,
+  });
+}
+
+async function sendWelcomeEmail({ email, name }) {
+  const displayName = name?.trim() || 'there';
+
+  await sendEmail({
+    to: email,
+    subject: 'Welcome to Grovia',
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;line-height:1.5;">
+        <h2 style="color:#E53935;margin-bottom:12px;">Welcome to Grovia, ${displayName}!</h2>
+        <p>Your account is ready. You can now sign in and start organizing your grocery lists.</p>
+        <p style="margin-top:20px;">What you can do next:</p>
+        <ul style="padding-left:20px;">
+          <li>Create and manage grocery lists</li>
+          <li>Share lists with family members</li>
+          <li>Keep everything synced across devices</li>
+        </ul>
+        <p style="margin-top:24px;">Thanks for joining Grovia.</p>
+      </div>
+    `,
+  });
+}
+
 // Create a new user/profile (async)
 const createUser = async (req, res) => {
   try {
@@ -55,6 +91,13 @@ const createUser = async (req, res) => {
 
     // Create user (store hashed password)
     const created = await usersStore.create({ name: sName, email: sEmail, password: hashed });
+
+    try {
+      await sendWelcomeEmail({ email: sEmail, name: sName });
+    } catch (mailErr) {
+      console.error('sendWelcomeEmail error:', mailErr);
+    }
+
     res.status(201).json(created);
   } catch (err) {
     console.error('createUser error:', err);
@@ -173,8 +216,7 @@ async function forgotPassword(req, res) {
 
     const resetUrl = `https://coral-app-qjq4a.ondigitalocean.app/a/reset-password/${token}`;
 
-    await transporter.sendMail({
-      from: `"Grovia" <${process.env.ZOHO_EMAIL}>`,
+    await sendEmail({
       to: sEmail,
       subject: 'Reset your Grovia password',
       html: `

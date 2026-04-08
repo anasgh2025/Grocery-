@@ -107,23 +107,33 @@ class _MyAppState extends State<MyApp> {
     // Get the URL that cold-started the app (if any).
     // Retry until the navigator is mounted.
     _channel.invokeMethod<String>('getInitialUrl').then((url) {
-      if (url != null) _handleLinkWhenReady(Uri.parse(url));
+      if (url != null) {
+        _handleLinkWhenReady(Uri.parse(url), replaceStack: true);
+      }
     }).catchError((e) {
       print('[DeepLink] getInitialUrl error: $e');
     });
   }
 
   /// Retries every 100 ms until the navigator is mounted (max 3 seconds).
-  void _handleLinkWhenReady(Uri uri, [int attempts = 0]) {
+  void _handleLinkWhenReady(
+    Uri uri, {
+    bool replaceStack = false,
+    int attempts = 0,
+  }) {
     if (_navigatorKey.currentState != null) {
-      _handleLink(uri);
+      _handleLink(uri, replaceStack: replaceStack);
     } else if (attempts < 30) {
       Future.delayed(const Duration(milliseconds: 100),
-          () => _handleLinkWhenReady(uri, attempts + 1));
+          () => _handleLinkWhenReady(
+                uri,
+                replaceStack: replaceStack,
+                attempts: attempts + 1,
+              ));
     }
   }
 
-  void _handleLink(Uri uri) {
+  void _handleLink(Uri uri, {bool replaceStack = false}) {
     print('[DeepLink] received: $uri');
 
     final uriStr = uri.toString();
@@ -139,17 +149,24 @@ class _MyAppState extends State<MyApp> {
       return;
     }
 
+    void openPage(Widget page) {
+      final route = MaterialPageRoute(builder: (_) => page);
+      if (replaceStack) {
+        nav.pushAndRemoveUntil(route, (route) => false);
+      } else {
+        nav.push(route);
+      }
+    }
+
     // grovia://invite/<token>
     if (uri.host == 'invite' && uri.pathSegments.isNotEmpty) {
-      nav.push(MaterialPageRoute(
-          builder: (_) => InviteAcceptPage(token: uri.pathSegments.first)));
+      openPage(InviteAcceptPage(token: uri.pathSegments.first));
       return;
     }
 
     // grovia://reset-password/<token>
     if (uri.host == 'reset-password' && uri.pathSegments.isNotEmpty) {
-      nav.push(MaterialPageRoute(
-          builder: (_) => ResetPasswordPage(token: uri.pathSegments.first)));
+      openPage(ResetPasswordPage(token: uri.pathSegments.first));
       return;
     }
 
