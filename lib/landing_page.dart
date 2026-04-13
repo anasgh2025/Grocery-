@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'widgets/banner_ad_widget.dart';
 import 'widgets/footer_menu.dart';
 import 'widgets/landing_header.dart';
 import 'widgets/list_section_with_api.dart';
@@ -91,7 +92,13 @@ class _LandingPageState extends State<LandingPage> {
         ),
       ),
       // Removed FloatingActionButton (+)
-      bottomNavigationBar: FooterMenu(accent: accent),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const BannerAdWidget(),
+          FooterMenu(accent: accent),
+        ],
+      ),
     );
   }
 }

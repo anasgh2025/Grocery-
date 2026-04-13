@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'launch_gate.dart';
 import 'screens/invite_accept_page.dart';
@@ -21,6 +22,7 @@ final ValueNotifier<String?> userNameNotifier = ValueNotifier<String?>(null);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
   print('Before dotenv.load');
   try {
     await dotenv.load(fileName: ".env");
