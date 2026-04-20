@@ -1,3 +1,16 @@
+
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
+import '../models/grocery_list.dart';
+
+/// Service for handling API calls related to grocery lists
+
+class ApiService {
+  // ...existing code...
+
   /// Login and migrate guest lists to user
   Future<Map<String, dynamic>> loginAndMigrate({required String email, required String password}) async {
     final loginResult = await login(email: email, password: password);
@@ -8,18 +21,6 @@
     }
     return loginResult;
   }
-
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter/foundation.dart';
-// import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../models/grocery_list.dart';
-
-/// Service for handling API calls related to grocery lists
-import 'package:uuid/uuid.dart';
-
-class ApiService {
   // ── Password Reset ────────────────────────────────────────────────────────
 
   /// Request a password reset email. Always succeeds (no user enumeration).
