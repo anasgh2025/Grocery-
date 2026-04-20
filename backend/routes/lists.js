@@ -1,11 +1,13 @@
-// Migrate guest lists to user after login
-router.post('/migrate-guest-lists', requireAuth, listsController.migrateGuestLists);
+
 'use strict';
 
 const express = require('express');
 const router = express.Router();
 const listsController = require('../controllers/listsController');
 const { requireAuth } = require('../middleware/auth');
+
+// Migrate guest lists to user after login
+router.post('/migrate-guest-lists', requireAuth, listsController.migrateGuestLists);
 
 /**
  * Optional auth middleware — attaches req.user if a valid Bearer token is
