@@ -131,7 +131,9 @@ const getAllLists = async (req, res) => {
   try {
     // If the caller has a JWT (attached by optional auth), filter to their lists.
     const userId = req.user ? req.user.id : null;
-    const lists = await store.getAllForUser(userId);
+    // For guests, get guestId from header
+    const guestId = req.headers['x-guest-id'] || null;
+    const lists = await store.getAllForUser(userId, guestId);
     res.json(lists);
   } catch (error) {
     res.status(500).json({

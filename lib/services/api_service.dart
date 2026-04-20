@@ -192,19 +192,25 @@ class ApiService {
   Future<List<GroceryList>> fetchGroceryLists() async {
     try {
       final token = await readToken();
+      Map<String, String> headers = {
+        'Content-Type': 'application/json',
+      };
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      } else {
+        // Guest: send guestId header
+        final guestId = await getGuestId();
+        headers['x-guest-id'] = guestId;
+      }
       final response = await http
           .get(
             Uri.parse('$baseUrl/lists'),
-            headers: {
-              'Content-Type': 'application/json',
-              if (token != null) 'Authorization': 'Bearer $token',
-            },
+            headers: headers,
           )
           .timeout(timeout);
 
-  // Log response for debugging
-  debugPrint('[ApiService] GET $baseUrl/lists status: ${response.statusCode}');
-  debugPrint('[ApiService] Response body: ${response.body}');
+      debugPrint('[ApiService] GET $baseUrl/lists status: ${response.statusCode}');
+      debugPrint('[ApiService] Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);
