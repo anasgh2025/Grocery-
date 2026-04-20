@@ -207,6 +207,7 @@ const createList = async (req, res) => {
       category: category !== undefined ? category : null,
       priority: priority !== undefined ? priority : 0,
       ownerId: req.user ? req.user.id : null,
+      guestId: !req.user && req.body.guestId ? req.body.guestId : null,
     };
     
     const createdList = await store.create(newList);

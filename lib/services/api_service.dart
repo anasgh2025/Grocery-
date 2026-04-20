@@ -352,7 +352,7 @@ class ApiService {
       final token = await readToken();
       Map<String, dynamic> body = list.toJson();
       if (token == null) {
-        // Guest: attach guestId
+        // Guest: always attach guestId
         final guestId = await getGuestId();
         body['guestId'] = guestId;
       }
