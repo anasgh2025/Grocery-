@@ -1,3 +1,19 @@
+// POST /api/lists/migrate-guest-lists
+// Body: { guestId: string }
+// Requires auth (user must be logged in)
+const migrateGuestLists = async (req, res) => {
+  try {
+    const userId = req.user && req.user.id;
+    const { guestId } = req.body;
+    if (!userId || !guestId) {
+      return res.status(400).json({ error: 'Missing userId or guestId' });
+    }
+    const modified = await store.migrateGuestListsToUser(guestId, userId);
+    res.json({ migrated: modified });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to migrate guest lists', message: error.message });
+  }
+};
 'use strict';
 
 const { v4: uuidv4 } = require('uuid');
@@ -388,4 +404,5 @@ module.exports = {
   getInvitePreview,
   acceptInvite,
   rejectInvite,
+  migrateGuestLists,
 };

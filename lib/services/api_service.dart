@@ -7,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import '../models/grocery_list.dart';
 
 /// Service for handling API calls related to grocery lists
+import 'package:uuid/uuid.dart';
+
 class ApiService {
   // ── Password Reset ────────────────────────────────────────────────────────
 
@@ -132,7 +134,22 @@ class ApiService {
   // Secure storage for auth token
   static const _tokenKey = 'auth_token';
   static const _userNameKey = 'user_display_name';
+  static const _guestIdKey = 'guest_id';
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+  /// Get or generate a persistent guestId for this device/session
+  Future<String> getGuestId() async {
+    String? guestId = await _secureStorage.read(key: _guestIdKey);
+    if (guestId == null || guestId.isEmpty) {
+      guestId = const Uuid().v4();
+      await _secureStorage.write(key: _guestIdKey, value: guestId);
+    }
+    return guestId;
+  }
+
+  /// Clear guestId (optional, e.g. after migration)
+  Future<void> clearGuestId() async {
+    await _secureStorage.delete(key: _guestIdKey);
+  }
 
   // Timeout duration for API calls
   static const Duration timeout = Duration(seconds: 30);
@@ -333,6 +350,12 @@ class ApiService {
   Future<GroceryList> createGroceryList(GroceryList list) async {
     try {
       final token = await readToken();
+      Map<String, dynamic> body = list.toJson();
+      if (token == null) {
+        // Guest: attach guestId
+        final guestId = await getGuestId();
+        body['guestId'] = guestId;
+      }
       final response = await http
           .post(
             Uri.parse('$baseUrl/lists'),
@@ -340,7 +363,7 @@ class ApiService {
               'Content-Type': 'application/json',
               if (token != null) 'Authorization': 'Bearer $token',
             },
-            body: json.encode(list.toJson()),
+            body: json.encode(body),
           )
           .timeout(timeout);
 
@@ -356,6 +379,27 @@ class ApiService {
     } catch (e) {
       throw Exception('Error creating list: $e');
     }
+  }
+
+  /// Migrate all guest lists to the logged-in user after login
+  Future<int> migrateGuestListsToUser() async {
+    final token = await readToken();
+    final guestId = await _secureStorage.read(key: _guestIdKey);
+    if (token == null || guestId == null) return 0;
+    final response = await http.post(
+      Uri.parse('$baseUrl/lists/migrate-guest-lists'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode({'guestId': guestId}),
+    ).timeout(timeout);
+    if (response.statusCode == 200) {
+      await clearGuestId();
+      final data = json.decode(response.body);
+      return data['migrated'] ?? 0;
+    }
+    return 0;
   }
 
   /// Create a new user/profile on the backend

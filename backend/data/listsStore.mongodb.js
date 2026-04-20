@@ -22,6 +22,7 @@ const groceryListSchema = new mongoose.Schema({
   icon:       { type: String, default: 'list' },
   listItems:  { type: [listItemSchema], default: [] },
   ownerId:    { type: String, default: null },        // userId of list creator
+  guestId:    { type: String, default: null },        // guest session/device id
   sharedWith: { type: [String], default: [] },        // userIds who accepted invite
 }, { timestamps: true });
 
@@ -153,5 +154,16 @@ module.exports = {
   remove,
   reset,
   addSharedUser,
+  /**
+   * Migrate all lists for a guestId to a userId (on login)
+   */
+  async migrateGuestListsToUser(guestId, userId) {
+    if (!guestId || !userId) return 0;
+    const result = await GroceryList.updateMany(
+      { guestId },
+      { $set: { ownerId: userId }, $unset: { guestId: "" } }
+    );
+    return result.modifiedCount || 0;
+  },
   GroceryList,
 };

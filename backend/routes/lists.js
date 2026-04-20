@@ -1,3 +1,5 @@
+// Migrate guest lists to user after login
+router.post('/migrate-guest-lists', requireAuth, listsController.migrateGuestLists);
 'use strict';
 
 const express = require('express');
