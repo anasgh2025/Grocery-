@@ -1,3 +1,13 @@
+  /// Login and migrate guest lists to user
+  Future<Map<String, dynamic>> loginAndMigrate({required String email, required String password}) async {
+    final loginResult = await login(email: email, password: password);
+    final token = loginResult['token'] as String?;
+    if (token != null) {
+      await saveToken(token);
+      await migrateGuestListsToUser();
+    }
+    return loginResult;
+  }
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
